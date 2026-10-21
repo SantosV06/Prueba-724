@@ -1,49 +1,67 @@
-# Activación de la base de datos en Vercel
+# Vercel + Neon: configuración y operación
 
-Este sitio usa **Neon PostgreSQL** con la variable `DATABASE_URL`. Las solicitudes
-de `/voluntariado` se guardan en `volunteer_requests`; el personal autorizado las
-consulta, exporta o elimina en `/solicitudes`.
+La web guarda las solicitudes en PostgreSQL y las administra en `/solicitudes`.
+No guardes contraseñas ni cadenas de conexión en GitHub. No uses prefijos `VITE_` para secretos.
 
-## 1. Crear Neon
-1. Abre https://console.neon.tech y crea un proyecto (plan gratuito si está disponible).
-2. En el panel de Neon elige **Connect**, selecciona la base de datos y copia la
-   cadena PostgreSQL **pooled** (con `-pooler` y `sslmode=require`).
-3. No copies la conexión en GitHub, el código o un archivo público.
+## Producción
 
-## 2. Añadir variables en Vercel
-Abre https://vercel.com/dashboard → proyecto Prueba-724 → Settings → Environment Variables.
-Define en **Production** (y, para probar en vista previa, también en **Preview**):
+En Vercel → proyecto **prueba-724** → **Settings → Environment Variables**, revisa en **Production**:
 
-| Variable | Valor |
-| --- | --- |
-| `DATABASE_URL` | Cadena PostgreSQL obtenida en Neon |
-| `ADMIN_PASSWORD` | Contraseña propia robusta de **14 caracteres o más** |
-| `ADMIN_SESSION_SECRET` | Secreto aleatorio de **32 caracteres o más**; genera uno con `openssl rand -hex 32` |
+| Variable               | Configuración                                                                                     |
+| ---------------------- | ------------------------------------------------------------------------------------------------- |
+| `DATABASE_URL`         | Conexión pooled de Neon; hostname con `-pooler` y `sslmode=require`                               |
+| `ADMIN_PASSWORD`       | Contraseña de 14–256 caracteres                                                                   |
+| `ADMIN_SESSION_SECRET` | Secreto aleatorio de al menos 32 caracteres                                                       |
+| `SITE_URL`             | Opcional: origen HTTPS del dominio definitivo, sin rutas; por ejemplo `https://www.tudominio.org` |
 
-> Las variables son de servidor: no uses prefijos `VITE_` ni `NEXT_PUBLIC_`.
-> No compartas sus valores por chat ni los incorpores al repositorio.
+Conserva las tres variables existentes si ya cumplen estos requisitos. `SITE_URL` configura canónicas y sitemap; sin ella se usa `VERCEL_PROJECT_PRODUCTION_URL` cuando Vercel lo proporciona. Los secretos se configuran como Secret y nunca se comparten por chat.
 
-## 3. Publicar
-- Fusiona el pull request con los cambios a `main` (si todavía no se fusionó).
-- En Vercel abre **Deployments → Redeploy** o espera el despliegue de `main`.
-- `npm run build` aplica automáticamente `migrations/0001_volunteer_requests.sql`
-  a Neon utilizando `scripts/migrate.mjs`. No necesitas ejecutar SQL manualmente.
-- Si falta la variable o falla una migración, revisa el **Build Log** en Vercel.
+Vercel instala con `npm ci` y Node 24. `npm run build` comprueba tipos, lint y pruebas antes de compilar y migrar. En producción, una configuración ausente o inválida detiene el despliegue. No cambies el comando de build por `build:dev`.
 
-## 4. Probar
-1. Abre `https://TU_DOMINIO/voluntariado`; llena el formulario.
-2. Debe aparecer **Solicitud registrada** solo después de que responda el servidor.
-3. Abre `https://TU_DOMINIO/solicitudes`, introduce `ADMIN_PASSWORD`.
-4. Verifica el registro, exporta el CSV y cierra la sesión.
-5. En Neon → **SQL Editor** ejecuta `SELECT COUNT(*) FROM volunteer_requests;`
-   para corroborar que los datos permanecen centralizados.
+Las migraciones son aditivas: los registros anteriores permanecen, con estado `pendiente`. Se aplican en una transacción con bloqueo de coordinación entre despliegues. Nunca edites un archivo SQL ya aplicado; añade uno nuevo. El cambio de sesiones requiere iniciar sesión otra vez; las cookies anteriores no se aceptan.
 
-## Avisos
-- Los registros antiguos en `localStorage` de cada navegador **no se migran**
-  automáticamente. Exporta o conserva esos datos por separado antes de borrarlos.
-- La vista previa local puede usar PGLite temporal; producción bloquea ese modo
-  para no perder datos en reinicios de Vercel.
-- El panel está limitado a 1.000 solicitudes por consulta; no incorpora paginación.
-- Hay límites básicos de envíos (5/hora/IP) y accesos (8/15 min/IP).
-- El panel usa una cookie firmada, HttpOnly, SameSite=Strict, con duración de 8 horas.
-- El formulario no envía correos automáticos; registra solicitudes en la base.
+## Preview: evitar cambios en la base real
+
+Por defecto las vistas previas muestran la web, pero **no ejecutan migraciones ni permiten usar el formulario o el panel**. Esto impide que una rama de prueba modifique la base real por una variable heredada.
+
+Para activar datos en Preview:
+
+1. Neon → proyecto → **Branches**: crea una rama de pruebas. Si necesitas evitar copias de datos personales, elige una rama de esquema solamente cuando esté disponible o una base separada vacía.
+2. En la integración Neon–Vercel, comprueba a qué rama apunta cada ambiente. Copia la conexión **pooled de pruebas** a `DATABASE_URL`, con ámbito **Preview**. Nunca reutilices la conexión de producción.
+3. Define `ADMIN_PASSWORD` y `ADMIN_SESSION_SECRET` de pruebas en **Preview**, distintos de los de producción.
+4. Solo después de verificar esa separación, añade `PREVIEW_DATABASE_ISOLATED=true` en **Preview** y vuelve a desplegar esa rama.
+
+La variable es una confirmación operativa, no una detección automática: el código no puede comparar la conexión con secretos de otros ambientes. Los robots de las vistas previas reciben `Disallow: /`.
+
+## Panel y seguridad
+
+- Lista de 50 registros por página, búsqueda literal y filtros por estado.
+- Estados: pendiente, contactada, aceptada y descartada.
+- Exportación de **todos los resultados filtrados**, por lotes de 500 con cursor. No existe el límite anterior de 1000. La exportación fija la fecha máxima de creación al iniciarse; cambios de estado/papelera concurrentes pueden afectar lo incluido.
+- CSV con BOM UTF-8, comillas y neutralización de fórmulas para hojas de cálculo.
+- Mover a papelera no borra la solicitud: se puede restaurar desde el panel.
+- `admin_events` registra cambios de estado, papelera y restauración, sin duplicar los datos personales.
+- Sesiones aleatorias de 8 horas almacenadas como hash; cierre de sesión revocado en el servidor. Cambiar la contraseña o el secreto invalida las sesiones previas.
+- Una credencial administrativa compartida; no hay cuentas individuales ni atribución a distintas personas.
+- Límites: 5 solicitudes/hora/IP y 8 accesos/15 minutos/IP. Redes compartidas pueden compartir el límite. Sesiones expiradas y claves de límite antiguas se limpian al recibir envíos o accesos.
+- Las solicitudes reintentadas conservan una clave aleatoria para evitar duplicados por fallos de red.
+- No se envían correos automáticos ni se procesan pagos: Zelle sigue siendo un canal externo.
+
+## Verificación después de publicar
+
+1. Vercel → Deployments: comprueba que el despliegue de `main` termine en **Ready**.
+2. Envía una solicitud de prueba en `/voluntariado`.
+3. Inicia sesión en `/solicitudes`, busca la solicitud y cambia su estado.
+4. Exporta CSV; mueve la solicitud a papelera y restáurala. Cierra sesión.
+5. En Neon → SQL Editor puedes consultar `SELECT COUNT(*) FROM volunteer_requests WHERE deleted_at IS NULL;` y las migraciones con `SELECT name FROM _migrations ORDER BY name;`.
+
+## Ajustes que requieren al propietario
+
+- Neon: verificar región cercana a la función, capacidad del plan, restauración y periodo de historial disponible; probar la recuperación con una rama de pruebas.
+- GitHub → Settings → Rules → Rulesets: proteger `main` y exigir el check **Validate application / validate**. El workflow viene incluido, pero la protección es una configuración de la cuenta.
+- Vercel: revisar región de funciones y configuración de acceso a vistas previas. No proporcionar credenciales al workflow de validación: no las necesita.
+- Definir la política de conservación y borrado definitivo de datos. La papelera no se purga automáticamente y la política debe acordarse antes de automatizar eliminaciones.
+- Si otras personas van a administrar, planificar cuentas individuales con roles y segundo factor.
+- Si se desean correos de confirmación o pagos integrados, elegir proveedor y configurar dominio/cuenta; no activar envíos ni cobros sin esa configuración.
+
+Los registros de antiguos navegadores en localStorage no se migran automáticamente. Conserva sus exportaciones por separado.

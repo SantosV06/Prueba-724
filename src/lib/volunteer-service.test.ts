@@ -1,0 +1,161 @@
+import test, { mock } from "node:test";
+import assert from "node:assert/strict";
+import { readFile } from "node:fs/promises";
+import { randomUUID } from "node:crypto";
+import { PGlite } from "@electric-sql/pglite";
+
+// Full real PostgreSQL schema/queries in a disposable local DB; no production credentials.
+const pg = new PGlite();
+const cookies = new Map<string, string>();
+let address = "192.0.2.1";
+let site = "same-origin";
+let failRevocation = false;
+mock.module("@tanstack/react-start/server", {
+  namedExports: {
+    getCookie: (name: string) => cookies.get(name),
+    setCookie: (name: string, value: string) => {
+      cookies.set(name, value);
+    },
+    deleteCookie: (name: string) => {
+      cookies.delete(name);
+    },
+    setResponseHeader: () => undefined,
+    getRequest: () =>
+      new Request("https://example.test/", {
+        headers: { "sec-fetch-site": site, "x-forwarded-for": address },
+      }),
+  },
+});
+mock.module("./db.ts", {
+  namedExports: {
+    dbSource: "neon",
+    getSql: async () => ({
+      query: async (sql: string, params: unknown[] = []) => {
+        if (failRevocation && sql.startsWith("DELETE FROM admin_sessions WHERE token_hash"))
+          throw new Error("database unavailable");
+        return (await pg.query(sql, params)).rows;
+      },
+    }),
+  },
+});
+const service = await import("./volunteer-service.server.ts");
+
+test("volunteer and admin workflow: durable data, limits, revocation, pagination, export and recovery", async () => {
+  await pg.waitReady;
+  for (const file of ["0001_volunteer_requests.sql", "0002_admin_workflow.sql"])
+    await pg.exec(await readFile(new URL(`../../migrations/${file}`, import.meta.url), "utf8"));
+  process.env.ADMIN_SESSION_SECRET = "test-secret-never-for-production-32-characters";
+  delete process.env.ADMIN_PASSWORD;
+  delete process.env.VERCEL;
+  delete process.env.VERCEL_ENV;
+  const input = {
+    nombre: "Ana",
+    apellido: "Pérez",
+    correo: "ana@example.com",
+    telefono: "+507 6000 0000",
+    mensaje: "Ayudar",
+    requestKey: randomUUID(),
+  };
+  await service.saveVolunteerRequest(input);
+  await service.saveVolunteerRequest(input);
+  assert.equal(
+    (await pg.query("SELECT * FROM volunteer_requests")).rows.length,
+    1,
+    "retry must not duplicate a request",
+  );
+  for (let i = 0; i < 4; i++)
+    await service.saveVolunteerRequest({ ...input, requestKey: randomUUID() });
+  await assert.rejects(
+    service.saveVolunteerRequest({ ...input, requestKey: randomUUID() }),
+    /Demasiados/,
+  );
+  await pg.exec(
+    "INSERT INTO request_limits(scope,key_hash,started_at) VALUES ('login','old',NOW()-INTERVAL '2 days')",
+  );
+  address = "192.0.2.2";
+  process.env.ADMIN_PASSWORD = "test-only-password-12345";
+  await assert.rejects(service.loginAdministrator("wrong"), /incorrecta/);
+  await service.loginAdministrator(process.env.ADMIN_PASSWORD);
+  assert.equal(
+    (await pg.query("SELECT * FROM request_limits WHERE key_hash='old'")).rows.length,
+    0,
+  );
+  assert.equal(await service.isAdminAuthenticated(), true);
+  const token = cookies.get("vne-admin-session")!;
+  assert.ok(!JSON.stringify((await pg.query("SELECT * FROM admin_sessions")).rows).includes(token));
+  const filters = { page: 1, search: "", status: "" as const, trash: false };
+  const initial = await service.listVolunteerRequests(filters);
+  const id = initial.rows[0].id;
+  await service.changeVolunteerRequest(id, "status", "contactada");
+  assert.equal(
+    (await service.listVolunteerRequests({ ...filters, status: "contactada" })).total,
+    1,
+  );
+  await service.changeVolunteerRequest(id, "trash");
+  assert.equal((await service.listVolunteerRequests({ ...filters, trash: true })).total, 1);
+  await service.changeVolunteerRequest(id, "restore");
+  assert.equal((await service.listVolunteerRequests({ ...filters, trash: true })).total, 0);
+  assert.equal(
+    (await pg.query("SELECT * FROM admin_events WHERE request_id=$1", [id])).rows.length,
+    3,
+  );
+  await pg.exec(
+    "INSERT INTO volunteer_requests(id,nombre,apellido,correo,telefono) SELECT md5(n::text)::uuid::text, 'Prueba', 'Equipo', 'test@example.com', '+507 6000 0000' FROM generate_series(1,1001) n",
+  );
+  const page = await service.listVolunteerRequests({ ...filters, page: 2 });
+  assert.equal(page.rows.length, 50);
+  assert.equal(page.total, 1006);
+  assert.equal(
+    (await service.listVolunteerRequests({ ...filters, search: "%" })).total,
+    0,
+    "search treats LIKE operators literally",
+  );
+  let cursor;
+  let snapshot;
+  const exported = new Set<string>();
+  do {
+    const result = await service.exportVolunteerRequests(filters, cursor, snapshot);
+    for (const row of result.rows) {
+      assert.ok(!exported.has(row.id));
+      exported.add(row.id);
+    }
+    cursor = result.next ?? undefined;
+    snapshot = result.snapshot;
+  } while (cursor);
+  assert.equal(exported.size, 1006, "export traverses beyond the old 1000-row limit");
+  site = "cross-site";
+  await assert.rejects(service.changeVolunteerRequest(id, "trash"), /cross-site/);
+  site = "same-origin";
+  failRevocation = true;
+  await assert.rejects(service.logoutAdministrator(), /database unavailable/);
+  assert.equal(
+    cookies.get("vne-admin-session"),
+    token,
+    "failed logout must not pretend to revoke the session",
+  );
+  failRevocation = false;
+  await service.logoutAdministrator();
+  cookies.set("vne-admin-session", token);
+  assert.equal(
+    await service.isAdminAuthenticated(),
+    false,
+    "copied cookie must be rejected after logout",
+  );
+  await assert.rejects(service.listVolunteerRequests(filters), /no autorizado/);
+  cookies.clear();
+  await service.loginAdministrator(process.env.ADMIN_PASSWORD);
+  process.env.ADMIN_PASSWORD += "-rotated";
+  assert.equal(
+    await service.isAdminAuthenticated(),
+    false,
+    "password rotation invalidates sessions",
+  );
+  cookies.clear();
+  process.env.VERCEL_ENV = "preview";
+  delete process.env.PREVIEW_DATABASE_ISOLATED;
+  await assert.rejects(
+    service.saveVolunteerRequest({ ...input, requestKey: randomUUID() }),
+    /vista previa/,
+  );
+  await pg.close();
+});

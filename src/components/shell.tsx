@@ -7,7 +7,7 @@ import { media } from "@/data/media";
 function Mark({ className = "size-9" }: { className?: string }) {
   return (
     <img
-      src="/favicon.svg?v=2"
+      src="/favicon.svg?v=3"
       alt="Emblema del árbol de Fundación VNE"
       className={`shrink-0 rounded-full object-contain ${className}`}
       width={36}
@@ -26,7 +26,11 @@ function useTheme() {
   function toggle() {
     const next = !document.documentElement.classList.contains("dark");
     document.documentElement.classList.toggle("dark", next);
-    localStorage.setItem("vne-theme", next ? "dark" : "light");
+    try {
+      localStorage.setItem("vne-theme", next ? "dark" : "light");
+    } catch {
+      /* Storage may be blocked by the browser. */
+    }
     setDark(next);
   }
 
@@ -69,7 +73,9 @@ function Header() {
             <span className="block font-display text-[15px] font-semibold tracking-tight text-navy dark:text-cream">
               Fundación VNE
             </span>
-            <span className="hidden text-xs text-mist sm:block dark:text-cream/70">Venezuela Nueva Esperanza</span>
+            <span className="hidden text-xs text-mist sm:block dark:text-cream/70">
+              Venezuela Nueva Esperanza
+            </span>
           </span>
         </Link>
 
@@ -80,8 +86,13 @@ function Header() {
               to={item.to}
               activeOptions={{ exact: item.to === "/" }}
               className="rounded-full px-3 py-2 text-sm font-semibold"
-              inactiveProps={{ className: "text-navy/80 hover:bg-navy/5 dark:text-cream/80 dark:hover:bg-white/10" }}
-              activeProps={{ className: "bg-navy text-cream hover:bg-navy-mid dark:bg-gold dark:text-navy dark:hover:bg-gold" }}
+              inactiveProps={{
+                className: "text-navy/80 hover:bg-navy/5 dark:text-cream/80 dark:hover:bg-white/10",
+              }}
+              activeProps={{
+                className:
+                  "bg-navy text-cream hover:bg-navy-mid dark:bg-gold dark:text-navy dark:hover:bg-gold",
+              }}
             >
               {item.label}
             </Link>
@@ -117,7 +128,11 @@ function Header() {
       </div>
 
       {open ? (
-        <nav id="menu-movil" className="border-t border-line bg-paper px-4 py-3 lg:hidden dark:border-white/10 dark:bg-navy-deep" aria-label="Móvil">
+        <nav
+          id="menu-movil"
+          className="border-t border-line bg-paper px-4 py-3 lg:hidden dark:border-white/10 dark:bg-navy-deep"
+          aria-label="Móvil"
+        >
           <ul className="grid gap-1">
             {nav.map((item) => (
               <li key={item.to}>
@@ -125,8 +140,13 @@ function Header() {
                   to={item.to}
                   onClick={() => setOpen(false)}
                   className="block rounded-lg px-3 py-3 text-base font-semibold"
-                  inactiveProps={{ className: "text-navy hover:bg-navy/5 dark:text-cream dark:hover:bg-white/10" }}
-                  activeProps={{ className: "bg-navy text-cream hover:bg-navy-mid dark:bg-gold dark:text-navy dark:hover:bg-gold" }}
+                  inactiveProps={{
+                    className: "text-navy hover:bg-navy/5 dark:text-cream dark:hover:bg-white/10",
+                  }}
+                  activeProps={{
+                    className:
+                      "bg-navy text-cream hover:bg-navy-mid dark:bg-gold dark:text-navy dark:hover:bg-gold",
+                  }}
                   activeOptions={{ exact: item.to === "/" }}
                 >
                   {item.label}
@@ -156,16 +176,25 @@ export function Footer() {
         <div>
           <h2 className="font-display text-lg text-gold">Contacto</h2>
           <p className="mt-4 text-sm leading-relaxed text-cream/80">Administración y atención</p>
-          <a className="mt-1 inline-flex items-center gap-2 text-sm font-semibold" href={`tel:${org.adminTel}`}>
+          <a
+            className="mt-1 inline-flex items-center gap-2 text-sm font-semibold"
+            href={`tel:${org.adminTel}`}
+          >
             <Phone className="size-4 text-gold" aria-hidden="true" />
             {org.adminPhone}
           </a>
           <p className="mt-4 text-sm leading-relaxed text-cream/80">Oficina ejecutiva</p>
-          <a className="mt-1 inline-flex items-center gap-2 text-sm font-semibold" href={`tel:${org.executiveTel}`}>
+          <a
+            className="mt-1 inline-flex items-center gap-2 text-sm font-semibold"
+            href={`tel:${org.executiveTel}`}
+          >
             <Phone className="size-4 text-gold" aria-hidden="true" />
             {org.executivePhone}
           </a>
-          <a className="mt-4 inline-flex items-center gap-2 text-sm font-semibold" href={`mailto:${org.email}`}>
+          <a
+            className="mt-4 inline-flex items-center gap-2 text-sm font-semibold"
+            href={`mailto:${org.email}`}
+          >
             <Mail className="size-4 text-gold" aria-hidden="true" />
             {org.email}
           </a>
@@ -188,7 +217,11 @@ export function Footer() {
             >
               WA
             </a>
-            <Link to="/donaciones" aria-label="Donar por Zelle" className="grid size-11 place-items-center rounded-full border border-gold/50 text-xs font-bold">
+            <Link
+              to="/donaciones"
+              aria-label="Donar por Zelle"
+              className="grid size-11 place-items-center rounded-full border border-gold/50 text-xs font-bold"
+            >
               Zelle
             </Link>
           </div>
@@ -215,7 +248,8 @@ export function Footer() {
         <div>
           <h2 className="font-display text-lg text-gold">Cumplimiento</h2>
           <p className="mt-4 text-sm leading-7 text-cream/80">
-            Operamos conforme a las regulaciones federales y estatales aplicables, con estándares internos de gobernanza, rendición de cuentas y transparencia.
+            Operamos conforme a las regulaciones federales y estatales aplicables, con estándares
+            internos de gobernanza, rendición de cuentas y transparencia.
           </p>
           <ul className="mt-4 space-y-2 text-sm">
             {legalLinks.map((item) => (
@@ -227,7 +261,7 @@ export function Footer() {
             ))}
             <li>
               <Link to="/solicitudes" className="text-cream/70 underline-offset-4 hover:underline">
-                Solicitudes guardadas en este navegador
+                Administración de solicitudes
               </Link>
             </li>
           </ul>
@@ -273,7 +307,9 @@ export function PageIntro({
     <section className={`${bg} text-cream`}>
       <div className="mx-auto max-w-6xl px-5 py-14 sm:px-6 sm:py-20">
         <p className="text-xs font-bold tracking-[0.22em] text-gold uppercase">{kicker}</p>
-        <h1 className="mt-3 max-w-3xl font-display text-4xl leading-[1.15] font-semibold text-balance sm:text-5xl">{title}</h1>
+        <h1 className="mt-3 max-w-3xl font-display text-4xl leading-[1.15] font-semibold text-balance sm:text-5xl">
+          {title}
+        </h1>
         <p className="mt-5 max-w-2xl text-lg leading-relaxed text-cream/85">{lede}</p>
       </div>
     </section>
