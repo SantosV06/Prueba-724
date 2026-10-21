@@ -2,6 +2,7 @@ import { Link } from "@tanstack/react-router";
 import { Instagram, Mail, Menu, Moon, Phone, Sun, X } from "lucide-react";
 import { useEffect, useState, type ReactNode } from "react";
 import { legalLinks, nav, org } from "@/data/site";
+import { media } from "@/data/media";
 
 function Mark({ className = "size-9" }: { className?: string }) {
   return (
@@ -230,7 +231,21 @@ export function Footer() {
               </Link>
             </li>
           </ul>
-          <p className="mt-8 font-display text-2xl tracking-tight text-gold">VNE</p>
+          <Link
+            to="/"
+            aria-label="Ir al inicio de Fundación VNE"
+            className="mt-8 inline-block max-w-full rounded-md focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-gold"
+          >
+            <img
+              src={media.logo}
+              alt="Logo completo de Fundación VNE"
+              loading="lazy"
+              decoding="async"
+              width={256}
+              height={107}
+              className="h-auto w-60 max-w-full rounded-md object-contain"
+            />
+          </Link>
         </div>
       </div>
       <div className="bg-card px-5 py-4 text-center text-xs leading-5 text-ink">
