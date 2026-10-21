@@ -1,7 +1,7 @@
+import { media } from "@/data/media";
 import { type ReactNode } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { PageIntro, Shell } from "@/components/shell";
-import { org } from "@/data/site";
 
 export const Route = createFileRoute("/genesis")({
   head: () => ({
@@ -37,6 +37,7 @@ function Genesis() {
       />
 
       <Block title="Qué es">
+        <img src={media.genesisLogo} alt="Proyecto Génesis" className="mx-auto max-h-40 max-w-full object-contain" />
         <p>
           Génesis propone una alternativa estructural a la asistencia prolongada. El eje es productividad real, creación de empresas e ingresos propios, para que poblaciones hoy excluidas operen como emprendedores y actores económicos formales.
         </p>
@@ -44,11 +45,9 @@ function Genesis() {
           El diseño prioriza la autosuficiencia, la responsabilidad económica progresiva y la integración productiva, sin depender de financiamiento público permanente.
         </p>
         <p>
-          El documento extenso del proyecto se entrega a solicitud. Escríbenos y lo compartimos:{" "}
-          <a className="font-semibold text-forest underline-offset-4 hover:underline dark:text-gold" href={`mailto:${org.email}?subject=Solicitud%20PDF%20Proyecto%20G%C3%A9nesis`}>
-            {org.email}
+          <a className="font-semibold text-forest underline underline-offset-4 dark:text-gold" href={media.genesisPdf} download>
+            Descargar el documento completo del Proyecto Génesis (PDF)
           </a>
-          .
         </p>
       </Block>
 
@@ -103,6 +102,8 @@ function Genesis() {
       </section>
 
       <Block title="Valor institucional">
+        <img src={media.scalability} alt="Escalabilidad del modelo Génesis" loading="lazy" className="w-full rounded-card" />
+        <img src={media.impact} alt="Impacto del programa Proyecto Génesis" loading="lazy" className="w-full rounded-card" />
         <p>
           El proyecto ofrece una herramienta de integración económica basada en resultados medibles, responsabilidad fiscal y actividad formal. La evidencia sirve para decidir mejor y para mostrar que existen salidas estructurales a la asistencia prolongada.
         </p>

@@ -1,3 +1,5 @@
+import { MediaVideo } from "@/components/media-video";
+import { media } from "@/data/media";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowUpRight } from "lucide-react";
 import { org } from "@/data/site";
@@ -69,7 +71,8 @@ function Home() {
             </div>
           </div>
           <aside className="border-t border-white/15 pt-8 lg:col-span-5 lg:border-t-0 lg:border-l lg:pt-0 lg:pl-10">
-            <dl className="grid gap-6">
+            <MediaVideo src={media.homeVideo} title="Presentación de Fundación VNE" />
+            <dl className="mt-8 grid gap-6">
               <div>
                 <dt className="text-xs tracking-[0.18em] text-gold uppercase">Figura</dt>
                 <dd className="mt-1 font-display text-2xl">LLC con propósito social</dd>
@@ -103,6 +106,7 @@ function Home() {
           <p>
             No buscamos resolver solo la necesidad del día. Construimos estructuras para que personas y comunidades se desarrollen de forma digna, autosuficiente y sostenible.
           </p>
+          <MediaVideo src={media.aboutVideo} title="Conoce Fundación VNE" />
         </div>
       </section>
 
@@ -136,6 +140,7 @@ function Home() {
           </Link>
         </article>
         <article className="flex flex-col rounded-card border border-line bg-card p-8 dark:border-white/10 dark:bg-navy">
+          <img src={media.houses} alt="Modelo de Casas VNE" loading="lazy" className="mb-6 w-full rounded-card object-contain" />
           <p className="text-xs font-bold tracking-[0.2em] text-gold-deep uppercase">Modelo territorial</p>
           <h2 className="mt-3 font-display text-3xl text-navy dark:text-cream">Casas VNE</h2>
           <p className="mt-4 leading-relaxed text-mist dark:text-cream/80">
