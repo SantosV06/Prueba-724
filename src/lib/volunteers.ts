@@ -47,16 +47,33 @@ export function clearVolunteers() {
   localStorage.removeItem(KEY);
 }
 
-export function volunteersToCsv(rows: Volunteer[]) {
-  const header = ["fecha", "nombre", "apellido", "correo", "telefono", "mensaje"];
-  const escape = (value: string) => `"${value.replaceAll('"', '""')}"`;
+export function volunteersToCsv(rows: (Volunteer & { status?: string })[]) {
+  const header = ["fecha", "nombre", "apellido", "correo", "telefono", "mensaje", "estado"];
+  // Quoting alone does not stop spreadsheet formulas. Force dangerous cells to text.
+  const escape = (value: string) => {
+    // eslint-disable-next-line no-control-regex -- ignore leading spreadsheet control characters
+    const safe = /^[\s\u0000-\u001f]*[=+@-]/u.test(value) ? `\t${value}` : value;
+    return `"${safe.replaceAll('"', '""')}"`;
+  };
   const lines = rows.map((row) =>
-    [row.fecha, row.nombre, row.apellido, row.correo, row.telefono, row.mensaje].map(escape).join(","),
+    [
+      row.fecha,
+      row.nombre,
+      row.apellido,
+      row.correo,
+      row.telefono,
+      row.mensaje,
+      row.status ?? "pendiente",
+    ]
+      .map(escape)
+      .join(","),
   );
-  return [header.join(","), ...lines].join("\n");
+  return [header.join(","), ...lines].join("\r\n");
 }
 
-export function mailtoFor(entry: Pick<Volunteer, "nombre" | "apellido" | "correo" | "telefono" | "mensaje">) {
+export function mailtoFor(
+  entry: Pick<Volunteer, "nombre" | "apellido" | "correo" | "telefono" | "mensaje">,
+) {
   const subject = encodeURIComponent(`Voluntariado VNE — ${entry.nombre} ${entry.apellido}`);
   const body = encodeURIComponent(
     `Nombre: ${entry.nombre} ${entry.apellido}\nCorreo: ${entry.correo}\nTeléfono: ${entry.telefono}\n\n${entry.mensaje}`,

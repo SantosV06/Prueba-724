@@ -1,153 +1,229 @@
-import { createHash, createHmac, randomUUID, timingSafeEqual } from "node:crypto";
-import { deleteCookie, getCookie, getRequest, setCookie } from "@tanstack/react-start/server";
-import { dbSource, getSql, type Sql } from "./db";
-import { assertSameSiteRequest } from "./auth/isolation.server";
+import { createHmac, randomUUID } from "node:crypto";
+import {
+  deleteCookie,
+  getCookie,
+  getRequest,
+  setCookie,
+  setResponseHeader,
+} from "@tanstack/react-start/server";
+import { dbSource, getSql, type Sql } from "./db.ts";
+import { assertSameSiteRequest } from "./auth/isolation.server.ts";
+import {
+  adminSettings,
+  sessionSecret,
+  credentialVersion,
+  constantEquals,
+  newSessionToken,
+  validSessionToken,
+  tokenHash,
+  SESSION_SECONDS,
+} from "./admin-session.ts";
+import type {
+  VolunteerInput,
+  VolunteerRequest,
+  RequestFilters,
+  RequestStatus,
+} from "./volunteer-schema";
 
 const COOKIE = "vne-admin-session";
-const SESSION_SECONDS = 8 * 60 * 60;
+const PAGE_SIZE = 50;
+const COLUMNS = `id, nombre, apellido, correo, telefono, mensaje, to_char(created_at AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS.US"Z"') AS fecha, status`;
+export type { VolunteerRequest } from "./volunteer-schema";
 
-export type VolunteerRequest = {
-  id: string;
-  nombre: string;
-  apellido: string;
-  correo: string;
-  telefono: string;
-  mensaje: string;
-  fecha: string;
-};
-
-type VolunteerInput = Omit<VolunteerRequest, "id" | "fecha">;
-
-function settings() {
-  const password = process.env.ADMIN_PASSWORD ?? "";
-  const secret = process.env.ADMIN_SESSION_SECRET ?? "";
-  if (password.length < 14 || secret.length < 32) {
-    throw new Error("Configuración pendiente: ADMIN_PASSWORD (14+ caracteres) y ADMIN_SESSION_SECRET (32+ caracteres) en Vercel.");
-  }
-  return { password, secret };
+function privateResponse() {
+  setResponseHeader("Cache-Control", "private, no-store");
 }
-
 async function database(): Promise<Sql> {
-  // A diferencia de una vista previa local, Vercel NUNCA debe guardar datos
-  // en PGLite en memoria: se perderían al reiniciar la función.
+  if (process.env.VERCEL_ENV === "preview" && process.env.PREVIEW_DATABASE_ISOLATED !== "true") {
+    throw new Error(
+      "El formulario y el panel están desactivados en esta vista previa hasta configurar una base de datos de pruebas independiente.",
+    );
+  }
   if (process.env.NODE_ENV === "production" && dbSource !== "neon") {
     throw new Error("Base de datos sin configurar: añade DATABASE_URL en Vercel.");
   }
   return getSql();
 }
-
-function keyForSession(password: string, secret: string) {
-  // Cambiar ADMIN_PASSWORD invalida también las sesiones anteriores.
-  return createHmac("sha256", secret).update(password).digest();
-}
-
-function signature(payload: string, password: string, secret: string) {
-  return createHmac("sha256", keyForSession(password, secret))
-    .update(payload).digest("base64url");
-}
-
-function constantEquals(a: string, b: string): boolean {
-  const first = createHash("sha256").update(a).digest();
-  const second = createHash("sha256").update(b).digest();
-  return timingSafeEqual(first, second);
-}
-
-export function isAdminAuthenticated(): boolean {
-  let password: string, secret: string;
-  try {
-    ({ password, secret } = settings());
-  } catch {
-    return false;
-  }
+export async function isAdminAuthenticated(): Promise<boolean> {
+  privateResponse();
   const raw = getCookie(COOKIE);
-  if (!raw) return false;
-  const parts = raw.split(".");
-  if (parts.length !== 3 || parts[0] !== "v1") return false;
-  const expires = Number(parts[1]);
-  if (!Number.isSafeInteger(expires) || expires <= Date.now() || expires > Date.now() + SESSION_SECONDS * 1000) return false;
-  return constantEquals(parts[2], signature(`v1.${parts[1]}`, password, secret));
+  if (!raw || !validSessionToken(raw)) return false;
+  const { password, secret } = adminSettings();
+  const sql = await database();
+  const rows = await sql.query<{ ok: boolean }>(
+    "SELECT true AS ok FROM admin_sessions WHERE token_hash = $1 AND credential_version = $2 AND expires_at > NOW()",
+    [tokenHash(raw), credentialVersion(password, secret)],
+  );
+  return rows.length === 1;
 }
-
-function requireAdmin(): void {
+async function requireAdmin(): Promise<Sql> {
   assertSameSiteRequest();
-  if (!isAdminAuthenticated()) throw new Error("Acceso no autorizado. Inicia sesión nuevamente.");
+  if (!(await isAdminAuthenticated()))
+    throw new Error("Acceso no autorizado. Inicia sesión nuevamente.");
+  return database();
 }
-
 function clientAddress() {
   const h = getRequest()?.headers;
-  return (h?.get("x-vercel-forwarded-for") ?? h?.get("x-forwarded-for") ?? h?.get("x-real-ip") ?? "unknown")
-    .split(",")[0].trim().slice(0, 128);
+  // Vercel overwrites its dedicated header. Do not trust a caller-supplied XFF there.
+  const value = process.env.VERCEL ? h?.get("x-vercel-forwarded-for") : h?.get("x-forwarded-for");
+  return (value ?? "unknown").split(",")[0].trim().slice(0, 128);
 }
-
-async function enforceLimit(sql: Sql, scope: "login" | "volunteer", allowed: number, minutes: number) {
-  const { secret } = settings();
-  const hash = createHmac("sha256", secret).update(`${scope}:${clientAddress()}`).digest("hex");
+async function enforceLimit(
+  sql: Sql,
+  scope: "login" | "volunteer",
+  allowed: number,
+  minutes: number,
+) {
+  const hash = createHmac("sha256", sessionSecret())
+    .update(`${scope}:${clientAddress()}`)
+    .digest("hex");
+  // Opportunistic housekeeping, including dormant keys, on real traffic.
+  await sql.query("DELETE FROM request_limits WHERE started_at < NOW() - INTERVAL '1 day'");
+  await sql.query("DELETE FROM admin_sessions WHERE expires_at <= NOW()");
   const rows = await sql.query<{ hits: number }>(
-    `INSERT INTO request_limits (scope, key_hash, started_at, hits)
-     VALUES ($1, $2, NOW(), 1)
+    `INSERT INTO request_limits (scope, key_hash, started_at, hits) VALUES ($1, $2, NOW(), 1)
      ON CONFLICT (scope, key_hash) DO UPDATE SET
-       hits = CASE WHEN request_limits.started_at < NOW() - ($3::integer * INTERVAL '1 minute')
-                   THEN 1 ELSE request_limits.hits + 1 END,
-       started_at = CASE WHEN request_limits.started_at < NOW() - ($3::integer * INTERVAL '1 minute')
-                         THEN NOW() ELSE request_limits.started_at END
+       hits = CASE WHEN request_limits.started_at < NOW() - ($3::integer * INTERVAL '1 minute') THEN 1 ELSE request_limits.hits + 1 END,
+       started_at = CASE WHEN request_limits.started_at < NOW() - ($3::integer * INTERVAL '1 minute') THEN NOW() ELSE request_limits.started_at END
      RETURNING hits`,
     [scope, hash, minutes],
   );
-  if (Number(rows[0]?.hits ?? allowed + 1) > allowed) {
+  if (Number(rows[0]?.hits ?? allowed + 1) > allowed)
     throw new Error("Demasiados intentos desde esta conexión. Vuelve a intentarlo más tarde.");
-  }
-  return hash;
 }
-
 export async function saveVolunteerRequest(input: VolunteerInput) {
   assertSameSiteRequest();
-  settings();
   const sql = await database();
+  // A retry of the same request must not create a second record or consume its limit again.
+  const existing = await sql.query("SELECT id FROM volunteer_requests WHERE request_key = $1", [
+    input.requestKey,
+  ]);
+  if (existing.length) return { ok: true };
   await enforceLimit(sql, "volunteer", 5, 60);
-  const id = randomUUID();
   await sql.query(
-    `INSERT INTO volunteer_requests (id, nombre, apellido, correo, telefono, mensaje)
-     VALUES ($1, $2, $3, $4, $5, $6)`,
-    [id, input.nombre, input.apellido, input.correo, input.telefono, input.mensaje],
+    `INSERT INTO volunteer_requests (id, nombre, apellido, correo, telefono, mensaje, request_key)
+     VALUES ($1, $2, $3, $4, $5, $6, $7) ON CONFLICT (request_key) DO NOTHING`,
+    [
+      randomUUID(),
+      input.nombre,
+      input.apellido,
+      input.correo,
+      input.telefono,
+      input.mensaje,
+      input.requestKey,
+    ],
   );
   return { ok: true };
 }
-
 export async function loginAdministrator(inputPassword: string) {
   assertSameSiteRequest();
-  const { password, secret } = settings();
+  privateResponse();
+  const { password, secret } = adminSettings();
   const sql = await database();
   await enforceLimit(sql, "login", 8, 15);
-  if (!constantEquals(inputPassword, password)) {
-    throw new Error("Contraseña incorrecta.");
-  }
-  const expires = Date.now() + SESSION_SECONDS * 1000;
-  const payload = `v1.${expires}`;
-  setCookie(COOKIE, `${payload}.${signature(payload, password, secret)}`, {
-    httpOnly: true, secure: process.env.NODE_ENV === "production",
-    sameSite: "strict", path: "/", maxAge: SESSION_SECONDS,
+  if (!constantEquals(inputPassword, password)) throw new Error("Contraseña incorrecta.");
+  const token = newSessionToken();
+  const oldToken = getCookie(COOKIE);
+  if (oldToken && validSessionToken(oldToken))
+    await sql.query("DELETE FROM admin_sessions WHERE token_hash = $1", [tokenHash(oldToken)]);
+  await sql.query(
+    "INSERT INTO admin_sessions (token_hash, credential_version, expires_at) VALUES ($1, $2, NOW() + ($3::integer * INTERVAL '1 second'))",
+    [tokenHash(token), credentialVersion(password, secret), SESSION_SECONDS],
+  );
+  setCookie(COOKIE, token, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "strict",
+    path: "/",
+    maxAge: SESSION_SECONDS,
   });
   return { ok: true };
 }
-
-export function logoutAdministrator() {
+export async function logoutAdministrator() {
   assertSameSiteRequest();
+  privateResponse();
+  const raw = getCookie(COOKIE);
+  if (raw && validSessionToken(raw)) {
+    const sql = await database();
+    await sql.query("DELETE FROM admin_sessions WHERE token_hash = $1", [tokenHash(raw)]);
+  }
+  // Only confirm logout after server-side revocation succeeds.
   deleteCookie(COOKIE, { path: "/" });
   return { ok: true };
 }
-
-export async function listVolunteerRequests(): Promise<VolunteerRequest[]> {
-  requireAdmin();
-  const sql = await database();
-  return sql.query<VolunteerRequest>(
-    `SELECT id, nombre, apellido, correo, telefono, mensaje, created_at::text AS fecha
-     FROM volunteer_requests ORDER BY created_at DESC LIMIT 1000`,
-  );
+function filterSql(filters: Pick<RequestFilters, "search" | "status" | "trash">) {
+  // Escape LIKE metacharacters: search is literal, and all values stay bound.
+  const search = `%${filters.search.replace(/[\\%_]/g, "\\$&")}%`;
+  return {
+    where: `deleted_at IS ${filters.trash ? "NOT " : ""}NULL AND ($1 = '%%' OR concat_ws(' ', nombre, apellido, correo, telefono) ILIKE $1) AND ($2 = '' OR status = $2)`,
+    params: [search, filters.status],
+  };
 }
-
-export async function deleteVolunteerRequest(id: string) {
-  requireAdmin();
-  const sql = await database();
-  await sql.query("DELETE FROM volunteer_requests WHERE id = $1", [id]);
+export async function listVolunteerRequests(filters: RequestFilters) {
+  const sql = await requireAdmin();
+  const { where, params } = filterSql(filters);
+  const count = await sql.query<{ total: number }>(
+    `SELECT count(*) AS total FROM volunteer_requests WHERE ${where}`,
+    params,
+  );
+  const total = Number(count[0]?.total ?? 0);
+  const page = Math.min(filters.page, Math.max(1, Math.ceil(total / PAGE_SIZE)));
+  const rows = await sql.query<VolunteerRequest>(
+    `SELECT ${COLUMNS} FROM volunteer_requests WHERE ${where} ORDER BY created_at DESC, id DESC LIMIT $3 OFFSET $4`,
+    [...params, PAGE_SIZE, (page - 1) * PAGE_SIZE],
+  );
+  return { rows, total, page, pageSize: PAGE_SIZE };
+}
+export async function exportVolunteerRequests(
+  filters: Pick<RequestFilters, "search" | "status" | "trash">,
+  cursor?: { fecha: string; id: string },
+  snapshot?: string,
+) {
+  const sql = await requireAdmin();
+  const { where, params } = filterSql(filters);
+  const until =
+    snapshot ??
+    (
+      await sql.query<{ now: string }>(
+        `SELECT to_char(NOW() AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS.US"Z"') AS now`,
+      )
+    )[0].now;
+  const rows = await sql.query<VolunteerRequest>(
+    `SELECT ${COLUMNS} FROM volunteer_requests WHERE ${where} AND created_at <= $3::timestamptz
+     AND ($4::timestamptz IS NULL OR (created_at, id) < ($4::timestamptz, $5::text))
+     ORDER BY created_at DESC, id DESC LIMIT 500`,
+    [...params, until, cursor?.fecha ?? null, cursor?.id ?? null],
+  );
+  return {
+    rows,
+    snapshot: until,
+    next: rows.length === 500 ? { fecha: rows[499].fecha, id: rows[499].id } : null,
+  };
+}
+export async function changeVolunteerRequest(
+  id: string,
+  action: "trash" | "restore" | "status",
+  status?: RequestStatus,
+) {
+  const sql = await requireAdmin();
+  const set =
+    "status = COALESCE($3::text, status)" +
+    (action === "trash"
+      ? ", deleted_at = NOW()"
+      : action === "restore"
+        ? ", deleted_at = NULL"
+        : "");
+  const guard = action === "restore" ? "deleted_at IS NOT NULL" : "deleted_at IS NULL";
+  // One statement makes the modification and its audit record atomic.
+  await sql.query(
+    `WITH changed AS (UPDATE volunteer_requests SET ${set} WHERE id = $1 AND ${guard} RETURNING id)
+     INSERT INTO admin_events (id, action, request_id) SELECT $2, $4, id FROM changed`,
+    [
+      id,
+      randomUUID(),
+      action === "status" ? status : null,
+      action === "status" ? `status:${status}` : action,
+    ],
+  );
   return { ok: true };
 }

@@ -6,3 +6,12 @@ node_modules/
 
 # Generated public aliases for Foundation multimedia
 /public/media/
+
+/.generated-public/
+/.vercel/
+/.nitro/
+/.output/
+/.grok/preview.log
+/.grok/preview.pid
+/.grok/og-pending
+/public/assets/img/.*

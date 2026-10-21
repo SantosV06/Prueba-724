@@ -1,19 +1,12 @@
-# Multimedia en Vercel
+# Multimedia
 
-Copia el contenido de `Foundation-VNE/assets/img/` dentro de
-`Prueba-724/public/assets/img/`. La carpeta final debe contener directamente
-los archivos; evita crear `img/img/`.
+Los originales se conservan en `public/assets/img/` con sus nombres existentes.
+Las versiones de entrega se guardan en `media-optimized/`: video H.264/AAC de hasta 1280×720 con faststart, imágenes WebP de hasta 1600 px y portadas JPG.
 
-Conserva exactamente los nombres, mayúsculas, espacios y acentos originales.
-Las páginas usan el catálogo `src/data/media-files.mjs`. Antes del desarrollo y de cada compilación,
-`scripts/prepare-media.mjs` genera copias con nombres sin espacios ni acentos
-en `public/media/`; las páginas usan esas URL estables desde la raíz.
-No edites ni subas manualmente `public/media/`.
+El catálogo es `src/data/media-files.mjs`. `scripts/prepare-media.mjs` genera `.generated-public/` para Vite; publica solo los aliases `/media/...` optimizados y los recursos públicos del sitio, sin duplicar los originales. Nunca edites `.generated-public/` ni `public/media/`.
 
-Vite copia `public/` al resultado de producción; Vercel publica tanto los
-archivos originales como las copias de `/media/...`. No los subas a `src/assets/img/` ni a `assets/img/`
-en la raíz del repositorio. No requieren base de datos ni variables de entorno.
+Para reemplazar una imagen o video, actualiza el original y regenera sus derivados con `python scripts/optimize-media.py` (requiere Python, Pillow y FFmpeg en el equipo de desarrollo). Incluye `media-optimized/` actualizado en el commit. Vercel y CI **no necesitan** FFmpeg ni Pillow: utilizan los derivados versionados.
 
-Incluye también los tres videos de sectores y `ProyectoGénesis.pdf`.
-Los videos tienen controles y no se descargan completos automáticamente.
-Después de subir la carpeta, realiza un nuevo despliegue para publicar los archivos.
+Los videos se reproducen en bucle, silenciados, cuando son visibles; se pausan al ocultarse la pestaña. Se respeta reducción de movimiento/ahorro de datos. `preload=none` y las portadas evitan descargar video solo para mostrar el recuadro inicial.
+
+`public/favicon.svg`, `public/og.jpg` y `src/lib/og/site.json` contienen la identidad de la marca. El favicon mantiene el árbol y la tarjeta social usa el logo completo.
