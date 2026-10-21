@@ -30,7 +30,7 @@ function LegalPage() {
             <section key={block.heading ?? block.paragraphs[0]}>
               {block.heading ? <h2 className="font-display text-2xl text-navy dark:text-cream">{block.heading}</h2> : null}
               {block.paragraphs.map((paragraph) => (
-                <p key={paragraph} className="mt-3 leading-relaxed text-mist dark:text-cream/80">
+                <p key={paragraph} className="editorial-justify mt-3 leading-relaxed text-mist dark:text-cream/80">
                   {paragraph}
                 </p>
               ))}
