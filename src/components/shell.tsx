@@ -1,15 +1,14 @@
 import { Link } from "@tanstack/react-router";
 import { Instagram, Mail, Menu, Moon, Phone, Sun, X } from "lucide-react";
 import { useEffect, useState, type ReactNode } from "react";
-import { media } from "@/data/media";
 import { legalLinks, nav, org } from "@/data/site";
 
 function Mark({ className = "size-9" }: { className?: string }) {
   return (
     <img
-      src={media.logo}
-      alt="Fundación VNE"
-      className={`shrink-0 object-contain ${className}`}
+      src="/favicon.svg?v=2"
+      alt="Emblema del árbol de Fundación VNE"
+      className={`shrink-0 rounded-full object-contain ${className}`}
       width={36}
       height={36}
     />
