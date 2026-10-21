@@ -83,3 +83,13 @@
     }
   }
 }
+
+/* Párrafos institucionales alineados, sin forzar títulos o controles. */
+@layer components {
+  .editorial-justify {
+    text-align: justify;
+    text-align-last: start;
+    hyphens: auto;
+    overflow-wrap: break-word;
+  }
+}
