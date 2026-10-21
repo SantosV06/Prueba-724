@@ -55,7 +55,7 @@ function Donaciones() {
           ))}
         </div>
 
-        <p className="mt-8 max-w-3xl leading-relaxed text-mist dark:text-cream/75">
+        <p className="editorial-justify mt-8 max-w-3xl leading-relaxed text-mist dark:text-cream/75">
           Los fondos se usan exclusivamente para desarrollar y sostener los programas sociales, comunitarios y productivos, conforme a los estatutos y a las políticas internas de gobernanza.
         </p>
 
