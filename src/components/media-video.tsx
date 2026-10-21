@@ -8,18 +8,14 @@ export function MediaVideo({ src, title }: { src: string; title: string }) {
     if (!video) return;
 
     const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
-    const connection = (
-      navigator as Navigator & { connection?: { saveData?: boolean } }
-    ).connection;
+    const connection = (navigator as Navigator & { connection?: { saveData?: boolean } })
+      .connection;
 
     let isVisible = false;
 
     const syncPlayback = () => {
       const shouldPlay =
-        isVisible &&
-        !document.hidden &&
-        !reducedMotion.matches &&
-        !connection?.saveData;
+        isVisible && !document.hidden && !reducedMotion.matches && !connection?.saveData;
 
       if (shouldPlay) {
         void video.play().catch(() => {
@@ -46,7 +42,7 @@ export function MediaVideo({ src, title }: { src: string; title: string }) {
       observer.disconnect();
       document.removeEventListener("visibilitychange", syncPlayback);
       reducedMotion.removeEventListener("change", syncPlayback);
-      video.pause();
+      if (video.paused === false) video.pause();
     };
   }, [src]);
 
@@ -58,6 +54,7 @@ export function MediaVideo({ src, title }: { src: string; title: string }) {
       muted
       playsInline
       preload="none"
+      poster={src.replace(/\.mp4$/, "-poster.jpg")}
       aria-label={title}
       className="mt-6 aspect-video w-full rounded-card bg-navy-deep"
     >
