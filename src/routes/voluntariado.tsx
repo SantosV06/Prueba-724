@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { PageIntro, Shell } from "@/components/shell";
-import { mailtoFor, saveVolunteer } from "@/lib/volunteers";
+import { submitVolunteer } from "@/lib/volunteer-functions";
 
 export const Route = createFileRoute("/voluntariado")({
   head: () => ({
@@ -31,12 +31,14 @@ function Voluntariado() {
   const [fields, setFields] = useState<Fields>(empty);
   const [error, setError] = useState("");
   const [sent, setSent] = useState<Fields | null>(null);
+  const [sending, setSending] = useState(false);
+  const [website, setWebsite] = useState("");
 
   function update(key: keyof Fields, value: string) {
     setFields((current) => ({ ...current, [key]: value }));
   }
 
-  function onSubmit(event: React.FormEvent) {
+  async function onSubmit(event: React.FormEvent) {
     event.preventDefault();
     const data = {
       nombre: fields.nombre.trim(),
@@ -57,10 +59,18 @@ function Voluntariado() {
       setError("El teléfono debe incluir código de país. Ejemplo: +1 917 555 0100.");
       return;
     }
-    saveVolunteer(data);
-    setError("");
-    setSent(data);
-    setFields(empty);
+    setSending(true);
+    try {
+      await submitVolunteer({ data: { ...data, website } });
+      setError("");
+      setSent(data);
+      setFields(empty);
+      setWebsite("");
+    } catch (error) {
+      setError(error instanceof Error ? error.message : "No se pudo registrar la solicitud. Inténtalo nuevamente.");
+    } finally {
+      setSending(false);
+    }
   }
 
   return (
@@ -69,7 +79,7 @@ function Voluntariado() {
         tone="forest"
         kicker="Proyecto Génesis"
         title="Voluntariado con oficio, no solo con buena voluntad."
-        lede="Buscamos personas dispuestas a aportar conocimiento, experiencia y tiempo a un modelo productivo. La solicitud queda guardada en este navegador y se prepara un correo para el equipo."
+        lede="Buscamos personas dispuestas a aportar conocimiento, experiencia y tiempo a un modelo productivo. La solicitud se guarda de forma segura y centralizada para que nuestro equipo pueda revisarla."
       />
 
       <section className="mx-auto grid max-w-6xl gap-10 px-5 py-14 sm:px-6 lg:grid-cols-12">
@@ -87,19 +97,15 @@ function Voluntariado() {
             <div className="rounded-card border border-forest/30 bg-card p-6 dark:border-gold/30 dark:bg-navy" role="status">
               <h2 className="font-display text-2xl text-navy dark:text-cream">Solicitud registrada</h2>
               <p className="mt-3 leading-relaxed text-mist dark:text-cream/75">
-                {sent.nombre}, guardamos tu solicitud en este dispositivo. Para que el equipo la reciba, envía el correo preparado.
+                {sent.nombre}, tu solicitud quedó registrada correctamente. El equipo podrá consultarla desde el panel administrativo.
               </p>
               <div className="mt-6 flex flex-col gap-3 sm:flex-row">
-                <a href={mailtoFor(sent)} className="inline-flex h-12 items-center justify-center rounded-full bg-forest px-5 text-sm font-bold text-cream">
-                  Enviar correo al equipo
-                </a>
+                
                 <button type="button" onClick={() => setSent(null)} className="inline-flex h-12 items-center justify-center rounded-full border border-line px-5 text-sm font-bold dark:border-white/15">
                   Nueva solicitud
                 </button>
               </div>
-              <Link to="/solicitudes" className="mt-4 inline-block text-sm font-semibold text-forest underline-offset-4 hover:underline dark:text-gold">
-                Ver solicitudes de este navegador
-              </Link>
+              
             </div>
           ) : (
             <form onSubmit={onSubmit} className="rounded-card border border-line bg-card p-6 dark:border-white/10 dark:bg-navy" noValidate>
@@ -118,13 +124,14 @@ function Voluntariado() {
                   className="mt-1.5 w-full rounded-xl border border-line bg-paper px-3 py-3 text-base font-normal text-ink outline-none dark:border-white/15 dark:bg-navy-deep dark:text-cream"
                 />
               </label>
+              <label className="absolute -left-[9999px]" aria-hidden="true">Sitio web<input tabIndex={-1} autoComplete="off" value={website} onChange={(event) => setWebsite(event.target.value)} /></label>
               {error ? (
                 <p className="mt-3 text-sm font-semibold text-clay" role="alert">
                   {error}
                 </p>
               ) : null}
-              <button type="submit" className="mt-5 inline-flex h-12 items-center rounded-full bg-forest px-6 text-sm font-bold text-cream">
-                Registrar solicitud
+              <button type="submit" disabled={sending} className="mt-5 inline-flex h-12 items-center rounded-full bg-forest px-6 text-sm font-bold text-cream">
+                {sending ? "Registrando…" : "Registrar solicitud"}
               </button>
             </form>
           )}
