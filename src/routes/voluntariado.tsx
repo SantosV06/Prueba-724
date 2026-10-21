@@ -115,7 +115,7 @@ function Voluntariado() {
               <h2 className="font-display text-2xl text-navy dark:text-cream">
                 Solicitud registrada
               </h2>
-              <p className="mt-3 leading-relaxed text-mist dark:text-cream/75">
+              <p className="editorial-justify mt-3 leading-relaxed text-mist dark:text-cream/75">
                 {sent.nombre}, tu solicitud quedó registrada correctamente. El equipo podrá
                 consultarla desde el panel administrativo.
               </p>
