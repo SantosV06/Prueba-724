@@ -1,26 +1,88 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { Shell } from "@/components/shell";
-import { clearVolunteers, listVolunteers, mailtoFor, removeVolunteer, volunteersToCsv, type Volunteer } from "@/lib/volunteers";
+import {
+  getAdminStatus, loginAdmin, logoutAdmin,
+  listVolunteerRequests, removeVolunteerRequest,
+} from "@/lib/volunteer-functions";
+import { volunteersToCsv } from "@/lib/volunteers";
+import type { VolunteerRequest } from "@/lib/volunteer-service.server";
 
 export const Route = createFileRoute("/solicitudes")({
-  head: () => ({
-    meta: [
-      { title: "Solicitudes locales | Fundación VNE" },
-      { name: "description", content: "Solicitudes de voluntariado guardadas solo en este navegador." },
-    ],
-  }),
+  head: () => ({ meta: [
+    { title: "Administración de solicitudes | Fundación VNE" },
+    { name: "robots", content: "noindex, nofollow" },
+  ] }),
   component: Solicitudes,
 });
 
 function Solicitudes() {
-  const [rows, setRows] = useState<Volunteer[]>([]);
+  const [rows, setRows] = useState<VolunteerRequest[]>([]);
+  const [authenticated, setAuthenticated] = useState(false);
   const [ready, setReady] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+
+  async function refresh() {
+    const records = await listVolunteerRequests();
+    setRows(records);
+  }
 
   useEffect(() => {
-    setRows(listVolunteers());
-    setReady(true);
+    let active = true;
+    void (async () => {
+      try {
+        const status = await getAdminStatus();
+        if (!active) return;
+        setAuthenticated(status.authenticated);
+        if (status.authenticated) {
+          const records = await listVolunteerRequests();
+          if (active) setRows(records);
+        }
+      } catch (cause) {
+        if (active) setError(cause instanceof Error ? cause.message : "Error de conexión");
+      } finally {
+        if (active) setReady(true);
+      }
+    })();
+    return () => { active = false; };
   }, []);
+
+  async function login(event: React.FormEvent) {
+    event.preventDefault();
+    setBusy(true); setError("");
+    try {
+      await loginAdmin({ data: { password } });
+      setAuthenticated(true);
+      setPassword("");
+      await refresh();
+    } catch (cause) {
+      setAuthenticated(false);
+      setError(cause instanceof Error ? cause.message : "No se pudo iniciar sesión");
+    } finally { setBusy(false); }
+  }
+
+  async function logout() {
+    setBusy(true); setError("");
+    try {
+      await logoutAdmin();
+      setRows([]); setAuthenticated(false);
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : "No se pudo cerrar sesión");
+    } finally { setBusy(false); }
+  }
+
+  async function remove(id: string) {
+    if (!window.confirm("¿Eliminar esta solicitud permanentemente?")) return;
+    setBusy(true); setError("");
+    try {
+      await removeVolunteerRequest({ data: { id } });
+      await refresh();
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : "No se pudo eliminar");
+    } finally { setBusy(false); }
+  }
 
   function download() {
     const blob = new Blob([volunteersToCsv(rows)], { type: "text/csv;charset=utf-8" });
@@ -32,76 +94,45 @@ function Solicitudes() {
     URL.revokeObjectURL(url);
   }
 
-  return (
-    <Shell>
-      <section className="mx-auto max-w-6xl px-5 py-14 sm:px-6">
-        <p className="text-xs font-bold tracking-[0.18em] text-gold-deep uppercase">Solo este dispositivo</p>
-        <h1 className="mt-3 max-w-3xl font-display text-4xl text-navy dark:text-cream">Solicitudes de voluntariado</h1>
-        <p className="mt-4 max-w-2xl leading-relaxed text-mist dark:text-cream/75">
-          Estas fichas viven en el navegador donde se enviaron. No hay servidor ni contraseña: en GitHub Pages no se puede guardar una base de datos. Exporta el CSV o reenvía cada correo a info@foundationvne.com.
-        </p>
-
-        <div className="mt-6 flex flex-wrap gap-3">
-          <button
-            type="button"
-            onClick={download}
-            disabled={!rows.length}
-            className="inline-flex h-11 items-center rounded-full bg-navy px-5 text-sm font-bold text-cream disabled:opacity-40 dark:bg-gold dark:text-navy"
-          >
-            Descargar CSV
+  return <Shell>
+    <section className="mx-auto max-w-6xl px-5 py-14 sm:px-6">
+      <p className="text-xs font-bold uppercase tracking-[0.18em] text-gold-deep">Administración privada</p>
+      <h1 className="mt-3 font-display text-4xl text-navy dark:text-cream">Solicitudes de voluntariado</h1>
+      <p className="mt-4 max-w-2xl text-mist dark:text-cream/75">
+        Datos centralizados en PostgreSQL. El acceso requiere credenciales administrativas.
+      </p>
+      {error && <p role="alert" className="mt-5 rounded-lg border border-clay p-3 text-clay dark:text-cream">{error}</p>}
+      {!ready ? <p className="mt-6">Verificando sesión…</p> : !authenticated ? (
+        <form onSubmit={login} className="mt-8 max-w-md rounded-card border border-line bg-card p-6 dark:border-white/10 dark:bg-navy">
+          <label className="block text-sm font-semibold">Contraseña administrativa
+            <input autoComplete="current-password" type="password" required value={password}
+              onChange={event => setPassword(event.target.value)}
+              className="mt-2 h-12 w-full rounded-xl border border-line bg-paper px-3 text-ink dark:border-white/15 dark:bg-navy-deep dark:text-cream" />
+          </label>
+          <button disabled={busy} type="submit" className="mt-5 h-11 rounded-full bg-navy px-6 font-semibold text-cream disabled:opacity-50 dark:bg-gold dark:text-navy">
+            {busy ? "Verificando…" : "Iniciar sesión"}
           </button>
-          <button
-            type="button"
-            onClick={() => {
-              clearVolunteers();
-              setRows([]);
-            }}
-            disabled={!rows.length}
-            className="inline-flex h-11 items-center rounded-full border border-line px-5 text-sm font-bold disabled:opacity-40 dark:border-white/15"
-          >
-            Borrar todas
-          </button>
-          <Link to="/voluntariado" className="inline-flex h-11 items-center text-sm font-bold text-forest dark:text-gold">
-            Nueva solicitud
-          </Link>
+        </form>
+      ) : <>
+        <div className="mt-7 flex flex-wrap gap-3">
+          <button disabled={!rows.length || busy} onClick={download} className="rounded-full bg-navy px-5 py-3 text-sm font-bold text-cream disabled:opacity-40 dark:bg-gold dark:text-navy">Exportar CSV</button>
+          <button disabled={busy} onClick={logout} className="rounded-full border border-line px-5 py-3 text-sm font-semibold dark:border-white/20">Cerrar sesión</button>
+          <Link to="/voluntariado" className="px-3 py-3 text-sm font-semibold text-forest dark:text-gold">Abrir formulario</Link>
         </div>
-
-        {!ready ? <p className="mt-8 text-mist">Cargando…</p> : null}
-        {ready && rows.length === 0 ? (
-          <p className="mt-10 rounded-card border border-dashed border-line p-8 text-mist dark:border-white/15">No hay solicitudes en este navegador.</p>
-        ) : null}
-
-        <ul className="mt-8 grid gap-4">
-          {rows.map((row) => (
-            <li key={row.id} className="rounded-card border border-line bg-card p-5 dark:border-white/10 dark:bg-navy">
-              <div className="flex flex-wrap items-baseline justify-between gap-2">
-                <h2 className="font-display text-2xl text-navy dark:text-cream">
-                  {row.nombre} {row.apellido}
-                </h2>
-                <time className="text-xs text-mist" dateTime={row.fecha}>
-                  {new Date(row.fecha).toLocaleString("es")}
-                </time>
-              </div>
-              <p className="mt-2 text-sm text-mist dark:text-cream/75">
-                {row.correo} · {row.telefono}
-              </p>
-              {row.mensaje ? <p className="mt-3 leading-relaxed">{row.mensaje}</p> : null}
-              <div className="mt-4 flex flex-wrap gap-4 text-sm font-bold">
-                <a href={mailtoFor(row)} className="text-forest dark:text-gold">
-                  Preparar correo
-                </a>
-                <button
-                  type="button"
-                  className="text-clay"
-                  onClick={() => setRows(removeVolunteer(row.id))}
-                >
-                  Eliminar
-                </button>
-              </div>
-            </li>
-          ))}
+        <p className="mt-6 text-sm text-mist dark:text-cream/75">{rows.length} solicitudes (máximo 1000 recientes)</p>
+        <ul className="mt-6 grid gap-4">
+          {rows.map(row => <li key={row.id} className="rounded-card border border-line bg-card p-5 dark:border-white/10 dark:bg-navy">
+            <div className="flex flex-wrap items-baseline justify-between gap-2">
+              <h2 className="font-display text-2xl text-navy dark:text-cream">{row.nombre} {row.apellido}</h2>
+              <time className="text-xs text-mist">{new Date(row.fecha).toLocaleString("es")}</time>
+            </div>
+            <p className="mt-2 text-sm">{row.correo} · {row.telefono}</p>
+            {row.mensaje && <p className="mt-3 whitespace-pre-wrap">{row.mensaje}</p>}
+            <button disabled={busy} onClick={() => void remove(row.id)} className="mt-4 text-sm font-semibold text-clay dark:text-gold">Eliminar</button>
+          </li>)}
         </ul>
-      </section>
-    </Shell>
-  );
+        {rows.length === 0 && <p className="mt-6">Todavía no hay solicitudes registradas.</p>}
+      </>}
+    </section>
+  </Shell>;
 }
