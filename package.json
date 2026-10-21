@@ -54,6 +54,7 @@
     "@tanstack/router-plugin": "1.168.42",
     "@vercel/analytics": "^2.0.1",
     "@vercel/functions": "3.10.2",
+    "@vercel/speed-insights": "^2.0.0",
     "@vitejs/plugin-react": "5.2.0",
     "better-auth": "1.6.33",
     "class-variance-authority": "0.7.1",
