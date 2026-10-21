@@ -1,3 +1,4 @@
+import { media } from "@/data/media";
 import { createFileRoute } from "@tanstack/react-router";
 import { PageIntro, Shell } from "@/components/shell";
 
@@ -18,6 +19,7 @@ export const Route = createFileRoute("/liderazgo")({
 const people = [
   {
     initials: "WS",
+    photo: media.director,
     role: "Dirección y liderazgo",
     name: "Wilmer Solórzano",
     charge: "CEO y fundador",
@@ -25,6 +27,7 @@ const people = [
   },
   {
     initials: "SS",
+    photo: media.coordinator,
     role: "Coordinación general",
     name: "Stefany Solorzano",
     charge: "Planificación estratégica",
@@ -42,6 +45,7 @@ function Liderazgo() {
       />
 
       <section className="mx-auto max-w-3xl space-y-5 px-5 py-14 text-lg leading-relaxed text-mist sm:px-6 dark:text-cream/80">
+        <img src={media.ceo} alt="Wilmer Solórzano, CEO y fundador" className="mx-auto max-h-96 max-w-full rounded-card object-contain" />
         <p>
           Desde temprano mostró sensibilidad social y un sentido fuerte de responsabilidad familiar y comunitaria. Esos valores se volvieron una filosofía de cambio, perseverancia y acción, y hoy dan forma a Fundación VNE.
         </p>
@@ -63,9 +67,7 @@ function Liderazgo() {
             {people.map((person) => (
               <article key={person.initials} className="rounded-card border border-line bg-paper p-6 dark:border-white/10 dark:bg-navy-deep">
                 <div className="flex items-center gap-4">
-                  <span className="grid size-16 place-items-center rounded-full bg-navy font-display text-lg text-gold" aria-hidden="true">
-                    {person.initials}
-                  </span>
+                  <img src={person.photo} alt={person.name} loading="lazy" width={64} height={64} className="size-16 shrink-0 rounded-full object-cover" />
                   <div>
                     <p className="text-xs font-bold tracking-[0.16em] text-gold-deep uppercase">{person.role}</p>
                     <h3 className="font-display text-2xl text-navy dark:text-cream">{person.name}</h3>

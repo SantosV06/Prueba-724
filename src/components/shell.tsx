@@ -1,16 +1,18 @@
 import { Link } from "@tanstack/react-router";
 import { Instagram, Mail, Menu, Moon, Phone, Sun, X } from "lucide-react";
 import { useEffect, useState, type ReactNode } from "react";
+import { media } from "@/data/media";
 import { legalLinks, nav, org } from "@/data/site";
 
 function Mark({ className = "size-9" }: { className?: string }) {
   return (
-    <span
-      className={`grid place-items-center rounded-md bg-navy text-[11px] font-semibold tracking-[0.14em] text-gold dark:bg-gold dark:text-navy ${className}`}
-      aria-hidden="true"
-    >
-      VNE
-    </span>
+    <img
+      src={media.logo}
+      alt="Fundación VNE"
+      className={`shrink-0 object-contain ${className}`}
+      width={36}
+      height={36}
+    />
   );
 }
 
@@ -77,8 +79,9 @@ function Header() {
               key={item.to}
               to={item.to}
               activeOptions={{ exact: item.to === "/" }}
-              className="rounded-full px-3 py-2 text-sm font-semibold text-navy/80 hover:bg-navy/5 dark:text-cream/80 dark:hover:bg-white/10"
-              activeProps={{ className: "rounded-full px-3 py-2 text-sm font-semibold bg-navy text-cream dark:bg-gold dark:text-navy" }}
+              className="rounded-full px-3 py-2 text-sm font-semibold"
+              inactiveProps={{ className: "text-navy/80 hover:bg-navy/5 dark:text-cream/80 dark:hover:bg-white/10" }}
+              activeProps={{ className: "bg-navy text-cream hover:bg-navy-mid dark:bg-gold dark:text-navy dark:hover:bg-gold" }}
             >
               {item.label}
             </Link>
@@ -121,8 +124,9 @@ function Header() {
                 <Link
                   to={item.to}
                   onClick={() => setOpen(false)}
-                  className="block rounded-lg px-3 py-3 text-base font-semibold text-navy dark:text-cream"
-                  activeProps={{ className: "block rounded-lg bg-navy px-3 py-3 text-base font-semibold text-cream dark:bg-gold dark:text-navy" }}
+                  className="block rounded-lg px-3 py-3 text-base font-semibold"
+                  inactiveProps={{ className: "text-navy hover:bg-navy/5 dark:text-cream dark:hover:bg-white/10" }}
+                  activeProps={{ className: "bg-navy text-cream hover:bg-navy-mid dark:bg-gold dark:text-navy dark:hover:bg-gold" }}
                   activeOptions={{ exact: item.to === "/" }}
                 >
                   {item.label}

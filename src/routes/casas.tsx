@@ -1,3 +1,5 @@
+import { MediaVideo } from "@/components/media-video";
+import { media } from "@/data/media";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { PageIntro, Shell } from "@/components/shell";
 
@@ -37,14 +39,17 @@ const parts = [
 const sectors = [
   {
     name: "Sector primario",
+    video: media.primaryVideo,
     text: "Agricultura, producción de alimentos y aprovechamiento responsable del territorio.",
   },
   {
     name: "Sector secundario",
+    video: media.secondaryVideo,
     text: "Transformación, manufactura ligera y valor agregado a lo que se produce localmente.",
   },
   {
     name: "Sector terciario",
+    video: media.tertiaryVideo,
     text: "Comercio, servicios, turismo y actividades que completan la economía del lugar.",
   },
 ];
@@ -60,6 +65,7 @@ function Casas() {
 
       <section className="mx-auto max-w-6xl px-5 py-16 sm:px-6">
         <h2 className="font-display text-3xl text-navy dark:text-cream">Componentes del modelo</h2>
+        <MediaVideo src={media.housesVideo} title="Modelo de Casas VNE" />
         <ol className="mt-8 grid gap-4 md:grid-cols-2">
           {parts.map((item, index) => (
             <li key={item.title} className="rounded-card border-t-4 border-gold bg-card p-6 dark:bg-navy">
@@ -88,6 +94,7 @@ function Casas() {
               <article key={sector.name} className="rounded-card bg-paper p-6 dark:bg-navy-deep">
                 <h3 className="font-display text-xl text-navy dark:text-cream">{sector.name}</h3>
                 <p className="mt-3 leading-relaxed text-mist dark:text-cream/75">{sector.text}</p>
+                <MediaVideo src={sector.video} title={sector.name} />
               </article>
             ))}
           </div>
