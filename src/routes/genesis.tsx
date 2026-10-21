@@ -21,7 +21,7 @@ function Block({ title, children }: { title: string; children: ReactNode }) {
   return (
     <section className="mx-auto max-w-3xl px-5 py-12 sm:px-6">
       <h2 className="font-display text-3xl text-navy dark:text-cream">{title}</h2>
-      <div className="mt-4 space-y-4 text-base leading-relaxed text-mist dark:text-cream/80">{children}</div>
+      <div className="editorial-justify mt-4 space-y-4 text-base leading-relaxed text-mist dark:text-cream/80">{children}</div>
     </section>
   );
 }
@@ -95,7 +95,7 @@ function Genesis() {
       <section className="mx-auto max-w-6xl px-5 pb-4 sm:px-6">
         <div className="rounded-card bg-forest p-8 text-cream sm:p-10">
           <h2 className="font-display text-3xl">Escalabilidad</h2>
-          <p className="mt-4 max-w-3xl leading-relaxed text-cream/85">
+          <p className="editorial-justify mt-4 max-w-3xl leading-relaxed text-cream/85">
             Génesis no es una intervención aislada. El diseño modular permite empezar en pequeño, validar con evidencia y sumar módulos productivos. Puede adaptarse a otros territorios de Estados Unidos y, después, replicarse en América Latina — Panamá y Venezuela entre ellos — sin perder coherencia operativa ni financiera.
           </p>
         </div>
@@ -118,7 +118,7 @@ function Genesis() {
             </li>
           ))}
         </ul>
-        <p className="mt-6 max-w-3xl leading-relaxed text-mist dark:text-cream/75">
+        <p className="editorial-justify mt-6 max-w-3xl leading-relaxed text-mist dark:text-cream/75">
           La participación se acuerda con esquemas claros, alineados con la sostenibilidad financiera, el impacto medible y el horizonte largo del modelo. No publicamos cifras de otros programas: el impacto de Génesis se medirá con los resultados del piloto.
         </p>
         <div className="mt-8 flex flex-col gap-3 sm:flex-row">

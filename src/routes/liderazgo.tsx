@@ -44,7 +44,7 @@ function Liderazgo() {
         lede="Líder venezolano nacido en 1983 en el estado Guárico. Su trayectoria está marcada por una idea concreta: servir, construir y transformar realidades con estructuras que se sostienen."
       />
 
-      <section className="mx-auto max-w-3xl space-y-5 px-5 py-14 text-lg leading-relaxed text-mist sm:px-6 dark:text-cream/80">
+      <section className="editorial-justify mx-auto max-w-3xl space-y-5 px-5 py-14 text-lg leading-relaxed text-mist sm:px-6 dark:text-cream/80">
         <img src={media.ceo} alt="Wilmer Solórzano, CEO y fundador" className="mx-auto max-h-96 max-w-full rounded-card object-contain" />
         <p>
           Desde temprano mostró sensibilidad social y un sentido fuerte de responsabilidad familiar y comunitaria. Esos valores se volvieron una filosofía de cambio, perseverancia y acción, y hoy dan forma a Fundación VNE.
@@ -60,7 +60,7 @@ function Liderazgo() {
       <section className="bg-card dark:bg-navy">
         <div className="mx-auto max-w-6xl px-5 py-14 sm:px-6">
           <h2 className="font-display text-3xl text-navy dark:text-cream">Cómo está organizada</h2>
-          <p className="mt-4 max-w-3xl leading-relaxed text-mist dark:text-cream/75">
+          <p className="editorial-justify mt-4 max-w-3xl leading-relaxed text-mist dark:text-cream/75">
             Áreas estratégicas permanentes garantizan coherencia, continuidad y escalabilidad. El equipo reúne profesionales, colaboradores y aliados. Cada persona tiene un rol específico, bajo responsabilidad institucional y ética. La representación pública se limita a cargos estratégicos.
           </p>
           <div className="mt-8 grid gap-4 md:grid-cols-2">
@@ -74,7 +74,7 @@ function Liderazgo() {
                     <p className="text-sm text-mist dark:text-cream/70">{person.charge}</p>
                   </div>
                 </div>
-                <p className="mt-4 leading-relaxed text-mist dark:text-cream/75">{person.text}</p>
+                <p className="editorial-justify mt-4 leading-relaxed text-mist dark:text-cream/75">{person.text}</p>
               </article>
             ))}
           </div>

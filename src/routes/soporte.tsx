@@ -26,14 +26,14 @@ function Soporte() {
       <section className="mx-auto grid max-w-6xl gap-4 px-5 py-14 sm:px-6 md:grid-cols-2">
         <article className="rounded-card bg-navy p-8 text-cream">
           <h2 className="font-display text-3xl">Más información</h2>
-          <p className="mt-3 leading-relaxed text-cream/80">Orientación institucional y detalle sobre programas, sedes y formas de participar.</p>
+          <p className="editorial-justify mt-3 leading-relaxed text-cream/80">Orientación institucional y detalle sobre programas, sedes y formas de participar.</p>
           <a href={org.infoWa} target="_blank" rel="noreferrer" className="mt-8 inline-flex h-12 items-center rounded-full bg-gold px-5 text-sm font-bold text-navy">
             Escribir por WhatsApp
           </a>
         </article>
         <article className="rounded-card border border-line bg-card p-8 dark:border-white/10 dark:bg-navy">
           <h2 className="font-display text-3xl text-navy dark:text-cream">Soporte del sitio</h2>
-          <p className="mt-3 leading-relaxed text-mist dark:text-cream/75">Si ves un error, un enlace roto o un problema al navegar, este canal es el correcto.</p>
+          <p className="editorial-justify mt-3 leading-relaxed text-mist dark:text-cream/75">Si ves un error, un enlace roto o un problema al navegar, este canal es el correcto.</p>
           <a
             href={org.webWa}
             target="_blank"

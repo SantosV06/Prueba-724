@@ -310,7 +310,7 @@ export function PageIntro({
         <h1 className="mt-3 max-w-3xl font-display text-4xl leading-[1.15] font-semibold text-balance sm:text-5xl">
           {title}
         </h1>
-        <p className="mt-5 max-w-2xl text-lg leading-relaxed text-cream/85">{lede}</p>
+        <p className="editorial-justify mt-5 max-w-2xl text-lg leading-relaxed text-cream/85">{lede}</p>
       </div>
     </section>
   );
