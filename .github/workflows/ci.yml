@@ -44,7 +44,15 @@ jobs:
         env:
           TEST_DATABASE_URL: postgres://postgres:disposable-ci-only@127.0.0.1:5432/vne_test
       - run: npm run build
-      - run: npx playwright install --with-deps chromium
+      - name: Configure browser
+        timeout-minutes: 3
+        run: |
+          vne_chrome_path="$(command -v google-chrome || command -v chromium || true)"
+          if [ -n "$vne_chrome_path" ]; then
+            printf 'BROWSER_EXECUTABLE_PATH=%s\n' "$vne_chrome_path" >> "$GITHUB_ENV"
+          else
+            npx playwright install --with-deps chromium
+          fi
       - name: Start isolated development server
         run: |
           npm run dev > /tmp/vne-dev.log 2>&1 &
