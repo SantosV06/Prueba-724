@@ -508,6 +508,7 @@ function SiteLanguage() {
       <label className="block font-semibold">
         {t("Idioma predeterminado")}
         <select
+          aria-label={t("Idioma predeterminado")}
           className={field}
           value={language}
           disabled={!ready || busy}
