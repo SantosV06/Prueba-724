@@ -66,3 +66,9 @@ La eliminación y el evento `retention:purge` se ejecutan atómicamente. Si fall
 - Revisar las notificaciones de Actions y ejecutar manualmente el monitor una vez.
 - Realizar el ensayo de restauración y decidir conservación.
 - Definir servicio y comportamiento de los correos antes de implementarlos.
+
+## Idioma inicial del sitio
+
+En `/solicitudes`, abre **Herramientas del propietario → Idioma predeterminado**, elige Español, English o Português y guarda. Se almacena en Neon y se registra en auditoría. Solo el propietario puede cambiarlo. Para comprobarlo, abre una ventana privada sin idioma en la URL. Una URL con `lang` o una preferencia guardada tiene prioridad. Si la base no responde se usa español. No requiere nuevas variables. La migración `0008_site_language.sql` se aplica con el despliegue habitual.
+
+Las opciones internas de herramientas se cierran al tocar de nuevo el botón abierto; tocar otra opción abre esa sección.

@@ -5,8 +5,8 @@ Sitio institucional de Fundación Venezuela Nueva Esperanza y aplicación privad
 ## Funciones actuales
 
 - Páginas institucionales, programas, contacto, instrucciones para donar por Zelle y documentos públicos.
-- Español, English y Português, tema claro/oscuro y navegación móvil accesible.
-- Enlaces por idioma: `/casas`, `/casas?lang=en` y `/casas?lang=pt`. El HTML y los metadatos se traducen en el servidor; las canónicas y alternativas `hreflang` usan el dominio configurado.
+- Español, English y Português, idioma inicial configurable desde las herramientas del propietario, tema claro/oscuro y navegación móvil accesible.
+- Enlaces por idioma: `/casas?lang=es`, `/casas?lang=en` y `/casas?lang=pt`. El HTML y los metadatos se traducen en el servidor; las canónicas y alternativas `hreflang` usan el dominio configurado.
 - Formulario de voluntariado con validación del servidor, protección contra reintentos duplicados, campo trampa y límites por conexión/correo.
 - Panel `/solicitudes`: búsqueda, estados, paginación, CSV por lotes, papelera, restauración y borrado definitivo de solicitudes en papelera.
 - Cuentas individuales, propietario/administradores, restablecimiento por el propietario y cambio de contraseña personal. Los cambios revocan las sesiones de esa cuenta.

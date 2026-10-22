@@ -7,8 +7,11 @@ import {
   getHomeContent,
   updateHomeContent,
   changeMyPassword,
+  getSiteLanguage,
+  updateSiteLanguage,
 } from "@/lib/admin-operations-functions";
 import type { AuditEvent, HomeContent } from "@/lib/admin-operations";
+import { isLanguage, languageOptions, type Language } from "@/lib/i18n/translate";
 import { defaultHomeContent } from "@/lib/home-content";
 
 const field =
@@ -104,7 +107,7 @@ export function MyPassword({ onSignedOut }: { onSignedOut: () => void }) {
 
 export function AdminOperations() {
   const { t } = useAdminLanguage();
-  const [tab, setTab] = useState<"security" | "audit" | "content">("security");
+  const [tab, setTab] = useState<"security" | "audit" | "content" | "language" | null>("security");
   return (
     <section className={panel} aria-label={t("Herramientas del propietario")}>
       <h2 className="font-display text-2xl">{t("Herramientas del propietario")}</h2>
@@ -114,20 +117,34 @@ export function AdminOperations() {
             ["security", "Seguridad del equipo"],
             ["audit", "Historial de actividad"],
             ["content", "Editar portada"],
+            ["language", "Idioma predeterminado"],
           ] as const
         ).map(([id, label]) => (
           <button
             type="button"
             key={id}
-            aria-pressed={tab === id}
+            aria-expanded={tab === id}
+            aria-controls={`owner-tool-${id}`}
             className={button}
-            onClick={() => setTab(id)}
+            onClick={() => setTab((current) => (current === id ? null : id))}
           >
             {t(label)}
           </button>
         ))}
       </div>
-      {tab === "security" ? <SecurityPolicy /> : tab === "audit" ? <AuditViewer /> : <HomeEditor />}
+      {tab && (
+        <div id={`owner-tool-${tab}`}>
+          {tab === "security" ? (
+            <SecurityPolicy />
+          ) : tab === "audit" ? (
+            <AuditViewer />
+          ) : tab === "content" ? (
+            <HomeEditor />
+          ) : (
+            <SiteLanguage />
+          )}
+        </div>
+      )}
     </section>
   );
 }
@@ -434,6 +451,84 @@ function HomeEditor() {
       {notice && <p role="status">{t(notice)}</p>}
       <button className={button} disabled={!ready || busy}>
         {t("Guardar portada")}
+      </button>
+    </form>
+  );
+}
+
+function SiteLanguage() {
+  const { t } = useAdminLanguage();
+  const [language, setLanguage] = useState<Language>("es");
+  const [revision, setRevision] = useState(0);
+  const [ready, setReady] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+  const [notice, setNotice] = useState("");
+  useEffect(() => {
+    let active = true;
+    void getSiteLanguage()
+      .then((value) => {
+        if (active) {
+          setLanguage(value.language);
+          setRevision(value.revision);
+          setReady(true);
+        }
+      })
+      .catch((cause) => {
+        if (active) setError(message(cause));
+      });
+    return () => {
+      active = false;
+    };
+  }, []);
+  return (
+    <form
+      className="mt-5 max-w-lg space-y-4"
+      onSubmit={async (event) => {
+        event.preventDefault();
+        setBusy(true);
+        setError("");
+        setNotice("");
+        try {
+          const result = await updateSiteLanguage({ data: { language, revision } });
+          setRevision(result.revision);
+          setNotice("Idioma predeterminado guardado.");
+        } catch (cause) {
+          setError(message(cause));
+        } finally {
+          setBusy(false);
+        }
+      }}
+    >
+      <p className="text-sm">
+        {t(
+          "Se aplica a visitantes sin idioma elegido. Los enlaces con idioma y las preferencias guardadas tienen prioridad.",
+        )}
+      </p>
+      <label className="block font-semibold">
+        {t("Idioma predeterminado")}
+        <select
+          className={field}
+          value={language}
+          disabled={!ready || busy}
+          onChange={(event) => {
+            if (isLanguage(event.target.value)) {
+              setLanguage(event.target.value);
+              setNotice("");
+            }
+          }}
+        >
+          {languageOptions.map((option) => (
+            <option key={option.code} value={option.code} lang={option.code}>
+              {option.label}
+            </option>
+          ))}
+        </select>
+      </label>
+      {error && <p role="alert">{t(error)}</p>}
+      {notice && <p role="status">{t(notice)}</p>}
+      <button className={button} disabled={!ready || busy}>
+        {t(busy ? "Procesando…" : "Guardar idioma predeterminado")}
       </button>
     </form>
   );

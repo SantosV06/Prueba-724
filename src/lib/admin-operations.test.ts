@@ -45,7 +45,19 @@ test("owner operations: policy enforces enrollment on the server, role restricti
       operations.listAuditEvents({ page: 1, actor: "", action: "" }),
       /no autorizado/,
     );
+    await assert.rejects(operations.saveSiteLanguage("en", 1), /no autorizado/);
     await service.loginAdministrator(process.env.ADMIN_PASSWORD);
+    assert.equal((await operations.readSiteLanguage()).language, "es");
+    await operations.saveSiteLanguage("en", 1);
+    assert.equal((await operations.readSiteLanguage()).language, "en");
+    await assert.rejects(operations.saveSiteLanguage("pt", 1), /configuración cambió/);
+    await assert.rejects(operations.saveSiteLanguage("fr", 2));
+    await operations.saveSiteLanguage("es", 2);
+    assert.equal(
+      (await operations.listAuditEvents({ page: 1, actor: "admin", action: "settings:language" }))
+        .total,
+      2,
+    );
     await assert.rejects(
       operations.updateTwoFactorPolicy(true, process.env.ADMIN_PASSWORD),
       /Activa 2FA/,
@@ -119,6 +131,7 @@ test("owner operations: policy enforces enrollment on the server, role restricti
       /propietario/,
     );
     await assert.rejects(operations.saveHomeContent(content, 2), /propietario/);
+    await assert.rejects(operations.saveSiteLanguage("pt", 3), /propietario/);
     await assert.rejects(
       operations.changeOwnPassword("incorrect", "local-new-password-123"),
       /incorrecta/,

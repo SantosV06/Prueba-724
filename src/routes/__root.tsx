@@ -1,9 +1,11 @@
+import { getDefaultLanguage } from "@/lib/i18n/default-language";
 import { preferredLanguage } from "@/lib/i18n/preference";
 import { requestNonce } from "@/lib/csp-nonce";
 import { languageFromSearch, languageHref, localizedHead } from "@/lib/i18n/seo";
 import { isLanguage } from "@/lib/i18n/translate";
 import {
   createRootRoute,
+  redirect,
   HeadContent,
   Outlet,
   Scripts,
@@ -23,6 +25,17 @@ export const Route = createRootRoute({
   validateSearch: (search: Record<string, unknown>): { lang?: "es" | "en" | "pt" } => ({
     lang: isLanguage(search.lang) ? search.lang : preferredLanguage(),
   }),
+  beforeLoad: async ({ location, search }) => {
+    if (isLanguage(search.lang)) return;
+    const language = await getDefaultLanguage();
+    // An explicit URL makes SSR, hydration and shared links agree.
+    if (language !== "es")
+      throw redirect({
+        to: location.pathname,
+        search: { ...search, lang: language },
+        replace: true,
+      });
+  },
   search: { middlewares: [retainSearchParams(["lang"])] },
   head: ({ matches }) =>
     localizedHead(
@@ -57,11 +70,14 @@ export const Route = createRootRoute({
             ? ["es", "en", "pt", "x-default"].map((lang) => ({
                 rel: "alternate",
                 hrefLang: lang,
-                href: languageHref(
-                  __SITE_ORIGIN__,
-                  matches.at(-1)?.pathname ?? "/",
-                  lang === "en" || lang === "pt" ? lang : "es",
-                ),
+                href:
+                  lang === "x-default"
+                    ? `${__SITE_ORIGIN__}${matches.at(-1)?.pathname ?? "/"}`
+                    : languageHref(
+                        __SITE_ORIGIN__,
+                        matches.at(-1)?.pathname ?? "/",
+                        lang === "en" || lang === "pt" ? lang : "es",
+                      ),
               }))
             : []),
           { rel: "stylesheet", href: appCss },

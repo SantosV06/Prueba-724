@@ -237,10 +237,10 @@ export function Footer() {
             <T>{org.executivePhone}</T>
           </a>
           <a
-            className="mt-4 inline-flex items-center gap-2 text-sm font-semibold"
+            className="mt-4 flex w-fit max-w-full items-center gap-2 break-all text-sm font-semibold"
             href={`mailto:${org.email}`}
           >
-            <Mail className="size-4 text-gold" aria-hidden="true" />
+            <Mail className="size-4 shrink-0 text-gold" aria-hidden="true" />
             <T>{org.email}</T>
           </a>
           <div className="mt-5 flex gap-2">

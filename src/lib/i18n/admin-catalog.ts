@@ -1,5 +1,18 @@
 // Administrative translations load only with the panel.
 export const adminCatalog: Record<string, readonly [string, string]> = {
+  "Idioma predeterminado": ["Default language", "Idioma padrão"],
+  "Guardar idioma predeterminado": ["Save default language", "Salvar idioma padrão"],
+  "Idioma predeterminado guardado.": ["Default language saved.", "Idioma padrão salvo."],
+  "Se aplica a visitantes sin idioma elegido. Los enlaces con idioma y las preferencias guardadas tienen prioridad.":
+    [
+      "Applies to visitors who have not chosen a language. Language links and saved preferences take priority.",
+      "Aplica-se a visitantes que não escolheram um idioma. Links com idioma e preferências salvas têm prioridade.",
+    ],
+  "La configuración cambió. Vuelve a cargar antes de guardar.": [
+    "Settings changed. Reload before saving.",
+    "A configuração mudou. Recarregue antes de salvar.",
+  ],
+
   "Administración privada": ["Private administration", "Administração privada"],
   "Solicitudes de voluntariado": ["Volunteer applications", "Inscrições de voluntariado"],
   "Revisa las solicitudes, registra su avance y conserva un seguimiento del equipo.": [

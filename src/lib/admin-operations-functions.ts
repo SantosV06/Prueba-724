@@ -1,6 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
-import { auditFiltersSchema, homeContentSchema } from "./admin-operations";
+import { auditFiltersSchema, homeContentSchema, siteLanguageSchema } from "./admin-operations";
 import { accountPasswordSchema } from "./admin-accounts";
 
 export const getAuditEvents = createServerFn({ method: "GET" })
@@ -36,4 +36,15 @@ export const updateHomeContent = createServerFn({ method: "POST" })
   .handler(async ({ data }) => {
     const service = await import("./admin-operations.server");
     return service.saveHomeContent(data.content, data.revision);
+  });
+
+export const getSiteLanguage = createServerFn({ method: "GET" }).handler(async () => {
+  const service = await import("./admin-operations.server");
+  return service.readSiteLanguage();
+});
+export const updateSiteLanguage = createServerFn({ method: "POST" })
+  .validator(siteLanguageSchema)
+  .handler(async ({ data }) => {
+    const service = await import("./admin-operations.server");
+    return service.saveSiteLanguage(data.language, data.revision);
   });

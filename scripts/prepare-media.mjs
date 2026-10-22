@@ -60,5 +60,5 @@ writeFileSync(
 if (origin)
   writeFileSync(
     new URL("sitemap.xml", output),
-    `<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">${publicPages.flatMap((path) => ["es", "en", "pt"].map((lang) => `<url><loc>${origin}${path}${lang === "es" ? "" : `?lang=${lang}`}</loc>${["es", "en", "pt", "x-default"].map((alternate) => `<xhtml:link rel="alternate" hreflang="${alternate}" href="${origin}${path}${alternate === "en" || alternate === "pt" ? `?lang=${alternate}` : ""}"/>`).join("")}</url>`)).join("")}</urlset>`,
+    `<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">${publicPages.flatMap((path) => ["es", "en", "pt"].map((lang) => `<url><loc>${origin}${path}?lang=${lang}</loc>${["es", "en", "pt", "x-default"].map((alternate) => `<xhtml:link rel="alternate" hreflang="${alternate}" href="${origin}${path}${alternate === "x-default" ? "" : `?lang=${alternate}`}"/>`).join("")}</url>`)).join("")}</urlset>`,
   );

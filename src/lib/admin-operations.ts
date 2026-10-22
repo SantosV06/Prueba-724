@@ -24,3 +24,8 @@ export const homeContentSchema = z.object({
   description: localizedText(700),
 });
 export type HomeContent = z.infer<typeof homeContentSchema>;
+
+export const siteLanguageSchema = z.object({
+  language: z.enum(["es", "en", "pt"]),
+  revision: z.number().int().min(1),
+});

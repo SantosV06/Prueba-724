@@ -31,13 +31,13 @@ Editor de portada → autorización de propietario → validación de tres idiom
 
 ## Idiomas y SEO
 
-`lang` admite `es`, `en` y `pt` en la query. El español sin query es la URL canónica base; las versiones inglesa/portuguesa utilizan `?lang=en` y `?lang=pt`. El idioma explícito tiene prioridad sobre la preferencia guardada en una cookie de idioma y se conserva al navegar. El servidor renderiza el contenido y los metadatos del idioma solicitado. El selector actualiza la URL y una cookie de idioma (sin datos personales); la misma preferencia se lee en servidor y navegador para evitar diferencias de hidratación. Si se bloquean cookies, el enlace explícito sigue funcionando. No se traducen datos de usuarios.
+`lang` admite `es`, `en` y `pt` en la query. Las canónicas y alternativas de cada idioma usan `?lang=es`, `?lang=en` y `?lang=pt`, para mantener una dirección inequívoca aunque cambie el idioma inicial. `x-default` apunta a la URL sin query. Sin query ni cookie se consulta el idioma inicial en `site_language` (editable por el propietario); si no es español se redirige a su URL explícita antes de renderizar. Ante fallo de lectura se usa español. El idioma explícito tiene prioridad sobre la preferencia guardada en una cookie de idioma y se conserva al navegar. El servidor renderiza el contenido y los metadatos del idioma solicitado. El selector actualiza la URL y una cookie de idioma (sin datos personales); la misma preferencia se lee en servidor y navegador para evitar diferencias de hidratación. Si se bloquean cookies, el enlace explícito sigue funcionando. No se traducen datos de usuarios.
 
 El sitemap incluye las tres variantes y alternativas `hreflang`; necesita un origen de producción configurado. No se generan alternativas del panel privado. Las tarjetas sociales siguen bajo el inyector de marca heredado; no se promete una tarjeta traducida por idioma.
 
 ## Datos
 
-Las tablas centrales son `volunteer_requests`, `admin_users`, `admin_sessions`, `admin_events`, `request_limits`, `admin_totp_pending`, `admin_recovery_codes`, `admin_policy` y `site_content`. `_migrations` registra archivos aplicados. `volunteer_export_revision` protege la consistencia de los lotes CSV.
+Las tablas centrales son `volunteer_requests`, `admin_users`, `admin_sessions`, `admin_events`, `request_limits`, `admin_totp_pending`, `admin_recovery_codes`, `admin_policy`, `site_content` y `site_language`. `_migrations` registra archivos aplicados. `volunteer_export_revision` protege la consistencia de los lotes CSV.
 
 Las migraciones se aplican antes de publicar funciones del nuevo despliegue. No hay escrituras de archivos en tiempo de ejecución de producción. El contenido editable vive en Neon, no en un JSON generado durante el build.
 

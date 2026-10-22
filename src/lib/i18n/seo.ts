@@ -3,7 +3,7 @@ export function languageFromSearch(search: Record<string, unknown>): Language {
   return isLanguage(search.lang) ? search.lang : "es";
 }
 export function languageHref(origin: string, path: string, language: Language) {
-  return `${origin}${path}${language === "es" ? "" : `?lang=${language}`}`;
+  return `${origin}${path}?lang=${language}`;
 }
 export function localizedHead<
   T extends {

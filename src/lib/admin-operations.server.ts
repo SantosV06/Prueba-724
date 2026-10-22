@@ -8,7 +8,7 @@ import {
 import { verifyPassword, hashPassword } from "./password.server.ts";
 import { totpConfigured } from "./admin-totp-crypto.server.ts";
 import type { AuditEvent, AuditFilters, HomeContent } from "./admin-operations.ts";
-import { homeContentSchema } from "./admin-operations.ts";
+import { siteLanguageSchema, homeContentSchema } from "./admin-operations.ts";
 import { deleteCookie } from "@tanstack/react-start/server";
 import { COOKIE } from "./volunteer-service.server.ts";
 
@@ -120,4 +120,26 @@ export async function saveHomeContent(content: HomeContent, revision: number) {
   );
   if (!result.length) throw new Error("El contenido cambió. Vuelve a cargar antes de guardar.");
   return { ok: true };
+}
+
+export async function readSiteLanguage() {
+  const { sql } = await requireOwner();
+  const [row] = await sql.query("SELECT language,revision FROM site_language WHERE id=1");
+  return siteLanguageSchema.parse(row);
+}
+export async function saveSiteLanguage(language: string, revision: number) {
+  const { sql, actor } = await requireOwner();
+  const input = siteLanguageSchema.parse({ language, revision });
+  const [result] = await sql.query<{ revision: number }>(
+    `WITH changed AS (
+      UPDATE site_language SET language=$1, revision=revision+1, updated_at=NOW()
+      WHERE id=1 AND revision=$2 RETURNING language,revision
+    ), logged AS (
+      INSERT INTO admin_events(id,action,actor_id,actor_username,after_value)
+      SELECT $3,'settings:language',$4,$5,jsonb_build_object('language',language) FROM changed
+    ) SELECT revision FROM changed`,
+    [input.language, input.revision, randomUUID(), actor.id, actor.username],
+  );
+  if (!result) throw new Error("La configuración cambió. Vuelve a cargar antes de guardar.");
+  return result;
 }

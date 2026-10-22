@@ -284,6 +284,41 @@ try {
     await row.waitFor();
     await page.getByRole("button", { name: "Herramientas del propietario", exact: true }).click();
     await page.getByText("Cuentas activas con 2FA", { exact: false }).waitFor();
+    const securityTool = page.getByRole("button", { name: "Seguridad del equipo", exact: true });
+    await securityTool.click();
+    assert.equal(await securityTool.getAttribute("aria-expanded"), "false");
+    assert.equal(await page.getByText("Cuentas activas con 2FA", { exact: false }).count(), 0);
+    await securityTool.click();
+    await page.getByText("Cuentas activas con 2FA", { exact: false }).waitFor();
+    const languageTool = page.getByRole("button", { name: "Idioma predeterminado", exact: true });
+    await languageTool.click();
+    const defaultLanguage = page.getByLabel("Idioma predeterminado", { exact: true });
+    await defaultLanguage.waitFor({ state: "visible" });
+    await page.waitForFunction(
+      () => !document.querySelector("#owner-tool-language select")?.disabled,
+    );
+    for (const language of ["en", "pt", "es"]) {
+      await defaultLanguage.selectOption(language);
+      await page
+        .getByRole("button", { name: "Guardar idioma predeterminado", exact: true })
+        .click();
+      await page
+        .getByRole("status")
+        .filter({ hasText: "Idioma predeterminado guardado." })
+        .waitFor();
+      const fresh = await fetch(base);
+      const html = await fresh.text();
+      assert.ok(html.includes(`lang="${language}"`), "default locale is rendered on a fresh visit");
+      const explicit = await fetch(`${base}/?lang=es`);
+      assert.ok((await explicit.text()).includes('lang="es"'), "explicit locale overrides default");
+      const preference = await fetch(base, { headers: { cookie: "vne-language=es" } });
+      assert.ok(
+        (await preference.text()).includes('lang="es"'),
+        "saved preference overrides default",
+      );
+    }
+    await languageTool.click();
+    assert.equal(await defaultLanguage.count(), 0);
     await page.getByRole("button", { name: "Historial de actividad", exact: true }).click();
     await page.getByLabel("Acción exacta", { exact: true }).fill("login:success");
     const tools = page.getByRole("region", { name: "Herramientas del propietario", exact: true });
