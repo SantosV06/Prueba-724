@@ -116,7 +116,7 @@ test("a staged file on another filesystem is refused, not copied", () => {
   };
 
   assert.throws(() => handOver(staged, target, { rename: crossDevice }), {
-    message: /stage under \/workspace\/\.grok\//,
+    message: /stage under \/workspace\/\.project-tools\//,
   });
   // Copying would have had to stage its own temp inside public/, which is the
   // one place stagingError refuses.
