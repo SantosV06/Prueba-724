@@ -85,3 +85,27 @@ GitHub Actions ejecuta tipos, lint, pruebas con PGLite y compilación. También 
 `E2E_LOCAL_DATABASE=true` permite verificar la compilación de producción sobre PGLite únicamente fuera de Vercel. **No configures esa variable en Vercel.** El acceso a Neon en Production sigue siendo obligatorio.
 
 La implementación activa usa `src/lib/volunteer-functions.ts`, `volunteer-service.server.ts`, `admin-accounts.ts` y `password.server.ts`. `foundation-vne/` es un archivo histórico de la versión Cloudflare, no forma parte del despliegue actual en Vercel. Se eliminaron las funciones locales de almacenamiento de voluntarios sin uso; `volunteers.ts` solo contiene los tipos y el generador CSV.
+
+## Recuperación del propietario
+
+Si un administrador olvida su contraseña, el propietario puede restablecerla en **Administrar usuarios**. Una contraseña ya creada no se puede consultar. Cambiar `ADMIN_PASSWORD` en Vercel **no restablece una cuenta existente**: esa variable solo sirve para crear al primer propietario.
+
+Si el propietario pierde su contraseña, una persona con acceso autorizado a Neon puede ejecutar la herramienta de recuperación desde una terminal privada con Node 24 y las dependencias instaladas:
+
+1. Configura `DATABASE_URL` como variable de entorno privada en esa terminal, usando la conexión correcta de Neon con SSL. No la pegues en chats, commits ni capturas. No uses una base de pruebas para recuperar una cuenta de producción.
+2. Ejecuta `npm run admin:recover -- admin` (sustituye `admin` si el propietario tiene otro usuario).
+3. Introduce dos veces una contraseña nueva de 14 a 256 caracteres. La entrada no se muestra y no se pasa como argumento del proceso.
+4. Inicia sesión en `/solicitudes`. La recuperación revoca todas las sesiones anteriores de esa cuenta y registra `account:recovery` en la auditoría.
+5. Elimina `DATABASE_URL` del entorno de la terminal al terminar.
+
+La herramienta solo recupera propietarios activos existentes; no crea cuentas, no habilita usuarios desactivados y no borra solicitudes. No se expone como una ruta pública.
+
+## Controles operativos fuera del código
+
+- Activa segundo factor en GitHub, Vercel y Neon para proteger las cuentas que controlan el proyecto. El panel propio usa contraseña; no incorpora un segundo factor en esta revisión.
+- En Neon, comprueba la ventana de restauración disponible en tu plan y ensaya una restauración en una rama independiente antes de necesitarla. Un archivo CSV no reemplaza un respaldo de la base de datos.
+- Usa una credencial de migraciones para cambios de esquema y una cuenta de ejecución con los permisos mínimos necesarios para las tablas de la aplicación. Nunca publiques las cadenas de conexión.
+- Las vistas previas deben usar su propia rama de Neon; `PREVIEW_DATABASE_ISOLATED=true` es una declaración de configuración, no crea por sí sola esa separación.
+- Verifica la dirección institucional, teléfonos y destinatario de Zelle con documentación de la organización antes de modificarlos en `src/data/site.ts`.
+
+La CSP restringe recursos, conexiones, formularios e incrustaciones a orígenes permitidos. Conserva `unsafe-inline` para los scripts de hidratación y la inicialización del tema; no debe presentarse como una protección completa frente a XSS. No autoriza `unsafe-eval`.

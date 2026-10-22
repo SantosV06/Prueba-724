@@ -234,6 +234,17 @@ test("volunteer and admin workflow: durable data, limits, revocation, pagination
   await service.loginAdministrator("replacement-password-1234", "equipo");
   assert.equal(await service.isAdminAuthenticated(), true);
   const replacementToken = cookies.get("vne-admin-session")!;
+  // Exhausting an account/IP budget must not lock the owner out on another connection.
+  address = "192.0.2.80";
+  for (let i = 0; i < 8; i++)
+    await assert.rejects(service.loginAdministrator("wrong", "admin"), /incorrecta/);
+  await assert.rejects(
+    service.loginAdministrator(process.env.ADMIN_PASSWORD, "admin"),
+    /Demasiados/,
+  );
+  address = "192.0.2.81";
+  await service.loginAdministrator(process.env.ADMIN_PASSWORD, "admin");
+
   cookies.set("vne-admin-session", ownerToken);
   await service.changeVolunteerRequest(id, "purge");
   assert.equal(

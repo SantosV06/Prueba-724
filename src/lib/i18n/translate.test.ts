@@ -1,3 +1,5 @@
+import { readFile } from "node:fs/promises";
+import { adminCatalog } from "./admin-catalog.ts";
 import test from "node:test";
 import assert from "node:assert/strict";
 import { translate, isLanguage } from "./translate.ts";
@@ -29,6 +31,18 @@ test("both translations cover every published legal title, description, paragrap
       assert.ok(catalog[text], `Missing legal translation: ${text}`);
       assert.ok(catalog[text][0].trim());
       assert.ok(catalog[text][1].trim());
+    }
+  }
+});
+
+test("administrative labels have both translations without translating personal data", async () => {
+  for (const filename of ["../../routes/solicitudes.tsx", "../../components/admin-accounts.tsx"]) {
+    const source = await readFile(new URL(filename, import.meta.url), "utf8");
+    for (const match of source.matchAll(/\bt\(("(?:[^"\\]|\\.)*")\)/g)) {
+      const text = JSON.parse(match[1]);
+      const entry = adminCatalog[text.trim()] ?? catalog[text.trim()];
+      assert.ok(entry, `Missing panel translation: ${text}`);
+      assert.ok(entry[0].trim() && entry[1].trim());
     }
   }
 });

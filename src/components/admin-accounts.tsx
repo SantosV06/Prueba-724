@@ -1,3 +1,4 @@
+import { useAdminLanguage } from "@/lib/i18n/admin";
 import { useEffect, useState } from "react";
 import {
   createAdminAccount,
@@ -17,6 +18,7 @@ export function AdminAccounts({
   currentId: string;
   onSignedOut: () => void;
 }) {
+  const { t } = useAdminLanguage();
   const [accounts, setAccounts] = useState<AdminAccount[]>([]);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
@@ -59,20 +61,21 @@ export function AdminAccounts({
       className="mt-8 rounded-card border border-line p-5 dark:border-white/20"
     >
       <h2 id="accounts-heading" className="font-display text-2xl">
-        Usuarios del panel
+        {t("Usuarios del panel")}
       </h2>
       <p className="mt-2 text-sm">
-        Solo el propietario puede crear cuentas o cambiar el acceso. Las contraseñas se guardan
-        protegidas y no pueden consultarse.
+        {t(
+          "Solo el propietario puede crear cuentas o cambiar el acceso. Las contraseñas se guardan protegidas y no pueden consultarse.",
+        )}
       </p>
       {error && (
         <p role="alert" className="mt-3 text-clay dark:text-cream">
-          {error}
+          {t(error)}
         </p>
       )}
       {notice && (
         <p role="status" className="mt-3">
-          {notice}
+          {t(notice)}
         </p>
       )}
       <form
@@ -88,7 +91,7 @@ export function AdminAccounts({
         }}
       >
         <label>
-          Nombre de la persona
+          {t("Nombre de la persona")}
           <input
             className={field}
             required
@@ -98,7 +101,7 @@ export function AdminAccounts({
           />
         </label>
         <label>
-          Nuevo usuario
+          {t("Nuevo usuario")}
           <input
             className={field}
             required
@@ -112,7 +115,7 @@ export function AdminAccounts({
           />
         </label>
         <label>
-          Contraseña del nuevo usuario
+          {t("Contraseña del nuevo usuario")}
           <input
             className={field}
             type="password"
@@ -126,7 +129,7 @@ export function AdminAccounts({
         </label>
         <div className="flex items-end">
           <button className={button} disabled={busy}>
-            Crear usuario
+            {t("Crear usuario")}
           </button>
         </div>
       </form>
@@ -139,10 +142,10 @@ export function AdminAccounts({
             <span className="min-w-0 break-words">
               {account.displayName} · <strong>{account.username}</strong> ·{" "}
               {account.role === "owner"
-                ? "Propietario"
+                ? t("Propietario")
                 : account.enabled
-                  ? "Administrador activo"
-                  : "Desactivado"}
+                  ? t("Administrador activo")
+                  : t("Desactivado")}
             </span>
             <div className="flex flex-wrap gap-2">
               <button
@@ -154,7 +157,7 @@ export function AdminAccounts({
                   setNotice("");
                 }}
               >
-                Cambiar contraseña de {account.username}
+                {t("Cambiar contraseña de")} {account.username}
               </button>
               {account.role !== "owner" && (
                 <button
@@ -163,7 +166,7 @@ export function AdminAccounts({
                   onClick={() => {
                     if (
                       window.confirm(
-                        `${account.enabled ? "¿Desactivar" : "¿Activar"} a ${account.username}? Se cerrarán sus sesiones actuales.`,
+                        `${t(account.enabled ? "¿Desactivar" : "¿Activar")} ${account.username}? ${t("Se cerrarán sus sesiones actuales.")}`,
                       )
                     )
                       void run(
@@ -175,7 +178,7 @@ export function AdminAccounts({
                       );
                   }}
                 >
-                  {account.enabled ? "Desactivar" : "Activar"} {account.username}
+                  {account.enabled ? t("Desactivar") : t("Activar")} {account.username}
                 </button>
               )}
             </div>
@@ -197,7 +200,7 @@ export function AdminAccounts({
                 })
                 .catch((cause) =>
                   setError(
-                    cause instanceof Error ? cause.message : "No se pudo cambiar la contraseña.",
+                    cause instanceof Error ? cause.message : t("No se pudo cambiar la contraseña."),
                   ),
                 )
                 .finally(() => setBusy(false));
@@ -210,7 +213,7 @@ export function AdminAccounts({
           }}
         >
           <label>
-            Nueva contraseña de {accounts.find((account) => account.id === target)?.username}
+            {t("Nueva contraseña de")} {accounts.find((account) => account.id === target)?.username}
             <input
               autoFocus
               type="password"
@@ -224,12 +227,12 @@ export function AdminAccounts({
             />
           </label>
           <p className="mt-2 text-sm">
-            Al guardar se cerrarán todas las sesiones de esta cuenta
-            {target === currentId ? ", incluida la actual" : ""}.
+            {t("Al guardar se cerrarán todas las sesiones de esta cuenta")}
+            {target === currentId ? t(", incluida la actual") : ""}.
           </p>
           <div className="mt-3 flex gap-2">
             <button className={button} disabled={busy}>
-              Guardar contraseña
+              {t("Guardar contraseña")}
             </button>
             <button
               type="button"
@@ -240,7 +243,7 @@ export function AdminAccounts({
                 setReplacement("");
               }}
             >
-              Cancelar
+              {t("Cancelar")}
             </button>
           </div>
         </form>
