@@ -9,6 +9,10 @@ export function testDatabase() {
     throw new Error(
       "TEST_DATABASE_URL must point to local disposable PostgreSQL, never Neon or production.",
     );
+  // Match the production driver's JSON-safe result parsers.
+  pg.types.setTypeParser(20, Number);
+  pg.types.setTypeParser(1082, (value) => value);
+  pg.types.setTypeParser(1186, (value) => value);
   const schema = `qa_${randomBytes(12).toString("hex")}`;
   const pool = new pg.Pool({
     connectionString: url.href,

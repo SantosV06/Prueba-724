@@ -43,7 +43,8 @@ mock.module("./db.ts", {
 });
 const service = await import("./volunteer-service.server.ts");
 
-test("volunteer and admin workflow: durable data, limits, revocation, pagination, export and recovery", async () => {
+test("volunteer and admin workflow: durable data, limits, revocation, pagination, export and recovery", async (t) => {
+  t.after(() => pg.close());
   await pg.waitReady;
   for (const file of [
     "0001_volunteer_requests.sql",
@@ -340,5 +341,4 @@ test("volunteer and admin workflow: durable data, limits, revocation, pagination
     service.saveVolunteerRequest({ ...input, requestKey: randomUUID() }),
     /vista previa/,
   );
-  await pg.close();
 });
