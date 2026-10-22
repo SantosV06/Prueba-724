@@ -1,6 +1,7 @@
 import { useAdminLanguage } from "@/lib/i18n/admin";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { AdminTwoFactor } from "@/components/admin-two-factor";
 import { AdminAccounts } from "@/components/admin-accounts";
 import type { AdminIdentity } from "@/lib/admin-accounts";
 import { Shell } from "@/components/shell";
@@ -47,6 +48,10 @@ function Solicitudes() {
   const [username, setUsername] = useState("admin");
   const [user, setUser] = useState<AdminIdentity | null>(null);
   const [showAccounts, setShowAccounts] = useState(false);
+  const [twoFactorRequired, setTwoFactorRequired] = useState(false);
+  const [code, setCode] = useState("");
+  const [recoveryCodes, setRecoveryCodes] = useState<string[]>([]);
+  const [savedCodes, setSavedCodes] = useState(false);
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const requestSequence = useRef(0);
@@ -140,7 +145,13 @@ function Solicitudes() {
     setBusy(true);
     setError("");
     try {
-      await loginAdmin({ data: { username, password } });
+      const result = await loginAdmin({ data: { username, password, code } });
+      if (result.requiresTwoFactor) {
+        setTwoFactorRequired(true);
+        return;
+      }
+      setTwoFactorRequired(false);
+      setCode("");
       const status = await getAdminStatus();
       setUser(status.user);
       setPassword("");
@@ -250,6 +261,38 @@ function Solicitudes() {
           <p className="mt-6" role="status">
             {t("Verificando sesión…")}
           </p>
+        ) : recoveryCodes.length ? (
+          <div className="mt-8 max-w-lg rounded-card border border-line bg-card p-6 dark:border-white/15 dark:bg-navy">
+            <h2 className="text-xl font-semibold">
+              2FA activado: guarda tus códigos de recuperación
+            </h2>
+            <p className="mt-3 text-sm">
+              Se muestran una sola vez. Cada código permite iniciar sesión una vez si pierdes tu
+              autenticador. Guarda una copia privada fuera de este teléfono. Todas tus sesiones se
+              han cerrado.
+            </p>
+            <pre className="mt-4 whitespace-pre-wrap break-all rounded-lg border border-line p-4 text-sm">
+              {recoveryCodes.join("\n")}
+            </pre>
+            <label className="mt-4 flex items-center gap-3 text-sm">
+              <input
+                type="checkbox"
+                checked={savedCodes}
+                onChange={(e) => setSavedCodes(e.target.checked)}
+              />
+              He guardado mis códigos de recuperación
+            </label>
+            <button
+              className={`mt-4 ${buttonStyle}`}
+              disabled={!savedCodes}
+              onClick={() => {
+                setRecoveryCodes([]);
+                setSavedCodes(false);
+              }}
+            >
+              Volver al inicio de sesión
+            </button>
+          </div>
         ) : !authenticated ? (
           <form
             onSubmit={login}
@@ -258,6 +301,7 @@ function Solicitudes() {
             <label className="mb-4 block text-sm font-semibold">
               {t("Usuario")}
               <input
+                readOnly={twoFactorRequired}
                 autoComplete="username"
                 autoCapitalize="none"
                 required
@@ -270,6 +314,7 @@ function Solicitudes() {
             <label className="block text-sm font-semibold">
               {t("Contraseña administrativa")}
               <input
+                readOnly={twoFactorRequired}
                 autoComplete="current-password"
                 type="password"
                 required
@@ -279,6 +324,24 @@ function Solicitudes() {
                 className={`mt-2 w-full ${inputStyle}`}
               />
             </label>
+            {twoFactorRequired && (
+              <label className="mt-4 block text-sm font-semibold">
+                Código del autenticador o de recuperación
+                <input
+                  autoFocus
+                  autoComplete="one-time-code"
+                  required
+                  maxLength={100}
+                  value={code}
+                  onChange={(e) => setCode(e.target.value)}
+                  className={`mt-2 w-full ${inputStyle}`}
+                />
+                <span className="mt-2 block text-sm font-normal">
+                  Introduce los seis dígitos de tu app o uno de tus códigos de recuperación. Cada
+                  código se acepta una sola vez.
+                </span>
+              </label>
+            )}
             <button
               disabled={busy}
               type="submit"
@@ -286,6 +349,21 @@ function Solicitudes() {
             >
               {busy ? t("Verificando…") : t("Iniciar sesión")}
             </button>
+            {twoFactorRequired && (
+              <button
+                type="button"
+                disabled={busy}
+                className={`mt-3 ${buttonStyle}`}
+                onClick={() => {
+                  setTwoFactorRequired(false);
+                  setPassword("");
+                  setCode("");
+                  setError("");
+                }}
+              >
+                Volver
+              </button>
+            )}
             <p className="mt-4 text-sm text-mist dark:text-cream/75">
               {t(
                 "¿Olvidaste tu contraseña? Pide al propietario que la restablezca. Si eres el propietario, consulta la guía de recuperación del repositorio.",
@@ -297,6 +375,24 @@ function Solicitudes() {
             <p className="mt-6 text-sm">
               {t("Sesión de")} {user?.displayName} ({user?.username})
             </p>
+            <AdminTwoFactor
+              onSignedOut={(codes) => {
+                requestSequence.current++;
+                setRows([]);
+                setTotal(0);
+                setAuthenticated(false);
+                setUser(null);
+                setShowAccounts(false);
+                setPassword("");
+                setCode("");
+                setTwoFactorRequired(false);
+                setError("");
+                if (codes) {
+                  setRecoveryCodes(codes);
+                  setSavedCodes(false);
+                }
+              }}
+            />
             {user?.role === "owner" && (
               <button
                 className={`mt-4 ${buttonStyle}`}

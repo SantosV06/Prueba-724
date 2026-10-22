@@ -27,7 +27,7 @@ import type {
   RequestStatus,
 } from "./volunteer-schema";
 
-const COOKIE = "vne-admin-session";
+export const COOKIE = "vne-admin-session";
 const PAGE_SIZE = 50;
 const COLUMNS = `id, nombre, apellido, correo, telefono, mensaje, to_char(created_at AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS.US"Z"') AS fecha, status`;
 export type { VolunteerRequest } from "./volunteer-schema";
@@ -35,7 +35,7 @@ export type { VolunteerRequest } from "./volunteer-schema";
 function privateResponse() {
   setResponseHeader("Cache-Control", "private, no-store");
 }
-async function database(): Promise<Sql> {
+export async function database(): Promise<Sql> {
   if (process.env.VERCEL_ENV === "preview" && process.env.PREVIEW_DATABASE_ISOLATED !== "true") {
     throw new Error(
       "El formulario y el panel están desactivados en esta vista previa hasta configurar una base de datos de pruebas independiente.",
@@ -50,7 +50,14 @@ async function database(): Promise<Sql> {
   }
   return getSql();
 }
-type StoredAdmin = AdminIdentity & { passwordHash: string; enabled: boolean };
+export type StoredAdmin = AdminIdentity & {
+  passwordHash: string;
+  enabled: boolean;
+  totp_secret: string | null;
+  totp_version: number;
+  totp_last_step: number | null;
+};
+const LOGIN_COLUMNS = `id, username, display_name AS "displayName", role, enabled, password_hash AS "passwordHash", totp_secret, totp_version, totp_last_step`;
 export async function currentAdministrator(): Promise<AdminIdentity | null> {
   privateResponse();
   assertTrustedRequest();
@@ -61,7 +68,7 @@ export async function currentAdministrator(): Promise<AdminIdentity | null> {
     `SELECT u.id, u.username, u.display_name AS "displayName", u.role, u.enabled,
       u.password_hash AS "passwordHash", s.credential_version AS version
      FROM admin_sessions s JOIN admin_users u ON u.id = s.user_id
-     WHERE s.token_hash = $1 AND s.expires_at > NOW() AND u.enabled = true`,
+     WHERE s.token_hash = $1 AND s.expires_at > NOW() AND u.enabled = true AND s.totp_version = u.totp_version`,
     [tokenHash(raw)],
   );
   if (!user || !constantEquals(user.version, credentialVersion(user.passwordHash, sessionSecret())))
@@ -71,7 +78,7 @@ export async function currentAdministrator(): Promise<AdminIdentity | null> {
 export async function isAdminAuthenticated(): Promise<boolean> {
   return (await currentAdministrator()) !== null;
 }
-async function requireAdmin() {
+export async function requireAdmin() {
   assertTrustedRequest();
   const actor = await currentAdministrator();
   if (!actor) throw new Error("Acceso no autorizado. Inicia sesión nuevamente.");
@@ -89,7 +96,7 @@ function clientAddress() {
   const value = process.env.VERCEL ? h?.get("x-vercel-forwarded-for") : h?.get("x-forwarded-for");
   return (value ?? "unknown").split(",")[0].trim().slice(0, 128);
 }
-async function enforceLimit(
+export async function enforceLimit(
   sql: Sql,
   scope: "login" | "volunteer",
   allowed: number,
@@ -136,7 +143,7 @@ export async function saveVolunteerRequest(input: VolunteerInput) {
   );
   return { ok: true };
 }
-export async function loginAdministrator(inputPassword: string, username = "admin") {
+export async function loginAdministrator(inputPassword: string, username = "admin", code = "") {
   assertTrustedRequest();
   privateResponse();
   const sql = await database();
@@ -144,7 +151,7 @@ export async function loginAdministrator(inputPassword: string, username = "admi
   // Scope the account budget to the source connection: one attacker must not lock out everyone.
   await enforceLimit(sql, "login", 8, 15, `account:${username}:${clientAddress()}`);
   let [user] = await sql.query<StoredAdmin>(
-    `SELECT id, username, display_name AS "displayName", role, enabled, password_hash AS "passwordHash" FROM admin_users WHERE username = $1`,
+    `SELECT ${LOGIN_COLUMNS} FROM admin_users WHERE username = $1`,
     [username],
   );
   if (!user && username === "admin") {
@@ -161,7 +168,7 @@ export async function loginAdministrator(inputPassword: string, username = "admi
         [randomUUID(), hash],
       );
       [user] = await sql.query<StoredAdmin>(
-        `SELECT id, username, display_name AS "displayName", role, enabled, password_hash AS "passwordHash" FROM admin_users WHERE username = 'admin'`,
+        `SELECT ${LOGIN_COLUMNS} FROM admin_users WHERE username = 'admin'`,
       );
     }
   }
@@ -170,24 +177,62 @@ export async function loginAdministrator(inputPassword: string, username = "admi
     ? await verifyPassword(inputPassword, user.passwordHash)
     : (await hashPassword(inputPassword), false);
   if (!user || !user.enabled || !valid) throw new Error("Usuario o contraseña incorrecta.");
-  const token = newSessionToken();
   const oldToken = getCookie(COOKIE);
   if (oldToken && validSessionToken(oldToken))
     await sql.query("DELETE FROM admin_sessions WHERE token_hash = $1", [tokenHash(oldToken)]);
-  // Re-check credentials/enabled after the expensive hash in case access was revoked meanwhile.
+  deleteCookie(COOKIE, { path: "/" });
+  if (user.totp_secret && !code) return { ok: false, requiresTwoFactor: true };
+  let step: number | null = null;
+  let recovery: string | null = null;
+  if (user.totp_secret) {
+    // This account-wide budget applies only AFTER a correct password, across all IPs.
+    await enforceLimit(sql, "login", 8, 5, `mfa:${user.id}`);
+    const { decryptTotp, verifyTotpStep, recoveryHash } =
+      await import("./admin-totp-crypto.server.ts");
+    recovery = recoveryHash(user.id, code);
+    step = recovery ? null : verifyTotpStep(decryptTotp(user.totp_secret, user.id), code);
+    if (step === null && recovery === null)
+      throw new Error("Código de autenticación inválido o ya utilizado.");
+  }
+  const token = newSessionToken();
+  // Lock the account and consume proof in the SAME statement that creates the
+  // session and audit. Concurrent logins cannot reuse a TOTP or recovery code.
   const inserted = await sql.query(
-    `INSERT INTO admin_sessions (token_hash, credential_version, expires_at, user_id)
-     SELECT $1, $2, NOW() + ($3::integer * INTERVAL '1 second'), id FROM admin_users
-     WHERE id = $4 AND enabled = true AND password_hash = $5 RETURNING user_id`,
+    `WITH locked AS MATERIALIZED (
+       SELECT * FROM admin_users WHERE id=$4 AND enabled=true AND password_hash=$5
+       AND totp_version=$6 AND totp_secret IS NOT DISTINCT FROM $7::text FOR UPDATE
+     ), used AS (
+       UPDATE admin_users u SET totp_last_step=$8::bigint FROM locked l
+       WHERE u.id=l.id AND l.totp_secret IS NOT NULL AND $8::bigint IS NOT NULL
+       AND (l.totp_last_step IS NULL OR l.totp_last_step < $8::bigint) RETURNING u.id
+     ), recovered AS (
+       DELETE FROM admin_recovery_codes r USING locked l WHERE r.user_id=l.id
+       AND l.totp_secret IS NOT NULL AND $8::bigint IS NULL AND r.code_hash=$9 RETURNING r.user_id
+     ), added AS (
+       INSERT INTO admin_sessions (token_hash, credential_version, expires_at, user_id, totp_version)
+       SELECT $1, $2, NOW()+($3::integer * INTERVAL '1 second'), l.id, l.totp_version FROM locked l
+       WHERE l.totp_secret IS NULL OR EXISTS (SELECT 1 FROM used) OR EXISTS (SELECT 1 FROM recovered)
+       RETURNING user_id
+     ), audit AS (
+       INSERT INTO admin_events(id, action, actor_id, actor_username)
+       SELECT $10, CASE WHEN EXISTS (SELECT 1 FROM recovered) THEN 'login:recovery-code' ELSE 'login:success' END, user_id, $11 FROM added RETURNING id
+     ) SELECT * FROM audit`,
     [
       tokenHash(token),
       credentialVersion(user.passwordHash, sessionSecret()),
       SESSION_SECONDS,
       user.id,
       user.passwordHash,
+      user.totp_version,
+      user.totp_secret,
+      step,
+      recovery,
+      randomUUID(),
+      user.username,
     ],
   );
-  if (!inserted.length) throw new Error("Las credenciales cambiaron. Inicia sesión nuevamente.");
+  if (!inserted.length)
+    throw new Error("Código inválido o credenciales modificadas. Inicia sesión nuevamente.");
   setCookie(COOKIE, token, {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",

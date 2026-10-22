@@ -69,7 +69,7 @@ Los registros de antiguos navegadores en localStorage no se migran automáticame
 
 ## Primer acceso y creación de usuarios
 
-1. Conserva `DATABASE_URL`, `ADMIN_PASSWORD` y `ADMIN_SESSION_SECRET` en Vercel → Settings → Environment Variables → Production. **No necesitas añadir nuevas variables ni crear tablas a mano en Neon.**
+1. Conserva `DATABASE_URL`, `ADMIN_PASSWORD` y `ADMIN_SESSION_SECRET` en Vercel → Settings → Environment Variables → Production. Para 2FA añade también `ADMIN_TOTP_ENCRYPTION_KEY` como se indica más abajo. No crees tablas a mano en Neon.
 2. Espera a que el despliegue de `main` esté **Ready**. El build aplica `0003_admin_accounts.sql` y `0004_export_revision.sql` automáticamente; conserva las solicitudes y cierra las sesiones antiguas.
 3. Abre `/solicitudes`. Usuario: **`admin`**. Contraseña: el valor actual de **`ADMIN_PASSWORD`**. El primer acceso correcto crea la única cuenta **Propietario**. Esa variable deja de servir como acceso alternativo una vez creada la cuenta.
 4. Pulsa **Administrar usuarios**. Introduce nombre, usuario (3–50 caracteres: letras, números, punto, guion o guion bajo) y una contraseña de al menos **14 caracteres**. Pulsa **Crear usuario**.
@@ -127,3 +127,38 @@ ORDER BY created_at DESC;
 ```
 
 No se requieren nuevas variables ni tablas para estos eventos. La política de conservación debe contemplar también la auditoría, las copias de seguridad y los archivos descargados: borrar una solicitud no elimina esas copias. No se automatiza una purga hasta que la organización defina el periodo y las excepciones aplicables.
+
+## Segundo factor TOTP del panel
+
+No requiere APIs de pago, SMS ni correos. Cada administrador (incluido el propietario) debe activarlo en su propia cuenta. No se activa automáticamente para las cuentas existentes.
+
+### Configuración del operador en Vercel
+
+1. Genera una clave de cifrado con `node -e "console.log(require('node:crypto').randomBytes(32).toString('base64'))"` en una terminal privada.
+2. En el proyecto Vercel → Settings → Environment Variables añade **`ADMIN_TOTP_ENCRYPTION_KEY`**, tipo **Sensitive**, entorno **Production**, con ese valor. Nunca uses el prefijo `VITE_` ni lo publiques en GitHub o chats. Es independiente de `ADMIN_SESSION_SECRET`.
+3. Guarda una copia privada y segura. No cambies esta clave arbitrariamente: cifra los secretos TOTP mediante AES-256-GCM; perderla impide verificar los autenticadores existentes. Para rotarla se requiere un procedimiento de recifrado o recuperación de las cuentas.
+4. Despliega el código. El build aplica `0005_admin_totp.sql` y `0006_admin_session_guard.sql` automáticamente sin borrar solicitudes. La aplicación sigue admitiendo cuentas sin 2FA mientras se configuran.
+5. Para Preview usa una clave distinta, además de una rama Neon aislada y `PREVIEW_DATABASE_ISOLATED=true`. Nunca copies los secretos de producción a una vista previa.
+
+### Activación por cada administrador
+
+1. Inicia sesión en `/solicitudes` y abre **Seguridad de mi cuenta · 2FA**.
+2. Introduce tu contraseña actual y pulsa **Configurar autenticador**.
+3. Escanea el QR con una app TOTP, o introduce la clave manualmente desde el mismo teléfono. El QR se genera en el servidor, sin enviar el secreto a servicios de terceros. La configuración pendiente caduca a los 10 minutos y no activa 2FA por sí sola.
+4. Introduce un código de seis dígitos y confirma. Se revocan todas tus sesiones.
+5. Guarda los diez códigos de recuperación: se muestran una sola vez, permanecen únicamente en memoria de esa pantalla y se almacenan como hashes en la base de datos. Confirma que los guardaste antes de volver al login.
+6. Vuelve a entrar con usuario y contraseña, y después un código del autenticador o de recuperación. El código usado para activar 2FA ya está consumido: espera al siguiente código de tu app.
+
+Los códigos TOTP duran 30 segundos, con tolerancia de un intervalo a cada lado. Cada intervalo aceptado se consume atómicamente junto con la creación de sesión; un código de recuperación también se consume una sola vez. Hay límites de intentos por conexión y, tras verificar la contraseña, por cuenta. La base de datos rechaza la creación de sesiones con una versión de seguridad antigua, incluso desde versiones anteriores del panel que omitan el segundo factor. Un cambio de versión revoca las sesiones también mediante un trigger. Las altas y bajas de 2FA, los accesos y el uso de recuperación quedan auditados sin secretos. El cambio de contraseña no desactiva 2FA. Para desactivarlo se necesita contraseña y un código TOTP nuevo o un código de recuperación sin utilizar; todas las sesiones y códigos de recuperación se invalidan. Para renovar los códigos, desactiva y vuelve a activar 2FA con tu autenticador disponible.
+
+### Pérdida del autenticador
+
+Usa un código de recuperación para iniciar sesión. Esto no desactiva 2FA. En Seguridad de mi cuenta puedes desactivarlo con tu contraseña y **otro** código de recuperación sin utilizar, y volver a configurarlo con un autenticador nuevo. Si conservas la clave del autenticador, también puedes restaurarlo en una app nueva. Si pierdes todos los medios de recuperación, requiere intervención del operador; el propietario del panel no puede desactivar 2FA de otro administrador mediante la interfaz.
+
+Solo para el propietario activo, un operador con acceso directo y privado a `DATABASE_URL` de Neon puede ejecutar:
+
+```bash
+npm run admin:recover -- admin --reset-2fa
+```
+
+El script pide una nueva contraseña de forma oculta, borra el segundo factor y los códigos, aumenta su versión de seguridad, revoca sesiones y registra `account:recovery` con `resetTwoFactor: true`, todo en una transacción. Después entra y configura de nuevo 2FA. Sin `--reset-2fa`, el script cambia la contraseña y conserva el segundo factor. No existe endpoint web de recuperación ni contraseña de entorno que omita 2FA. Para otras cuentas sin medios de recuperación, el operador debe verificar la identidad antes de un restablecimiento controlado en la base de datos; no compartas cuentas ni crees accesos provisionales que salten el segundo factor.
