@@ -42,7 +42,12 @@ const service = await import("./volunteer-service.server.ts");
 
 test("volunteer and admin workflow: durable data, limits, revocation, pagination, export and recovery", async () => {
   await pg.waitReady;
-  for (const file of ["0001_volunteer_requests.sql", "0002_admin_workflow.sql"])
+  for (const file of [
+    "0001_volunteer_requests.sql",
+    "0002_admin_workflow.sql",
+    "0003_admin_accounts.sql",
+    "0004_export_revision.sql",
+  ])
     await pg.exec(await readFile(new URL(`../../migrations/${file}`, import.meta.url), "utf8"));
   process.env.ADMIN_SESSION_SECRET = "test-secret-never-for-production-32-characters";
   delete process.env.ADMIN_PASSWORD;
@@ -112,17 +117,31 @@ test("volunteer and admin workflow: durable data, limits, revocation, pagination
   );
   let cursor;
   let snapshot;
+  let revision;
   const exported = new Set<string>();
   do {
-    const result = await service.exportVolunteerRequests(filters, cursor, snapshot);
+    const result = await service.exportVolunteerRequests(filters, cursor, snapshot, revision);
     for (const row of result.rows) {
       assert.ok(!exported.has(row.id));
       exported.add(row.id);
     }
     cursor = result.next ?? undefined;
     snapshot = result.snapshot;
+    revision = result.revision;
   } while (cursor);
   assert.equal(exported.size, 1006, "export traverses beyond the old 1000-row limit");
+  const batch = await service.exportVolunteerRequests(filters);
+  await service.changeVolunteerRequest(id, "status", "pendiente");
+  await assert.rejects(
+    service.exportVolunteerRequests(
+      filters,
+      batch.next ?? undefined,
+      batch.snapshot,
+      batch.revision,
+    ),
+    /cambiaron/,
+  );
+  await service.changeVolunteerRequest(id, "status", "contactada");
   site = "cross-site";
   await assert.rejects(service.changeVolunteerRequest(id, "trash"), /cross-site/);
   site = "same-origin";
@@ -144,11 +163,104 @@ test("volunteer and admin workflow: durable data, limits, revocation, pagination
   await assert.rejects(service.listVolunteerRequests(filters), /no autorizado/);
   cookies.clear();
   await service.loginAdministrator(process.env.ADMIN_PASSWORD);
-  process.env.ADMIN_PASSWORD += "-rotated";
+  const [owner] = await service.listAdminAccounts();
+  assert.equal(owner.username, "admin");
+  assert.equal(owner.role, "owner");
+  await service.createAdminAccount({
+    username: "equipo",
+    displayName: "Equipo VNE",
+    password: "individual-password-1234",
+  });
+  await assert.rejects(
+    service.createAdminAccount({
+      username: "equipo",
+      displayName: "Otro",
+      password: "individual-password-5678",
+    }),
+    /ya existe/,
+  );
+  const member = (await service.listAdminAccounts()).find((user) => user.username === "equipo")!;
+  const ownerToken = cookies.get("vne-admin-session")!;
+  cookies.clear();
+  await service.loginAdministrator("individual-password-1234", "equipo");
+  const memberToken = cookies.get("vne-admin-session")!;
+  assert.equal((await service.currentAdministrator())?.username, "equipo");
+  await assert.rejects(service.listAdminAccounts(), /propietario/);
+  await assert.rejects(
+    service.createAdminAccount({
+      username: "intruso",
+      displayName: "No",
+      password: "another-password-1234",
+    }),
+    /propietario/,
+  );
+  await assert.rejects(
+    service.updateAdminAccount({ id: owner.id, password: "unauthorized-password" }),
+    /propietario/,
+  );
+  await service.changeVolunteerRequest(id, "status", "aceptada");
+  const [audit] = (
+    await pg.query<{
+      actor_username: string;
+      before_value: { status: string };
+      after_value: { status: string };
+    }>("SELECT * FROM admin_events WHERE request_id=$1 AND action='status:aceptada'", [id])
+  ).rows;
+  assert.equal(audit.actor_username, "equipo");
+  assert.equal(audit.before_value.status, "contactada");
+  assert.equal(audit.after_value.status, "aceptada");
+  await assert.rejects(service.changeVolunteerRequest(id, "purge"), /propietario/);
+  cookies.set("vne-admin-session", ownerToken);
+  await service.updateAdminAccount({ id: member.id, enabled: false });
+  cookies.set("vne-admin-session", memberToken);
+  assert.equal(await service.isAdminAuthenticated(), false);
+  address = "192.0.2.3";
+  await assert.rejects(
+    service.loginAdministrator("individual-password-1234", "equipo"),
+    /incorrecta/,
+  );
+  cookies.set("vne-admin-session", ownerToken);
+  await assert.rejects(
+    service.updateAdminAccount({ id: owner.id, enabled: false }),
+    /propia cuenta/,
+  );
+  await service.updateAdminAccount({ id: member.id, enabled: true });
+  await service.updateAdminAccount({ id: member.id, password: "replacement-password-1234" });
+  cookies.clear();
+  await assert.rejects(
+    service.loginAdministrator("individual-password-1234", "equipo"),
+    /incorrecta/,
+  );
+  await service.loginAdministrator("replacement-password-1234", "equipo");
+  assert.equal(await service.isAdminAuthenticated(), true);
+  const replacementToken = cookies.get("vne-admin-session")!;
+  cookies.set("vne-admin-session", ownerToken);
+  await service.changeVolunteerRequest(id, "purge");
+  assert.equal(
+    (await pg.query("SELECT id FROM volunteer_requests WHERE id=$1", [id])).rows.length,
+    1,
+    "purge only permits trash",
+  );
+  await service.changeVolunteerRequest(id, "trash");
+  await service.changeVolunteerRequest(id, "purge");
+  assert.equal(
+    (await pg.query("SELECT id FROM volunteer_requests WHERE id=$1", [id])).rows.length,
+    0,
+  );
+  const hashed = JSON.stringify((await pg.query("SELECT password_hash FROM admin_users")).rows);
+  assert.ok(!hashed.includes("replacement-password-1234"));
+  // The old environment password can no longer bypass account credentials.
+  await service.updateAdminAccount({ id: owner.id, password: "new-owner-password-12345" });
+  assert.equal(await service.isAdminAuthenticated(), false);
+  address = "192.0.2.4";
+  await assert.rejects(service.loginAdministrator(process.env.ADMIN_PASSWORD), /incorrecta/);
+  await service.loginAdministrator("new-owner-password-12345");
+  cookies.set("vne-admin-session", replacementToken);
+  process.env.ADMIN_SESSION_SECRET += "-rotated";
   assert.equal(
     await service.isAdminAuthenticated(),
     false,
-    "password rotation invalidates sessions",
+    "secret rotation invalidates every account session",
   );
   cookies.clear();
   process.env.VERCEL_ENV = "preview";
