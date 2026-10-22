@@ -27,8 +27,8 @@ export const Route = createRootRoute({
         ? [{ rel: "canonical", href: `${__SITE_ORIGIN__}${matches.at(-1)?.pathname ?? "/"}` }]
         : []),
       { rel: "stylesheet", href: appCss },
-      { rel: "manifest", href: "/__grok/manifest.webmanifest" },
-      { rel: "apple-touch-icon", href: "/__grok/icon-180.png" },
+      { rel: "manifest", href: "/pwa/manifest.webmanifest" },
+      { rel: "apple-touch-icon", href: "/pwa/icon-180.png" },
     ],
   }),
   component: () => (

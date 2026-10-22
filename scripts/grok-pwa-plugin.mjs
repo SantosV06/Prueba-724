@@ -52,7 +52,15 @@ function serveGrokPwa(middlewares) {
       return;
     }
 
-    if (pathOnly === "/__grok/manifest.webmanifest" || pathOnly === "/__grok/manifest.json") {
+    // Backward compatibility for previously installed PWA assets.
+    if (pathOnly.startsWith("/__grok/")) {
+      res.statusCode = 308;
+      res.setHeader("location", rawUrl.replace("/__grok/", "/pwa/"));
+      res.end();
+      return;
+    }
+
+    if (pathOnly === "/pwa/manifest.webmanifest" || pathOnly === "/pwa/manifest.json") {
       const body = Buffer.from(renderWebManifest(requestHost(req)), "utf8");
       res.statusCode = 200;
       res.setHeader("content-type", "application/manifest+json; charset=utf-8");

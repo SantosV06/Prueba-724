@@ -11,7 +11,7 @@ node_modules/
 /.vercel/
 /.nitro/
 /.output/
-/.grok/preview.log
-/.grok/preview.pid
-/.grok/og-pending
+/.project-tools/preview.log
+/.project-tools/preview.pid
+/.project-tools/og-pending
 /public/assets/img/.*
