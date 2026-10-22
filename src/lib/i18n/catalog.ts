@@ -1,6 +1,10 @@
 // Spanish source text stays authoritative. Names, addresses and user data are not translated.
 // Each entry contains [English, Português]. Keep translations local; no external translation service.
 export const catalog: Record<string, readonly [string, string]> = {
+  "Administración de solicitudes | Fundación VNE": [
+    "Application administration | Fundación VNE",
+    "Administração de inscrições | Fundación VNE",
+  ],
   "Ocurrió un problema": ["Something went wrong", "Ocorreu um problema"],
   "No pudimos cargar esta página. Inténtalo de nuevo o vuelve al inicio.": [
     "We could not load this page. Try again or return home.",

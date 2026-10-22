@@ -92,6 +92,7 @@ function compareAgainstBaseline(verdict) {
 let browser = null;
 try {
   browser = await chromium.launch({
+    executablePath: process.env.BROWSER_EXECUTABLE_PATH || undefined,
     headless: true,
     args: ["--no-sandbox", "--disable-dev-shm-usage"],
   });
@@ -102,6 +103,22 @@ try {
     const page = await browser.newPage({
       viewport: { width: vp.width, height: vp.height },
     });
+    if (process.env.QA_OFFLINE_EXTERNALS === "true") {
+      // Explicit local QA mode: application endpoints and resources are never mocked.
+      await page.route(
+        /^https:\/\/(?:www\.google\.com|grok\.com|va\.vercel-scripts\.com)\//,
+        (route) =>
+          route.fulfill({
+            status: 200,
+            contentType:
+              route.request().resourceType() === "script" ? "application/javascript" : "text/html",
+            body: "",
+          }),
+      );
+      await page.route(/\/_vercel\/(?:insights|speed-insights)\//, (route) =>
+        route.fulfill({ status: 200, contentType: "application/javascript", body: "" }),
+      );
+    }
     page.on("console", (msg) => {
       if (msg.type() === "error") errors.consoleErrors.push(msg.text());
     });
@@ -153,7 +170,14 @@ try {
       buildAuthEnabled: buildAuthEnabled(),
     }),
   );
-  const verdict = { url, viewports, brandWarnings, authWarnings, verdictFile: outJson };
+  const verdict = {
+    url,
+    viewports,
+    brandWarnings,
+    authWarnings,
+    offlineExternals: process.env.QA_OFFLINE_EXTERNALS === "true",
+    verdictFile: outJson,
+  };
   if (baselineRequested) {
     const { divergesFromBaseline, reasons } = compareAgainstBaseline(verdict);
     verdict.divergesFromBaseline = divergesFromBaseline;

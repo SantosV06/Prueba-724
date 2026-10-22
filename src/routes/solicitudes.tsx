@@ -1,3 +1,4 @@
+import { useAdminLanguage } from "@/lib/i18n/admin";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { AdminAccounts } from "@/components/admin-accounts";
@@ -33,6 +34,7 @@ const inputStyle =
 const buttonStyle =
   "rounded-full border border-line px-5 py-3 text-sm font-semibold disabled:opacity-40 dark:border-white/20";
 function Solicitudes() {
+  const { t, language } = useAdminLanguage();
   const [rows, setRows] = useState<VolunteerRequest[]>([]);
   const [total, setTotal] = useState(0);
   const [pageSize, setPageSize] = useState(50);
@@ -95,6 +97,44 @@ function Solicitudes() {
       if (mounted.current) setError(message(cause));
     });
   }, [authenticated, refresh]);
+  // Clear personal data from the screen when a session expires or access is revoked.
+  useEffect(() => {
+    if (!authenticated) return;
+    let active = true;
+    let checking = false;
+    const verify = async () => {
+      if (document.hidden || checking) return;
+      checking = true;
+      try {
+        const status = await getAdminStatus();
+        if (active && !status.authenticated) {
+          requestSequence.current++;
+          setRows([]);
+          setTotal(0);
+          setShowAccounts(false);
+          setUser(null);
+          setAuthenticated(false);
+          setError("Tu sesión terminó. Inicia sesión nuevamente.");
+        }
+      } catch {
+        // An intermittent network failure is not proof that the session was revoked.
+      } finally {
+        checking = false;
+      }
+    };
+    const check = () => {
+      void verify();
+    };
+    window.addEventListener("focus", check);
+    document.addEventListener("visibilitychange", check);
+    const timer = window.setInterval(check, 60000);
+    return () => {
+      active = false;
+      window.clearInterval(timer);
+      window.removeEventListener("focus", check);
+      document.removeEventListener("visibilitychange", check);
+    };
+  }, [authenticated]);
   async function login(event: React.FormEvent) {
     event.preventDefault();
     setBusy(true);
@@ -104,7 +144,7 @@ function Solicitudes() {
       const status = await getAdminStatus();
       setUser(status.user);
       setPassword("");
-      setAuthenticated(true);
+      setAuthenticated(status.authenticated);
     } catch (cause) {
       setError(message(cause));
     } finally {
@@ -186,27 +226,27 @@ function Solicitudes() {
   }
   return (
     <Shell>
-      <section lang="es" className="mx-auto max-w-6xl px-5 py-14 sm:px-6">
+      <section lang={language} className="mx-auto max-w-6xl px-5 py-14 sm:px-6">
         <p className="text-xs font-bold uppercase tracking-widest text-gold-deep">
-          Administración privada
+          {t("Administración privada")}
         </p>
         <h1 className="mt-3 font-display text-4xl text-navy dark:text-cream">
-          Solicitudes de voluntariado
+          {t("Solicitudes de voluntariado")}
         </h1>
         <p className="mt-4 max-w-2xl text-mist dark:text-cream/75">
-          Revisa las solicitudes, registra su avance y conserva un seguimiento del equipo.
+          {t("Revisa las solicitudes, registra su avance y conserva un seguimiento del equipo.")}
         </p>
         {error && (
           <p
             role="alert"
             className="mt-5 rounded-lg border border-clay p-3 text-clay dark:text-cream"
           >
-            {error}
+            {t(error)}
           </p>
         )}
         {!ready ? (
           <p className="mt-6" role="status">
-            Verificando sesión…
+            {t("Verificando sesión…")}
           </p>
         ) : !authenticated ? (
           <form
@@ -214,7 +254,7 @@ function Solicitudes() {
             className="mt-8 max-w-md rounded-card border border-line bg-card p-6 dark:border-white/10 dark:bg-navy"
           >
             <label className="mb-4 block text-sm font-semibold">
-              Usuario
+              {t("Usuario")}
               <input
                 autoComplete="username"
                 autoCapitalize="none"
@@ -226,7 +266,7 @@ function Solicitudes() {
               />
             </label>
             <label className="block text-sm font-semibold">
-              Contraseña administrativa
+              {t("Contraseña administrativa")}
               <input
                 autoComplete="current-password"
                 type="password"
@@ -242,13 +282,18 @@ function Solicitudes() {
               type="submit"
               className="mt-5 h-12 rounded-full bg-navy px-6 font-semibold text-cream disabled:opacity-50 dark:bg-gold dark:text-navy"
             >
-              {busy ? "Verificando…" : "Iniciar sesión"}
+              {busy ? t("Verificando…") : t("Iniciar sesión")}
             </button>
+            <p className="mt-4 text-sm text-mist dark:text-cream/75">
+              {t(
+                "¿Olvidaste tu contraseña? Pide al propietario que la restablezca. Si eres el propietario, consulta la guía de recuperación del repositorio.",
+              )}
+            </p>
           </form>
         ) : (
           <>
             <p className="mt-6 text-sm">
-              Sesión de {user?.displayName} ({user?.username})
+              {t("Sesión de")} {user?.displayName} ({user?.username})
             </p>
             {user?.role === "owner" && (
               <button
@@ -256,7 +301,7 @@ function Solicitudes() {
                 onClick={() => setShowAccounts((value) => !value)}
                 aria-expanded={showAccounts}
               >
-                {showAccounts ? "Ocultar usuarios" : "Administrar usuarios"}
+                {showAccounts ? t("Ocultar usuarios") : t("Administrar usuarios")}
               </button>
             )}
             {showAccounts && user && (
@@ -278,7 +323,7 @@ function Solicitudes() {
                 onClick={() => void download()}
                 className="rounded-full bg-navy px-5 py-3 text-sm font-bold text-cream disabled:opacity-40 dark:bg-gold dark:text-navy"
               >
-                {busy ? "Procesando…" : "Exportar resultados CSV"}
+                {busy ? t("Procesando…") : t("Exportar resultados CSV")}
               </button>
               <button
                 disabled={busy || loading}
@@ -287,16 +332,16 @@ function Solicitudes() {
                 }
                 className={buttonStyle}
               >
-                {filters.trash ? "Ver solicitudes activas" : "Ver papelera"}
+                {filters.trash ? t("Ver solicitudes activas") : t("Ver papelera")}
               </button>
               <button disabled={busy} onClick={() => void logout()} className={buttonStyle}>
-                Cerrar sesión
+                {t("Cerrar sesión")}
               </button>
               <Link
                 to="/voluntariado"
                 className="px-3 py-3 text-sm font-semibold text-forest dark:text-gold"
               >
-                Abrir formulario
+                {t("Abrir formulario")}
               </Link>
             </div>
             <form
@@ -308,7 +353,7 @@ function Solicitudes() {
               className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-end"
             >
               <label className="flex-1 text-sm font-semibold">
-                Buscar por nombre, correo o teléfono
+                {t("Buscar por nombre, correo o teléfono")}
                 <input
                   type="search"
                   maxLength={100}
@@ -318,7 +363,7 @@ function Solicitudes() {
                 />
               </label>
               <label className="text-sm font-semibold">
-                Estado
+                {t("Estado")}
                 <select
                   value={filters.status}
                   disabled={busy}
@@ -331,22 +376,22 @@ function Solicitudes() {
                   }
                   className={`mt-2 block w-full ${inputStyle}`}
                 >
-                  <option value="">Todos</option>
+                  <option value="">{t("Todos")}</option>
                   {states.map((state) => (
-                    <option key={state} value={state}>
+                    <option key={t(state)} value={state}>
                       {state}
                     </option>
                   ))}
                 </select>
               </label>
               <button disabled={busy || loading} type="submit" className={buttonStyle}>
-                Buscar
+                {t("Buscar")}
               </button>
             </form>
             <p className="mt-6 text-sm text-mist dark:text-cream/75" role="status">
               {loading
-                ? "Cargando…"
-                : `${total} solicitudes${filters.trash ? " en papelera" : ""}. Página ${filters.page} de ${Math.max(1, Math.ceil(total / pageSize))}.`}
+                ? t("Cargando…")
+                : `${total} ${t("solicitudes")}${filters.trash ? ` ${t("en papelera")}` : ""}. ${t("Página")} ${filters.page} ${t("de")} ${Math.max(1, Math.ceil(total / pageSize))}.`}
             </p>
             <ul className="mt-6 grid gap-4" aria-busy={loading}>
               {rows.map((row) => (
@@ -359,7 +404,9 @@ function Solicitudes() {
                       {row.nombre} {row.apellido}
                     </h2>
                     <time dateTime={row.fecha} className="text-xs text-mist dark:text-cream/70">
-                      {new Date(row.fecha).toLocaleString("es-PA")}
+                      {new Date(row.fecha).toLocaleString(
+                        language === "es" ? "es-PA" : language === "en" ? "en-US" : "pt-BR",
+                      )}
                     </time>
                   </div>
                   <p className="mt-2 break-words text-sm">
@@ -371,7 +418,7 @@ function Solicitudes() {
                   <div className="mt-4 flex flex-wrap items-end gap-4">
                     {!filters.trash && (
                       <label className="text-sm font-semibold">
-                        Estado de {row.nombre}
+                        {t("Estado de")} {row.nombre}
                         <select
                           value={row.status}
                           disabled={busy || loading}
@@ -398,13 +445,15 @@ function Solicitudes() {
                         if (filters.trash)
                           void mutate(() => restoreVolunteerRequest({ data: { id: row.id } }));
                         else if (
-                          window.confirm("¿Mover esta solicitud a la papelera? Podrás restaurarla.")
+                          window.confirm(
+                            t("¿Mover esta solicitud a la papelera? Podrás restaurarla."),
+                          )
                         )
                           void mutate(() => removeVolunteerRequest({ data: { id: row.id } }));
                       }}
                       className={buttonStyle}
                     >
-                      {filters.trash ? "Restaurar" : "Mover a papelera"}
+                      {filters.trash ? t("Restaurar") : t("Mover a papelera")}
                     </button>
                     {filters.trash && user?.role === "owner" && (
                       <button
@@ -413,13 +462,15 @@ function Solicitudes() {
                         onClick={() => {
                           if (
                             window.confirm(
-                              "¿Eliminar definitivamente los datos personales de esta solicitud? Esta acción no se puede deshacer.",
+                              t(
+                                "¿Eliminar definitivamente los datos personales de esta solicitud? Esta acción no se puede deshacer.",
+                              ),
                             )
                           )
                             void mutate(() => purgeVolunteerRequest({ data: { id: row.id } }));
                         }}
                       >
-                        Eliminar definitivamente
+                        {t("Eliminar definitivamente")}
                       </button>
                     )}
                   </div>
@@ -427,7 +478,7 @@ function Solicitudes() {
               ))}
             </ul>
             {!rows.length && !loading && (
-              <p className="mt-6">No hay solicitudes que coincidan con estos filtros.</p>
+              <p className="mt-6">{t("No hay solicitudes que coincidan con estos filtros.")}</p>
             )}
             <div className="mt-7 flex flex-wrap gap-3">
               <button
@@ -435,14 +486,14 @@ function Solicitudes() {
                 onClick={() => setFilters((current) => ({ ...current, page: current.page - 1 }))}
                 className={buttonStyle}
               >
-                Anterior
+                {t("Anterior")}
               </button>
               <button
                 disabled={busy || loading || filters.page * pageSize >= total}
                 onClick={() => setFilters((current) => ({ ...current, page: current.page + 1 }))}
                 className={buttonStyle}
               >
-                Siguiente
+                {t("Siguiente")}
               </button>
             </div>
           </>

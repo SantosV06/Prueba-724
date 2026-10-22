@@ -7,7 +7,7 @@ import {
   setResponseHeader,
 } from "@tanstack/react-start/server";
 import { dbSource, getSql, type Sql } from "./db.ts";
-import { assertSameSiteRequest } from "./auth/isolation.server.ts";
+import { assertTrustedRequest } from "./admin-request.server.ts";
 import {
   adminSettings,
   sessionSecret,
@@ -53,6 +53,7 @@ async function database(): Promise<Sql> {
 type StoredAdmin = AdminIdentity & { passwordHash: string; enabled: boolean };
 export async function currentAdministrator(): Promise<AdminIdentity | null> {
   privateResponse();
+  assertTrustedRequest();
   const raw = getCookie(COOKIE);
   if (!raw || !validSessionToken(raw)) return null;
   const sql = await database();
@@ -71,7 +72,7 @@ export async function isAdminAuthenticated(): Promise<boolean> {
   return (await currentAdministrator()) !== null;
 }
 async function requireAdmin() {
-  assertSameSiteRequest();
+  assertTrustedRequest();
   const actor = await currentAdministrator();
   if (!actor) throw new Error("Acceso no autorizado. Inicia sesión nuevamente.");
   return { sql: await database(), actor };
@@ -111,7 +112,7 @@ async function enforceLimit(
     throw new Error("Demasiados intentos desde esta conexión. Vuelve a intentarlo más tarde.");
 }
 export async function saveVolunteerRequest(input: VolunteerInput) {
-  assertSameSiteRequest();
+  assertTrustedRequest();
   const sql = await database();
   // A retry of the same request must not create a second record or consume its limit again.
   const existing = await sql.query("SELECT id FROM volunteer_requests WHERE request_key = $1", [
@@ -136,11 +137,12 @@ export async function saveVolunteerRequest(input: VolunteerInput) {
   return { ok: true };
 }
 export async function loginAdministrator(inputPassword: string, username = "admin") {
-  assertSameSiteRequest();
+  assertTrustedRequest();
   privateResponse();
   const sql = await database();
   await enforceLimit(sql, "login", 60, 15);
-  await enforceLimit(sql, "login", 8, 15, `account:${username}`);
+  // Scope the account budget to the source connection: one attacker must not lock out everyone.
+  await enforceLimit(sql, "login", 8, 15, `account:${username}:${clientAddress()}`);
   let [user] = await sql.query<StoredAdmin>(
     `SELECT id, username, display_name AS "displayName", role, enabled, password_hash AS "passwordHash" FROM admin_users WHERE username = $1`,
     [username],
@@ -249,7 +251,7 @@ export async function updateAdminAccount(input: {
   return { ok: true, signedOut: input.id === actor.id };
 }
 export async function logoutAdministrator() {
-  assertSameSiteRequest();
+  assertTrustedRequest();
   privateResponse();
   const raw = getCookie(COOKIE);
   if (raw && validSessionToken(raw)) {

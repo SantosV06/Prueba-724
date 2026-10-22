@@ -1,6 +1,6 @@
 /** Local QA only. Run against an explicitly started local dev or built preview. */
 import assert from "node:assert/strict";
-import { mkdirSync } from "node:fs";
+import { mkdirSync, readFileSync } from "node:fs";
 import { chromium } from "playwright";
 import { catalog } from "../src/lib/i18n/catalog.ts";
 import { checkedUrl } from "./browser-guard.mjs";
@@ -39,6 +39,21 @@ try {
     excludedExternalHosts.add("Vercel managed analytics (local preview)");
     return route.fulfill({ status: 200, contentType: "application/javascript", body: "" });
   });
+  if (built) {
+    // Exercise the actual deployment CSP against the built HTML, not just its syntax.
+    const config = JSON.parse(readFileSync(new URL("../vercel.json", import.meta.url), "utf8"));
+    const policy = config.headers[0].headers.find(
+      (header) => header.key === "Content-Security-Policy",
+    ).value;
+    await context.route(`${base}/**`, async (route) => {
+      if (route.request().resourceType() !== "document") return route.fallback();
+      const response = await route.fetch();
+      await route.fulfill({
+        response,
+        headers: { ...response.headers(), "content-security-policy": policy },
+      });
+    });
+  }
   const page = await context.newPage();
   page.on("response", (response) => {
     if (response.status() >= 400) errors.push(`HTTP ${response.status()} ${response.url()}`);
@@ -107,8 +122,9 @@ try {
     }
   }
   async function chooseLanguage(label) {
-    await page.getByRole("button", { name: /^(Idioma|Language):/ }).click();
-    await page.getByRole("menuitemradio", { name: label, exact: true }).click();
+    await page.getByRole("combobox", { name: /^(Idioma|Language)$/ }).selectOption({
+      label: `${label === "Español" ? "ES" : label === "English" ? "EN" : "PT"} · ${label}`,
+    });
   }
   await chooseLanguage("English");
   await page.waitForFunction(() => document.documentElement.lang === "en");
@@ -203,8 +219,7 @@ try {
   });
   const blockedPage = await blocked.newPage();
   await blockedPage.goto(base, { waitUntil: "domcontentloaded" });
-  await blockedPage.getByRole("button", { name: "Idioma: Español", exact: true }).click();
-  await blockedPage.getByRole("menuitemradio", { name: "English", exact: true }).click();
+  await blockedPage.getByRole("combobox", { name: "Idioma", exact: true }).selectOption("en");
   await blockedPage.waitForFunction(() => document.documentElement.lang === "en");
   await blocked.close();
   await page.setViewportSize({ width: 390, height: 844 });
@@ -231,6 +246,13 @@ try {
     await page.getByRole("button", { name: "Registrar solicitud" }).click();
     await page.getByRole("heading", { name: "Solicitud registrada" }).waitFor();
     await page.goto(`${base}/solicitudes`, { waitUntil: "domcontentloaded" });
+    await chooseLanguage("English");
+    await page.getByRole("heading", { name: "Volunteer applications", exact: true }).waitFor();
+    await page.getByLabel("Administrator password", { exact: true }).waitFor();
+    await chooseLanguage("Português");
+    await page.getByRole("heading", { name: "Inscrições de voluntariado", exact: true }).waitFor();
+    await page.getByLabel("Senha administrativa", { exact: true }).waitFor();
+    await chooseLanguage("Español");
     await page.getByLabel("Usuario", { exact: true }).fill("admin");
     await page.getByLabel("Contraseña administrativa").fill(process.env.E2E_ADMIN_PASSWORD);
     await page.getByRole("button", { name: "Iniciar sesión" }).click();
@@ -296,8 +318,10 @@ try {
       await page.getByRole("button", { name: "Administrar usuarios", exact: true }).count(),
       0,
     );
-    await page.getByRole("button", { name: "Cerrar sesión", exact: true }).click();
+    await context.clearCookies();
+    await page.evaluate(() => window.dispatchEvent(new Event("focus")));
     await page.getByRole("button", { name: "Iniciar sesión", exact: true }).waitFor();
+    assert.equal(await row.count(), 0, "session expiry clears personal data from the screen");
   }
   assert.deepEqual(errors, []);
   console.log(
@@ -323,6 +347,8 @@ try {
           ...[
             "form to PostgreSQL",
             "admin login",
+            "administration translated into English and Portuguese",
+            "expired session clears personal data",
             "status update",
             "CSV download",
             "trash and restore",
