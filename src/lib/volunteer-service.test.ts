@@ -50,6 +50,8 @@ test("volunteer and admin workflow: durable data, limits, revocation, pagination
     "0002_admin_workflow.sql",
     "0003_admin_accounts.sql",
     "0004_export_revision.sql",
+    "0005_admin_totp.sql",
+    "0006_admin_session_guard.sql",
   ])
     await pg.exec(await readFile(new URL(`../../migrations/${file}`, import.meta.url), "utf8"));
   process.env.ADMIN_SESSION_SECRET = "test-secret-never-for-production-32-characters";

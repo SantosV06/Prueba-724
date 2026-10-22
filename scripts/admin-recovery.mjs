@@ -6,7 +6,7 @@ import { pathToFileURL } from "node:url";
 import pg from "pg";
 import { hashPassword } from "../src/lib/password.server.ts";
 
-export async function recoverOwner(client, username, password) {
+export async function recoverOwner(client, username, password, { resetTwoFactor = false } = {}) {
   if (!/^[a-z0-9][a-z0-9._-]{2,49}$/.test(username)) throw new Error("Usuario inválido.");
   if (password.length < 14 || password.length > 256)
     throw new Error("Usa una contraseña de 14 a 256 caracteres.");
@@ -14,14 +14,18 @@ export async function recoverOwner(client, username, password) {
   await client.query("BEGIN");
   try {
     const { rows } = await client.query(
-      "UPDATE admin_users SET password_hash=$2 WHERE username=$1 AND role='owner' AND enabled=true RETURNING id",
+      `UPDATE admin_users SET password_hash=$2${resetTwoFactor ? ", totp_secret=NULL, totp_last_step=NULL, totp_version=totp_version+1" : ""} WHERE username=$1 AND role='owner' AND enabled=true RETURNING id`,
       [username, hash],
     );
     if (rows.length !== 1) throw new Error("No se encontró un propietario activo con ese usuario.");
+    if (resetTwoFactor) {
+      await client.query("DELETE FROM admin_recovery_codes WHERE user_id=$1", [rows[0].id]);
+      await client.query("DELETE FROM admin_totp_pending WHERE user_id=$1", [rows[0].id]);
+    }
     await client.query("DELETE FROM admin_sessions WHERE user_id=$1", [rows[0].id]);
     await client.query(
       "INSERT INTO admin_events(id, action, actor_username, after_value) VALUES ($1, 'account:recovery', 'database-operator', $2::jsonb)",
-      [randomUUID(), JSON.stringify({ userId: rows[0].id, username })],
+      [randomUUID(), JSON.stringify({ userId: rows[0].id, username, resetTwoFactor })],
     );
     await client.query("COMMIT");
   } catch (error) {
@@ -69,8 +73,13 @@ function readPassword(prompt) {
 
 async function main() {
   const username = process.argv[2]?.trim().toLowerCase();
-  if (!username || process.argv.length !== 3)
-    throw new Error("Uso: npm run admin:recover -- nombre_de_usuario");
+  const resetTwoFactor = process.argv[3] === "--reset-2fa";
+  if (!username || (process.argv.length !== 3 && !(process.argv.length === 4 && resetTwoFactor)))
+    throw new Error("Uso: npm run admin:recover -- nombre_de_usuario [--reset-2fa]");
+  if (resetTwoFactor)
+    console.log(
+      "Recuperación de emergencia: se eliminará 2FA y sus códigos. Deberás configurarlo de nuevo después de iniciar sesión.",
+    );
   let url;
   try {
     url = new URL(process.env.DATABASE_URL);
@@ -94,7 +103,7 @@ async function main() {
   let client;
   try {
     client = await pool.connect();
-    await recoverOwner(client, username, password);
+    await recoverOwner(client, username, password, { resetTwoFactor });
     console.log("Contraseña actualizada. Todas las sesiones de esta cuenta fueron revocadas.");
   } finally {
     client?.release();
