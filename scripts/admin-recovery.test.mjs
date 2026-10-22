@@ -14,6 +14,7 @@ test("operator recovery only resets an active owner, revokes sessions and audits
       "0003_admin_accounts.sql",
       "0005_admin_totp.sql",
       "0006_admin_session_guard.sql",
+    "0007_operations.sql",
     ])
       await db.exec(await readFile(new URL(`../migrations/${file}`, import.meta.url), "utf8"));
     await db.exec(

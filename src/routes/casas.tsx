@@ -1,3 +1,4 @@
+import { localizedHead } from "@/lib/i18n/seo";
 import { T, useLanguage } from "@/lib/i18n";
 import { MediaVideo } from "@/components/media-video";
 import { media } from "@/data/media";
@@ -5,16 +6,20 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { PageIntro, Shell } from "@/components/shell";
 
 export const Route = createFileRoute("/casas")({
-  head: () => ({
-    meta: [
-      { title: "Casas VNE | Modelo comunitario autosostenible" },
+  head: ({ matches }) =>
+    localizedHead(
       {
-        name: "description",
-        content:
-          "Las Casas VNE integran formación, economía local y participación social para generar autonomía y cohesión comunitaria.",
+        meta: [
+          { title: "Casas VNE | Modelo comunitario autosostenible" },
+          {
+            name: "description",
+            content:
+              "Las Casas VNE integran formación, economía local y participación social para generar autonomía y cohesión comunitaria.",
+          },
+        ],
       },
-    ],
-  }),
+      matches.at(-1)?.search ?? {},
+    ),
   component: Casas,
 });
 

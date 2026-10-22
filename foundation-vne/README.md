@@ -1,15 +1,14 @@
-# Archivo histórico: versión Cloudflare
+# Archivo histórico · Cloudflare Pages y D1
 
-Esta carpeta conserva la implementación anterior basada en Cloudflare Pages y D1.
-No es el backend activo del despliegue Vercel de Prueba-724 y no debe configurarse
-como Root Directory ni como directorio público de ese proyecto.
+Esta carpeta conserva una implementación anterior. **No es el backend activo** de Prueba-724 en Vercel y no debe configurarse como Root Directory, directorio público o fuente de migraciones de Neon.
 
-La aplicación actual vive en `src/`; el formulario y el panel usan
-`src/lib/volunteer-functions.ts` y `src/lib/volunteer-service.server.ts` con Neon
-PostgreSQL. Su esquema se mantiene en `migrations/*.sql` y las instrucciones
-vigentes están en `../SETUP_DATABASE.md`.
+La aplicación vigente vive en `src/`, con Neon PostgreSQL, cuentas individuales, TOTP, auditoría y contenido de portada. Sus migraciones están en `migrations/*.sql`.
 
-No ejecutes `schema.sql` de esta carpeta sobre Neon ni copies estas funciones a
-las rutas del sitio actual. Si todavía existe un despliegue Cloudflare separado,
-su acceso y retirada deben comprobarse en esa cuenta: conservar estos archivos
-en Git no demuestra que esos endpoints estén publicados.
+- [Descripción actual](../README.md)
+- [Configuración de Neon y Vercel](../SETUP_DATABASE.md)
+- [Operación y recuperación](../OPERATIONS.md)
+- [Seguridad](../SECURITY.md)
+
+No ejecutes `schema.sql` de este archivo histórico sobre Neon ni copies estas funciones a las rutas activas. Si todavía existe un despliegue Cloudflare separado, su acceso y retirada deben comprobarse en la cuenta correspondiente. Conservar archivos en Git no demuestra que sus endpoints estén publicados ni que estén protegidos por las medidas de la aplicación nueva.
+
+Los cambios nuevos deben realizarse en la aplicación activa; esta carpeta se mantiene como referencia histórica.

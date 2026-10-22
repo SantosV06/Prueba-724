@@ -2,10 +2,10 @@ import test, { mock } from "node:test";
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import { randomUUID } from "node:crypto";
-import { PGlite } from "@electric-sql/pglite";
+import { testDatabase } from "../../scripts/test-db.mjs";
 
 // Full real PostgreSQL schema/queries in a disposable local DB; no production credentials.
-const pg = new PGlite();
+const pg = testDatabase();
 const cookies = new Map<string, string>();
 let address = "192.0.2.1";
 let site = "same-origin";
@@ -52,6 +52,7 @@ test("volunteer and admin workflow: durable data, limits, revocation, pagination
     "0004_export_revision.sql",
     "0005_admin_totp.sql",
     "0006_admin_session_guard.sql",
+    "0007_operations.sql",
   ])
     await pg.exec(await readFile(new URL(`../../migrations/${file}`, import.meta.url), "utf8"));
   process.env.ADMIN_SESSION_SECRET = "test-secret-never-for-production-32-characters";

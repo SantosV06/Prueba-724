@@ -60,8 +60,9 @@ export function handOver(staged, target, { rename = renameSync } = {}) {
   } catch (err) {
     if (err?.code === "EXDEV") {
       throw new Error(
-        `${staged} is on another filesystem than ${target}, so the hand-over cannot be a `
-          + "rename — stage under /workspace/.project-tools/ instead",
+        `${staged} is on another filesystem than ${target}, so the hand-over cannot be a ` +
+          "rename — stage under /workspace/.project-tools/ instead",
+        { cause: err },
       );
     }
     throw err;

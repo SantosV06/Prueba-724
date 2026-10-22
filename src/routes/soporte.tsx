@@ -1,19 +1,24 @@
+import { localizedHead } from "@/lib/i18n/seo";
 import { T, useLanguage } from "@/lib/i18n";
 import { createFileRoute } from "@tanstack/react-router";
 import { PageIntro, Shell } from "@/components/shell";
 import { org } from "@/data/site";
 
 export const Route = createFileRoute("/soporte")({
-  head: () => ({
-    meta: [
-      { title: "Soporte | Fundación VNE" },
+  head: ({ matches }) =>
+    localizedHead(
       {
-        name: "description",
-        content:
-          "Canales de información institucional y soporte técnico del sitio de Fundación VNE.",
+        meta: [
+          { title: "Soporte | Fundación VNE" },
+          {
+            name: "description",
+            content:
+              "Canales de información institucional y soporte técnico del sitio de Fundación VNE.",
+          },
+        ],
       },
-    ],
-  }),
+      matches.at(-1)?.search ?? {},
+    ),
   component: Soporte,
 });
 

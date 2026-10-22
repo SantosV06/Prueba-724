@@ -2,7 +2,7 @@ import test, { mock } from "node:test";
 import assert from "node:assert/strict";
 import { readFile, readdir } from "node:fs/promises";
 import { randomBytes } from "node:crypto";
-import { PGlite } from "@electric-sql/pglite";
+import { testDatabase } from "../../scripts/test-db.mjs";
 import {
   authenticator,
   encryptTotp,
@@ -10,7 +10,7 @@ import {
   verifyTotpStep,
 } from "./admin-totp-crypto.server.ts";
 
-const pg = new PGlite();
+const pg = testDatabase();
 const cookies = new Map<string, string>();
 let site = "same-origin";
 let isolatedLoginRequests = false;

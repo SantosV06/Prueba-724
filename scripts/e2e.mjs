@@ -51,9 +51,30 @@ try {
       const response = await route.fetch();
       await route.fulfill({
         response,
-        headers: { ...response.headers(), "content-security-policy": policy },
+        headers: {
+          ...response.headers(),
+          "content-security-policy": response.headers()["content-security-policy"] ?? policy,
+        },
       });
     });
+  }
+  for (const [language, expected] of [
+    ["en", "We are Fundación VNE, Venezuela Nueva Esperanza."],
+    ["pt", "Somos a Fundación VNE, Venezuela Nueva Esperanza."],
+  ]) {
+    const response = await fetch(`${base}/?lang=${language}`);
+    const html = await response.text();
+    if (built) {
+      const policy = response.headers.get("content-security-policy") ?? "";
+      assert.ok(policy.includes("'nonce-"), "built HTML uses a response nonce");
+      assert.ok(
+        !policy.split("script-src ")[1].split(";")[0].includes("unsafe-inline"),
+        "inline scripts require a nonce",
+      );
+    }
+    assert.ok(html.includes(`lang="${language}"`), "locale is rendered on the server");
+    if (language === "en")
+      assert.ok(html.includes(expected), "translated content exists before JavaScript");
   }
   const page = await context.newPage();
   page.on("response", (response) => {
@@ -261,6 +282,37 @@ try {
       .getByRole("listitem")
       .filter({ has: page.getByRole("heading", { name: `Prueba ${suffix} Automatizada` }) });
     await row.waitFor();
+    await page.getByRole("button", { name: "Herramientas del propietario", exact: true }).click();
+    await page.getByText("Cuentas activas con 2FA", { exact: false }).waitFor();
+    await page.getByRole("button", { name: "Historial de actividad", exact: true }).click();
+    await page.getByLabel("Acción exacta", { exact: true }).fill("login:success");
+    const tools = page.getByRole("region", { name: "Herramientas del propietario", exact: true });
+    await tools.getByRole("button", { name: "Buscar", exact: true }).click();
+    await tools.locator("strong").filter({ hasText: "login:success" }).first().waitFor();
+    await page.getByRole("button", { name: "Editar portada", exact: true }).click();
+    const homepageTitle = page.getByLabel("Título de portada (es)", { exact: true });
+    await homepageTitle.waitFor();
+    await page.waitForFunction(
+      () =>
+        ![...document.querySelectorAll("input")].find(
+          (x) => x.value === "Somos Fundación VNE, Venezuela Nueva Esperanza.",
+        )?.disabled,
+    );
+    const originalTitle = await homepageTitle.inputValue();
+    await homepageTitle.fill(`Portada QA ${suffix}`);
+    await page.getByRole("button", { name: "Guardar portada", exact: true }).click();
+    await page.getByRole("status").filter({ hasText: "Portada guardada" }).waitFor();
+    await page.goto(base, { waitUntil: "domcontentloaded" });
+    await page.getByRole("heading", { level: 1, name: `Portada QA ${suffix}` }).waitFor();
+    await page.goto(`${base}/solicitudes`, { waitUntil: "domcontentloaded" });
+    await row.waitFor();
+    await page.getByRole("button", { name: "Herramientas del propietario", exact: true }).click();
+    await page.getByRole("button", { name: "Editar portada", exact: true }).click();
+    await homepageTitle.waitFor();
+    await homepageTitle.fill(originalTitle);
+    await page.getByRole("button", { name: "Guardar portada", exact: true }).click();
+    await page.getByRole("status").filter({ hasText: "Portada guardada" }).waitFor();
+    await page.getByRole("button", { name: "Ocultar herramientas", exact: true }).click();
     await row.getByRole("combobox").selectOption("contactada");
     await page.waitForFunction(() =>
       [...document.querySelectorAll("button")]
@@ -312,6 +364,8 @@ try {
     if (process.env.E2E_TOTP_ENABLED === "true") {
       await page.locator("summary").filter({ hasText: "Seguridad de mi cuenta" }).click();
       await page
+        .locator("details")
+        .filter({ has: page.locator("summary").filter({ hasText: "Seguridad de mi cuenta" }) })
         .getByLabel("Contraseña actual", { exact: true })
         .fill(process.env.E2E_ADMIN_PASSWORD);
       await page.getByRole("button", { name: "Configurar autenticador", exact: true }).click();
@@ -336,9 +390,7 @@ try {
           path: `${screenshots}/vne-totp-${built ? "built" : "dev"}-${name}.png`,
         });
       }
-      await page
-        .getByLabel("Código del autenticador", { exact: true })
-        .fill(otp.generate());
+      await page.getByLabel("Código del autenticador", { exact: true }).fill(otp.generate());
       await page.getByRole("button", { name: "Confirmar y activar 2FA", exact: true }).click();
       await page
         .getByRole("heading", {
@@ -376,6 +428,8 @@ try {
         .getByText("2FA activo. Códigos de recuperación restantes: 9.", { exact: true })
         .waitFor();
       await page
+        .locator("details")
+        .filter({ has: page.locator("summary").filter({ hasText: "Seguridad de mi cuenta" }) })
         .getByLabel("Contraseña actual", { exact: true })
         .fill(process.env.E2E_ADMIN_PASSWORD);
       await page
@@ -402,6 +456,26 @@ try {
       await page.getByRole("button", { name: "Administrar usuarios", exact: true }).count(),
       0,
     );
+    await page.locator("summary").filter({ hasText: "Cambiar mi contraseña" }).click();
+    const passwordForm = page
+      .locator("details")
+      .filter({ has: page.locator("summary").filter({ hasText: "Cambiar mi contraseña" }) });
+    await passwordForm
+      .getByLabel("Contraseña actual", { exact: true })
+      .fill("test-replacement-password-1234");
+    await passwordForm
+      .getByLabel("Nueva contraseña", { exact: true })
+      .fill("test-self-password-12345");
+    await passwordForm
+      .getByLabel("Repetir nueva contraseña", { exact: true })
+      .fill("test-self-password-12345");
+    await page.getByRole("button", { name: "Guardar mi contraseña", exact: true }).click();
+    await page.getByRole("button", { name: "Iniciar sesión", exact: true }).waitFor();
+    await page
+      .getByLabel("Contraseña administrativa", { exact: true })
+      .fill("test-self-password-12345");
+    await page.getByRole("button", { name: "Iniciar sesión", exact: true }).click();
+    await row.waitFor();
     await context.clearCookies();
     await page.evaluate(() => window.dispatchEvent(new Event("focus")));
     await page.getByRole("button", { name: "Iniciar sesión", exact: true }).waitFor();
@@ -424,6 +498,10 @@ try {
           "language persistence and translated metadata",
           "form values survive language changes",
           "language switching with blocked storage",
+          "owner audit viewer and role restrictions",
+          "homepage editor publishes and restores content",
+          "server-rendered language URLs",
+          "own password change revokes sessions",
           "owner creates accounts",
           "password reset",
           ...(process.env.E2E_TOTP_ENABLED === "true"

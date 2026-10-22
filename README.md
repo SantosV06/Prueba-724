@@ -1,22 +1,55 @@
-# Fundación VNE
+# Fundación VNE · Prueba-724
 
-Web institucional con TanStack Start, React, Vite y Nitro para Vercel. Neon PostgreSQL almacena solicitudes de voluntariado; `/solicitudes` permite acceso administrativo, filtros, estados, exportación CSV y papelera recuperable.
+Sitio institucional de Fundación Venezuela Nueva Esperanza y aplicación privada de gestión de voluntariado. Despliegue: **Vercel**. Datos persistentes: **Neon PostgreSQL**. Stack: React, TanStack Start/Router, TypeScript, Vite, Nitro y Tailwind CSS.
 
-## Desarrollo y validación
+## Funciones actuales
 
-Node 24, npm 11.9.0. Instala con `npm ci`. `npm run dev` inicia el desarrollo; sin Neon usa PGLite local temporal. Para probar formulario y administración local, proporciona credenciales de prueba mediante variables del proceso (`ADMIN_PASSWORD`, `ADMIN_SESSION_SECRET`), nunca archivos de secretos versionados.
+- Páginas institucionales, programas, contacto, instrucciones para donar por Zelle y documentos públicos.
+- Español, English y Português, tema claro/oscuro y navegación móvil accesible.
+- Enlaces por idioma: `/casas`, `/casas?lang=en` y `/casas?lang=pt`. El HTML y los metadatos se traducen en el servidor; las canónicas y alternativas `hreflang` usan el dominio configurado.
+- Formulario de voluntariado con validación del servidor, protección contra reintentos duplicados, campo trampa y límites por conexión/correo.
+- Panel `/solicitudes`: búsqueda, estados, paginación, CSV por lotes, papelera, restauración y borrado definitivo de solicitudes en papelera.
+- Cuentas individuales, propietario/administradores, restablecimiento por el propietario y cambio de contraseña personal. Los cambios revocan las sesiones de esa cuenta.
+- TOTP con QR generado localmente, secretos cifrados y códigos de recuperación de un solo uso. El propietario puede exigirlo al equipo tras activarlo en su propia cuenta.
+- Herramientas del propietario: cobertura de 2FA, visor de auditoría y editor del título e introducción de portada en los tres idiomas. No es un CMS completo.
+- Diagnóstico genérico `/api/health`, comprobación horaria desde GitHub Actions y utilidades privadas de verificación de la base y retención.
 
-- `npm run check`: tipos, lint y pruebas, incluidas consultas PostgreSQL en PGLite desechable.
-- `npm run build`: comprobaciones, compilación y migraciones según ambiente.
-- `npm run test:e2e -- http://127.0.0.1:8080`: revisión de navegador sobre desarrollo local (requiere Chromium de Playwright y `E2E_ADMIN_PASSWORD` de pruebas). Mapas y script externo de marca se sustituyen solo en QA; las funciones y consultas de la aplicación se ejecutan realmente.
-- `npm run db:migrate`: migraciones pendientes con bloqueo transaccional.
+**Correos automáticos pendientes de definir con el propietario.** No hay proveedor de correo, SMTP, recuperación por email ni envíos. Zelle es una página de instrucciones: el sitio no procesa, confirma ni concilia pagos.
 
-Consulta [SETUP_DATABASE.md](SETUP_DATABASE.md) para producción, aislamiento de Preview y tareas del propietario; [MULTIMEDIA.md](MULTIMEDIA.md) para recursos optimizados.
+## Empezar
 
-Las migraciones nuevas preservan registros existentes. GitHub Actions valida cada PR y cada cambio en `main` sin secretos de producción. El build de Vercel también ejecuta las comprobaciones.
+Requiere Node **24.x** y npm **11.9.0**. Ejecuta `npm ci --include=dev` y `npm run dev`. Sin `DATABASE_URL`, desarrollo utiliza PGLite en memoria; sus datos se pierden al reiniciar. Usa únicamente credenciales ficticias en desarrollo y pruebas.
 
-## Idiomas
+Para formulario y panel local, proporciona `ADMIN_PASSWORD` y `ADMIN_SESSION_SECRET` mediante variables del proceso. Para probar TOTP añade una clave local `ADMIN_TOTP_ENCRYPTION_KEY`. No subas archivos de secretos a Git.
 
-El selector del encabezado ofrece Español, English y Português en las páginas públicas. Recuerda la preferencia en `localStorage` con manejo de almacenamiento bloqueado y actualiza el atributo `lang`, los títulos y las descripciones al navegar. El español es el idioma inicial y de respaldo. Se conservan rutas, marca, contactos, datos escritos y documentos descargables. El panel administrativo permanece en español y declara `lang="es"`.
+## Comandos
 
-Las traducciones se mantienen localmente en `src/lib/i18n/catalog.ts`: cada texto español corresponde a una pareja `[English, Português]`. Usa `<T>` para texto visible y `useLanguage().t()` para atributos accesibles y propiedades de texto; no traduzcas valores de formularios ni datos de usuarios. No utiliza servicios de traducción externos ni requiere nuevas variables o cambios en Neon. Las pruebas de navegador recorren todas las páginas públicas en ambos idiomas y comprueban persistencia, metadatos y conservación del formulario.
+| Comando                                      | Función                                                                                                                                        |
+| -------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
+| `npm run check`                              | Tipos, lint y pruebas de scripts, validación y servicios con base desechable.                                                                  |
+| `npm run build`                              | Comprobaciones, compilación de Vercel y migraciones según el entorno.                                                                          |
+| `npm run test:e2e`                           | Chromium: páginas, idiomas, formulario, panel, usuarios, editor, auditoría, contraseñas y 2FA. Requiere servidor local y contraseña de prueba. |
+| `npm run test:postgres`                      | Servicios contra PostgreSQL local desechable si se proporciona `TEST_DATABASE_URL`. Nunca admite una URL remota.                               |
+| `npm run db:migrate`                         | Aplica migraciones pendientes con transacción y bloqueo.                                                                                       |
+| `npm run db:verify`                          | Verificación privada de solo lectura de migraciones, recuentos y secretos TOTP después de restaurar.                                           |
+| `npm run data:retention`                     | Cuenta solicitudes en papelera que superan `DATA_RETENTION_DAYS`. No borra.                                                                    |
+| `npm run data:retention -- --apply`          | Borra únicamente esa papelera antigua y registra el resultado atómicamente.                                                                    |
+| `npm run admin:recover -- admin`             | Recuperación privada del propietario con acceso directo a Neon. Conserva 2FA.                                                                  |
+| `npm run admin:recover -- admin --reset-2fa` | Recuperación de emergencia: nueva contraseña, retirada del factor y revocación de sesiones.                                                    |
+
+## Guías vigentes
+
+- [Configuración y despliegue](SETUP_DATABASE.md): variables, Neon, Vercel y primer acceso.
+- [Operación y recuperación](OPERATIONS.md): panel, alertas, respaldos, restauración y conservación.
+- [Seguridad](SECURITY.md): controles, límites y comunicación privada de incidencias.
+- [Arquitectura](ARCHITECTURE.md): rutas, servicios, datos y pruebas.
+- [Multimedia](MULTIMEDIA.md): originales, derivados y reproducción.
+- [Instrucciones de mantenimiento](AGENTS.md): contratos que debe preservar quien modifique el código.
+
+`foundation-vne/` es la versión histórica de Cloudflare y no se despliega. `.project-tools/` conserva herramientas y plantillas heredadas del generador; no describe el entorno actual ni sustituye estas guías.
+
+## Validación y límites
+
+GitHub Actions valida cada PR y cambio en `main`: pruebas con PGLite, servicios sobre PostgreSQL 17 desechable, compilación y navegador en desarrollo/compilación. Las credenciales de CI son públicas y exclusivas de las bases de prueba. Los mapas y scripts externos se sustituyen en QA; el formulario y el backend sí se ejecutan.
+
+Una validación verde no acredita configuración de producción, accesibilidad completa, carga máxima ni restauración de Neon. La ejecución de producción y la custodia de secretos deben comprobarse por separado. El repositorio no incluye una licencia de redistribución; las condiciones de uso de contenido y marcas corresponden a sus titulares.

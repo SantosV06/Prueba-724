@@ -22,5 +22,6 @@ export type AdminIdentity = {
   username: string;
   displayName: string;
   role: "owner" | "admin";
+  requiresEnrollment?: boolean;
 };
-export type AdminAccount = AdminIdentity & { enabled: boolean };
+export type AdminAccount = AdminIdentity & { enabled: boolean; twoFactorEnabled: boolean };

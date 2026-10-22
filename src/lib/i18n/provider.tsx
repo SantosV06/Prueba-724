@@ -1,35 +1,34 @@
-import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
-import { useRouterState } from "@tanstack/react-router";
+import { useCallback, useEffect, useMemo, type ReactNode } from "react";
+import { useRouterState, useNavigate } from "@tanstack/react-router";
 import { isLanguage, translate, type Language } from "./translate";
 
 import { LanguageContext, useLanguage } from "./context";
 
-const KEY = "vne-language";
 export function LanguageProvider({ children }: { children: ReactNode }) {
-  // Spanish on the server and during hydration; restore the preference after mounting.
-  const [language, updateLanguage] = useState<Language>("es");
+  const navigate = useNavigate();
+  const search = useRouterState({ select: (state) => state.matches.at(-1)?.search ?? {} });
+  const language: Language = isLanguage(search.lang) ? search.lang : "es";
   const matches = useRouterState({ select: (state) => state.matches });
-  useEffect(() => {
-    try {
-      const saved = localStorage.getItem(KEY);
-      if (isLanguage(saved)) updateLanguage(saved);
-    } catch {
-      /* Browsing and language selection still work when storage is blocked. */
-    }
-  }, []);
-  const setLanguage = useCallback((next: Language) => {
-    updateLanguage(next);
-    try {
-      localStorage.setItem(KEY, next);
-    } catch {
-      /* Session-only preference. */
-    }
-  }, []);
+  const setLanguage = useCallback(
+    (next: Language) => {
+      try {
+        document.cookie = `vne-language=${next}; Path=/; Max-Age=31536000; SameSite=Lax${location.protocol === "https:" ? "; Secure" : ""}`;
+      } catch {
+        /* The explicit language URL remains usable when cookies are blocked. */
+      }
+      void navigate({
+        to: ".",
+        search: (previous) => ({ ...previous, lang: next }),
+        replace: true,
+      });
+    },
+    [navigate],
+  );
   const t = useCallback((source: string) => translate(source, language), [language]);
   const value = useMemo(() => ({ language, setLanguage, t }), [language, setLanguage, t]);
   useEffect(() => {
     document.documentElement.lang = language;
-    // Use the route's authoritative Spanish metadata, not the previously translated DOM.
+    // Use authoritative route metadata rather than previously modified DOM content.
     const metadata = matches.flatMap((match) => match.meta ?? []) as {
       title?: string;
       name?: string;

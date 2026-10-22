@@ -1,3 +1,4 @@
+import { localizedHead } from "@/lib/i18n/seo";
 import { T, useLanguage } from "@/lib/i18n";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
@@ -6,16 +7,20 @@ import { isInternationalPhone, normalizePhone } from "@/lib/phone";
 import { submitVolunteer } from "@/lib/volunteer-functions";
 
 export const Route = createFileRoute("/voluntariado")({
-  head: () => ({
-    meta: [
-      { title: "Voluntariado | Proyecto Génesis · Fundación VNE" },
+  head: ({ matches }) =>
+    localizedHead(
       {
-        name: "description",
-        content:
-          "Solicitud de voluntariado para Proyecto Génesis y Fundación VNE. Registro de solicitudes en línea.",
+        meta: [
+          { title: "Voluntariado | Proyecto Génesis · Fundación VNE" },
+          {
+            name: "description",
+            content:
+              "Solicitud de voluntariado para Proyecto Génesis y Fundación VNE. Registro de solicitudes en línea.",
+          },
+        ],
       },
-    ],
-  }),
+      matches.at(-1)?.search ?? {},
+    ),
   component: Voluntariado,
 });
 
@@ -157,14 +162,14 @@ function Voluntariado() {
                   label={t("Nombre")}
                   value={fields.nombre}
                   onChange={(value) => update("nombre", value)}
-                  disabled={sending}
+                  disabled={sending || !interactive}
                   autoComplete="given-name"
                 />
                 <Field
                   label={t("Apellido")}
                   value={fields.apellido}
                   onChange={(value) => update("apellido", value)}
-                  disabled={sending}
+                  disabled={sending || !interactive}
                   autoComplete="family-name"
                 />
                 <Field
@@ -172,7 +177,7 @@ function Voluntariado() {
                   type="email"
                   value={fields.correo}
                   onChange={(value) => update("correo", value)}
-                  disabled={sending}
+                  disabled={sending || !interactive}
                   autoComplete="email"
                 />
                 <Field
@@ -180,7 +185,7 @@ function Voluntariado() {
                   type="tel"
                   value={fields.telefono}
                   onChange={(value) => update("telefono", value)}
-                  disabled={sending}
+                  disabled={sending || !interactive}
                   autoComplete="tel"
                   hint="+1 347 555 0100"
                 />
@@ -191,7 +196,7 @@ function Voluntariado() {
                   value={fields.mensaje}
                   onChange={(event) => update("mensaje", event.target.value)}
                   rows={4}
-                  disabled={sending}
+                  disabled={sending || !interactive}
                   maxLength={2000}
                   className="mt-1.5 w-full rounded-xl border border-line bg-paper px-3 py-3 text-base font-normal text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold dark:border-white/15 dark:bg-navy-deep dark:text-cream"
                 />

@@ -1,3 +1,5 @@
+import { localizedHead } from "@/lib/i18n/seo";
+import { getPublicHomeContent } from "@/lib/home-content-functions";
 import { T, useLanguage } from "@/lib/i18n";
 import { MediaVideo } from "@/components/media-video";
 import { media } from "@/data/media";
@@ -7,16 +9,21 @@ import { org } from "@/data/site";
 import { Shell } from "@/components/shell";
 
 export const Route = createFileRoute("/")({
-  head: () => ({
-    meta: [
-      { title: "Fundación VNE | Desarrollo social y económico sostenible" },
+  head: ({ matches }) =>
+    localizedHead(
       {
-        name: "description",
-        content:
-          "Fundación Venezuela Nueva Esperanza. Proyectos productivos, emprendimiento y autonomía a través de Casas VNE y Proyecto Génesis.",
+        meta: [
+          { title: "Fundación VNE | Desarrollo social y económico sostenible" },
+          {
+            name: "description",
+            content:
+              "Fundación Venezuela Nueva Esperanza. Proyectos productivos, emprendimiento y autonomía a través de Casas VNE y Proyecto Génesis.",
+          },
+        ],
       },
-    ],
-  }),
+      matches.at(-1)?.search ?? {},
+    ),
+  loader: () => getPublicHomeContent(),
   component: Home,
 });
 
@@ -44,7 +51,8 @@ const pillars = [
 ];
 
 function Home() {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
+  const content = Route.useLoaderData();
   return (
     <Shell>
       <section className="bg-navy text-cream">
@@ -54,14 +62,10 @@ function Home() {
               <T>Nueva York · Caracas · desde 2022</T>
             </p>
             <h1 className="mt-4 font-display text-[2.6rem] leading-[1.08] font-semibold text-balance sm:text-6xl">
-              <T>Somos Fundación VNE, Venezuela Nueva Esperanza.</T>
+              {content.title[language]}
             </h1>
             <p className="editorial-justify mt-6 max-w-xl text-lg leading-relaxed text-cream/85">
-              <T>
-                Empresa con propósito social. Diseñamos e implementamos proyectos de desarrollo
-                sostenible mediante actividad productiva, alianzas y programas de servicio — no
-                asistencia de corto plazo.
-              </T>
+              {content.description[language]}
             </p>
             <div className="mt-8 flex flex-col gap-3 sm:flex-row">
               <Link

@@ -15,3 +15,5 @@ node_modules/
 /.project-tools/preview.pid
 /.project-tools/og-pending
 /public/assets/img/.*
+
+/.tanstack/

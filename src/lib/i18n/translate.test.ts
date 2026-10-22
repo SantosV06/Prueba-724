@@ -36,7 +36,12 @@ test("both translations cover every published legal title, description, paragrap
 });
 
 test("administrative labels have both translations without translating personal data", async () => {
-  for (const filename of ["../../routes/solicitudes.tsx", "../../components/admin-accounts.tsx"]) {
+  for (const filename of [
+    "../../routes/solicitudes.tsx",
+    "../../components/admin-accounts.tsx",
+    "../../components/admin-two-factor.tsx",
+    "../../components/admin-operations.tsx",
+  ]) {
     const source = await readFile(new URL(filename, import.meta.url), "utf8");
     for (const match of source.matchAll(/\bt\(("(?:[^"\\]|\\.)*")\)/g)) {
       const text = JSON.parse(match[1]);

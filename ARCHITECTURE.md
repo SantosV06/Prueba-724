@@ -1,0 +1,51 @@
+# Arquitectura
+
+## Aplicación activa
+
+TanStack Start combina renderizado de servidor, React y funciones del servidor. Vite compila y Nitro adapta el resultado a Vercel. PostgreSQL de Neon almacena solicitudes y administración. PGLite proporciona una base desechable para desarrollo y pruebas; no es persistencia de producción.
+
+| Ubicación                             | Responsabilidad                                                            |
+| ------------------------------------- | -------------------------------------------------------------------------- |
+| `src/routes/`                         | Páginas, shell del documento y salud HTTP.                                 |
+| `src/components/`                     | Navegación, multimedia y componentes administrativos.                      |
+| `src/lib/volunteer-functions.ts`      | Frontera HTTP: validación y funciones del servidor de solicitudes/cuentas. |
+| `src/lib/volunteer-service.server.ts` | Acceso, roles, sesiones, límites y consultas de solicitudes/cuentas.       |
+| `src/lib/admin-totp*`                 | Inscripción, cifrado, validación y recuperación TOTP.                      |
+| `src/lib/admin-operations*`           | Auditoría, política, cambio personal de contraseña y contenido de portada. |
+| `src/lib/home-content*`               | Valores iniciales y lectura pública del contenido editorial.               |
+| `src/lib/i18n/`                       | Catálogos, proveedor, traducción administrativa y SEO por idioma.          |
+| `src/data/`                           | Contenido institucional fijo y catálogo multimedia.                        |
+| `src/lib/db.ts`                       | Pool PostgreSQL/PGLite y normalización de resultados.                      |
+| `migrations/*.sql`                    | Esquema versionado de la aplicación activa.                                |
+| `server/middleware/`                  | Nonce CSP y recursos de instalación/marca del generador.                   |
+| `scripts/`                            | Migraciones, validación, navegador y utilidades de operación.              |
+| `.github/workflows/`                  | CI y monitor de disponibilidad.                                            |
+
+## Flujos
+
+Formulario → validación del servidor → control de origen/límites → inserción con clave de reintento → confirmación en pantalla. No hay correo en este flujo.
+
+Login → contraseña → segundo factor si está inscrito → sesión revocable → verificación de rol/política en cada operación. Si se exige 2FA y la cuenta no está inscrita, solo se permite gestionar la inscripción y cerrar sesión.
+
+Editor de portada → autorización de propietario → validación de tres idiomas y revisión → escritura/auditoría → lectura pública al recargar inicio. Si la base está indisponible, la portada usa el contenido original y emite un evento genérico. El formulario y panel no confirman escrituras fallidas.
+
+## Idiomas y SEO
+
+`lang` admite `es`, `en` y `pt` en la query. El español sin query es la URL canónica base; las versiones inglesa/portuguesa utilizan `?lang=en` y `?lang=pt`. El idioma explícito tiene prioridad sobre la preferencia guardada en una cookie de idioma y se conserva al navegar. El servidor renderiza el contenido y los metadatos del idioma solicitado. El selector actualiza la URL y una cookie de idioma (sin datos personales); la misma preferencia se lee en servidor y navegador para evitar diferencias de hidratación. Si se bloquean cookies, el enlace explícito sigue funcionando. No se traducen datos de usuarios.
+
+El sitemap incluye las tres variantes y alternativas `hreflang`; necesita un origen de producción configurado. No se generan alternativas del panel privado. Las tarjetas sociales siguen bajo el inyector de marca heredado; no se promete una tarjeta traducida por idioma.
+
+## Datos
+
+Las tablas centrales son `volunteer_requests`, `admin_users`, `admin_sessions`, `admin_events`, `request_limits`, `admin_totp_pending`, `admin_recovery_codes`, `admin_policy` y `site_content`. `_migrations` registra archivos aplicados. `volunteer_export_revision` protege la consistencia de los lotes CSV.
+
+Las migraciones se aplican antes de publicar funciones del nuevo despliegue. No hay escrituras de archivos en tiempo de ejecución de producción. El contenido editable vive en Neon, no en un JSON generado durante el build.
+
+## Pruebas
+
+- Tipos y lint con `npm run check`.
+- Pruebas de scripts, seguridad de peticiones, traducciones, CSV y consultas sobre PGLite.
+- Servicios con PostgreSQL 17 en CI mediante `TEST_DATABASE_URL`, que solo permite una base local desechable y crea un esquema aleatorio por proceso.
+- Navegador sobre desarrollo y compilación: páginas/móvil, temas, idioma en SSR, formulario, cuentas, auditoría, portada, contraseñas, sesiones y TOTP. Las solicitudes de la aplicación no se simulan; recursos externos se excluyen de QA.
+
+Los resultados deben consultarse en la ejecución del commit correspondiente. Un documento no sustituye logs de pruebas ni garantiza que producción use las mismas variables.

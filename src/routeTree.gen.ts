@@ -17,6 +17,7 @@ import { Route as LiderazgoRouteImport } from './routes/liderazgo'
 import { Route as SolicitudesRouteImport } from './routes/solicitudes'
 import { Route as SoporteRouteImport } from './routes/soporte'
 import { Route as VoluntariadoRouteImport } from './routes/voluntariado'
+import { Route as ApiHealthRouteImport } from './routes/api.health'
 import { Route as LegalSlugRouteImport } from './routes/legal.$slug'
 
 const IndexRoute = IndexRouteImport.update({
@@ -59,6 +60,11 @@ const VoluntariadoRoute = VoluntariadoRouteImport.update({
   path: '/voluntariado',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiHealthRoute = ApiHealthRouteImport.update({
+  id: '/api/health',
+  path: '/api/health',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const LegalSlugRoute = LegalSlugRouteImport.update({
   id: '/legal/$slug',
   path: '/legal/$slug',
@@ -74,6 +80,7 @@ export interface FileRoutesByFullPath {
   '/solicitudes': typeof SolicitudesRoute
   '/soporte': typeof SoporteRoute
   '/voluntariado': typeof VoluntariadoRoute
+  '/api/health': typeof ApiHealthRoute
   '/legal/$slug': typeof LegalSlugRoute
 }
 export interface FileRoutesByTo {
@@ -85,6 +92,7 @@ export interface FileRoutesByTo {
   '/solicitudes': typeof SolicitudesRoute
   '/soporte': typeof SoporteRoute
   '/voluntariado': typeof VoluntariadoRoute
+  '/api/health': typeof ApiHealthRoute
   '/legal/$slug': typeof LegalSlugRoute
 }
 export interface FileRoutesById {
@@ -97,6 +105,7 @@ export interface FileRoutesById {
   '/solicitudes': typeof SolicitudesRoute
   '/soporte': typeof SoporteRoute
   '/voluntariado': typeof VoluntariadoRoute
+  '/api/health': typeof ApiHealthRoute
   '/legal/$slug': typeof LegalSlugRoute
 }
 export interface FileRouteTypes {
@@ -110,6 +119,7 @@ export interface FileRouteTypes {
     | '/solicitudes'
     | '/soporte'
     | '/voluntariado'
+    | '/api/health'
     | '/legal/$slug'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -121,6 +131,7 @@ export interface FileRouteTypes {
     | '/solicitudes'
     | '/soporte'
     | '/voluntariado'
+    | '/api/health'
     | '/legal/$slug'
   id:
     | '__root__'
@@ -132,6 +143,7 @@ export interface FileRouteTypes {
     | '/solicitudes'
     | '/soporte'
     | '/voluntariado'
+    | '/api/health'
     | '/legal/$slug'
   fileRoutesById: FileRoutesById
 }
@@ -144,6 +156,7 @@ export interface RootRouteChildren {
   SolicitudesRoute: typeof SolicitudesRoute
   SoporteRoute: typeof SoporteRoute
   VoluntariadoRoute: typeof VoluntariadoRoute
+  ApiHealthRoute: typeof ApiHealthRoute
   LegalSlugRoute: typeof LegalSlugRoute
 }
 
@@ -205,6 +218,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof VoluntariadoRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/health': {
+      id: '/api/health'
+      path: '/api/health'
+      fullPath: '/api/health'
+      preLoaderRoute: typeof ApiHealthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/legal/$slug': {
       id: '/legal/$slug'
       path: '/legal/$slug'
@@ -224,6 +244,7 @@ const rootRouteChildren: RootRouteChildren = {
   SolicitudesRoute: SolicitudesRoute,
   SoporteRoute: SoporteRoute,
   VoluntariadoRoute: VoluntariadoRoute,
+  ApiHealthRoute: ApiHealthRoute,
   LegalSlugRoute: LegalSlugRoute,
 }
 export const routeTree = rootRouteImport
