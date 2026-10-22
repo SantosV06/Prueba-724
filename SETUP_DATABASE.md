@@ -137,7 +137,7 @@ No requiere APIs de pago, SMS ni correos. Cada administrador (incluido el propie
 1. Genera una clave de cifrado con `node -e "console.log(require('node:crypto').randomBytes(32).toString('base64'))"` en una terminal privada.
 2. En el proyecto Vercel → Settings → Environment Variables añade **`ADMIN_TOTP_ENCRYPTION_KEY`**, tipo **Sensitive**, entorno **Production**, con ese valor. Nunca uses el prefijo `VITE_` ni lo publiques en GitHub o chats. Es independiente de `ADMIN_SESSION_SECRET`.
 3. Guarda una copia privada y segura. No cambies esta clave arbitrariamente: cifra los secretos TOTP mediante AES-256-GCM; perderla impide verificar los autenticadores existentes. Para rotarla se requiere un procedimiento de recifrado o recuperación de las cuentas.
-4. Despliega el código. El build aplica `0005_admin_totp.sql` automáticamente sin borrar solicitudes. La aplicación sigue admitiendo cuentas sin 2FA mientras se configuran.
+4. Despliega el código. El build aplica `0005_admin_totp.sql` y `0006_admin_session_guard.sql` automáticamente sin borrar solicitudes. La aplicación sigue admitiendo cuentas sin 2FA mientras se configuran.
 5. Para Preview usa una clave distinta, además de una rama Neon aislada y `PREVIEW_DATABASE_ISOLATED=true`. Nunca copies los secretos de producción a una vista previa.
 
 ### Activación por cada administrador
@@ -149,7 +149,7 @@ No requiere APIs de pago, SMS ni correos. Cada administrador (incluido el propie
 5. Guarda los diez códigos de recuperación: se muestran una sola vez, permanecen únicamente en memoria de esa pantalla y se almacenan como hashes en la base de datos. Confirma que los guardaste antes de volver al login.
 6. Vuelve a entrar con usuario y contraseña, y después un código del autenticador o de recuperación. El código usado para activar 2FA ya está consumido: espera al siguiente código de tu app.
 
-Los códigos TOTP duran 30 segundos, con tolerancia de un intervalo a cada lado. Cada intervalo aceptado se consume atómicamente junto con la creación de sesión; un código de recuperación también se consume una sola vez. Hay límites de intentos por conexión y, tras verificar la contraseña, por cuenta. Las altas y bajas de 2FA, los accesos y el uso de recuperación quedan auditados sin secretos. El cambio de contraseña no desactiva 2FA. Para desactivarlo se necesita contraseña y un código TOTP nuevo o un código de recuperación sin utilizar; todas las sesiones y códigos de recuperación se invalidan. Para renovar los códigos, desactiva y vuelve a activar 2FA con tu autenticador disponible.
+Los códigos TOTP duran 30 segundos, con tolerancia de un intervalo a cada lado. Cada intervalo aceptado se consume atómicamente junto con la creación de sesión; un código de recuperación también se consume una sola vez. Hay límites de intentos por conexión y, tras verificar la contraseña, por cuenta. La base de datos rechaza la creación de sesiones con una versión de seguridad antigua, incluso desde versiones anteriores del panel que omitan el segundo factor. Un cambio de versión revoca las sesiones también mediante un trigger. Las altas y bajas de 2FA, los accesos y el uso de recuperación quedan auditados sin secretos. El cambio de contraseña no desactiva 2FA. Para desactivarlo se necesita contraseña y un código TOTP nuevo o un código de recuperación sin utilizar; todas las sesiones y códigos de recuperación se invalidan. Para renovar los códigos, desactiva y vuelve a activar 2FA con tu autenticador disponible.
 
 ### Pérdida del autenticador
 

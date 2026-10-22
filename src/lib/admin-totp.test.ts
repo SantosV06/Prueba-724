@@ -58,7 +58,8 @@ test("TOTP: encryption and RFC 6238 vector", () => {
   assert.equal(authenticator(secret).generate({ timestamp: 59000 }), "287082");
 });
 
-test("real DB: enrollment, no bypass, atomic one-use proofs, revocation, limits and recovery", async () => {
+test("real DB: enrollment, no bypass, atomic one-use proofs, revocation, limits and recovery", async (t) => {
+  t.mock.method(Date, "now", () => 1_700_000_015_000);
   try {
     for (const name of (await readdir(new URL("../../migrations/", import.meta.url)))
       .filter((n) => n.endsWith(".sql"))
@@ -96,6 +97,13 @@ test("real DB: enrollment, no bypass, atomic one-use proofs, revocation, limits 
     await pg.exec("ALTER TABLE admin_events DROP CONSTRAINT test_audit_failure");
     const { codes } = await mfa.confirmTwoFactor(password, activationCode);
     assert.equal(codes.length, 10);
+    await assert.rejects(
+      pg.query(
+        "INSERT INTO admin_sessions(token_hash, credential_version, expires_at, user_id) VALUES ('old-deployment-token', 'old-version', NOW()+INTERVAL '1 hour', $1)",
+        [user.id],
+      ),
+      /security version/,
+    );
     assert.equal(new Set(codes).size, 10);
     assert.equal(await service.currentAdministrator(), null);
     assert.equal((await pg.query("SELECT * FROM admin_sessions")).rows.length, 0);
@@ -156,7 +164,11 @@ test("real DB: enrollment, no bypass, atomic one-use proofs, revocation, limits 
     await service.loginAdministrator(password);
     assert.equal((await mfa.twoFactorStatus()).enabled, false);
     // Old session security versions cannot be resurrected after a 2FA change.
-    await pg.query("UPDATE admin_sessions SET totp_version=0 WHERE user_id=$1", [user.id]);
+    await assert.rejects(
+      pg.query("UPDATE admin_sessions SET totp_version=0 WHERE user_id=$1", [user.id]),
+      /security version/,
+    );
+    await service.logoutAdministrator();
     assert.equal(await service.currentAdministrator(), null);
     await pg.exec("DELETE FROM request_limits");
     await service.loginAdministrator(password);

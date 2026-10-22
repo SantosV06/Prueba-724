@@ -84,8 +84,7 @@ export async function confirmTwoFactor(password: string, code: string) {
        FROM admin_totp_pending p WHERE u.id=$1 AND p.user_id=u.id AND u.enabled=true AND u.password_hash=$3
        AND u.totp_secret IS NULL AND u.totp_version=$4 AND p.encrypted_secret=$5
        AND p.expires_at>NOW() AND p.credential_version=$6 RETURNING u.id
-     ), revoked AS (DELETE FROM admin_sessions WHERE user_id IN (SELECT id FROM changed)),
-     cleared AS (DELETE FROM admin_totp_pending WHERE user_id IN (SELECT id FROM changed)),
+     ), cleared AS (DELETE FROM admin_totp_pending WHERE user_id IN (SELECT id FROM changed)),
      saved AS (INSERT INTO admin_recovery_codes(user_id, code_hash)
        SELECT id, h FROM changed CROSS JOIN unnest($7::text[]) h RETURNING user_id)
      INSERT INTO admin_events(id, action, actor_id, actor_username)
@@ -119,8 +118,7 @@ export async function disableTwoFactor(password: string, code: string) {
        WHERE id=$1 AND enabled=true AND password_hash=$2 AND totp_version=$3 AND totp_secret=$4
        AND (($5::bigint IS NOT NULL AND (totp_last_step IS NULL OR totp_last_step<$5::bigint))
          OR ($8::text IS NOT NULL AND EXISTS (SELECT 1 FROM admin_recovery_codes WHERE user_id=$1 AND code_hash=$8))) RETURNING id
-     ), revoked AS (DELETE FROM admin_sessions WHERE user_id IN (SELECT id FROM changed)),
-     cleared AS (DELETE FROM admin_totp_pending WHERE user_id IN (SELECT id FROM changed)),
+     ), cleared AS (DELETE FROM admin_totp_pending WHERE user_id IN (SELECT id FROM changed)),
      removed AS (DELETE FROM admin_recovery_codes WHERE user_id IN (SELECT id FROM changed))
      INSERT INTO admin_events(id, action, actor_id, actor_username)
        SELECT $6, CASE WHEN $8::text IS NULL THEN '2fa:disabled' ELSE '2fa:disabled-recovery' END, id, $7 FROM changed RETURNING id`,

@@ -338,7 +338,7 @@ try {
       }
       await page
         .getByLabel("Código del autenticador", { exact: true })
-        .fill(otp.generate({ timestamp: Date.now() - 30000 }));
+        .fill(otp.generate());
       await page.getByRole("button", { name: "Confirmar y activar 2FA", exact: true }).click();
       await page
         .getByRole("heading", {
@@ -357,7 +357,7 @@ try {
       await page.getByRole("button", { name: "Iniciar sesión", exact: true }).click();
       await page
         .getByLabel("Código del autenticador o de recuperación", { exact: false })
-        .fill(otp.generate());
+        .fill(otp.generate({ timestamp: Date.now() + 30000 }));
       assert.equal(await row.count(), 0, "password alone never opens the panel");
       await page.getByRole("button", { name: "Iniciar sesión", exact: true }).click();
       await row.waitFor();
