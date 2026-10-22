@@ -6,7 +6,10 @@ import { checkedUrl } from "./browser-guard.mjs";
 
 const base = checkedUrl(process.argv[2] || "http://127.0.0.1:8080");
 const built = process.argv.includes("--built");
-const screenshots = "/workspace/screenshots";
+// GitHub runners do not have write access to /workspace. Keep local QA captures there.
+const screenshots = process.env.GITHUB_WORKSPACE
+  ? `${process.env.GITHUB_WORKSPACE}/screenshots`
+  : "/workspace/screenshots";
 mkdirSync(screenshots, { recursive: true });
 const browser = await chromium.launch({
   executablePath: process.env.BROWSER_EXECUTABLE_PATH || undefined,
