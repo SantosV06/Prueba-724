@@ -187,12 +187,13 @@ function Solicitudes() {
       const chunks: BlobPart[] = ["\uFEFF"];
       let bytes = 0;
       let revision: string | undefined;
+      let exportId: string | undefined;
       let first = true;
       let cursor: { fecha: string; id: string } | undefined;
       let snapshot: string | undefined;
       do {
         const result = await exportVolunteerRequests({
-          data: { ...filters, cursor, snapshot, revision },
+          data: { ...filters, cursor, snapshot, revision, exportId },
         });
         let csv = volunteersToCsv(result.rows);
         if (!first) csv = "\r\n" + csv.slice(csv.indexOf("\r\n") + 2);
@@ -206,6 +207,7 @@ function Solicitudes() {
         chunks.push(chunk);
         first = false;
         revision = result.revision;
+        exportId = result.exportId;
         cursor = result.next ?? undefined;
         snapshot = result.snapshot;
       } while (cursor);

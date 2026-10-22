@@ -33,9 +33,11 @@ export const listVolunteerRequests = createServerFn({ method: "GET" })
     const { listVolunteerRequests } = await import("./volunteer-service.server");
     return listVolunteerRequests(data);
   });
-export const exportVolunteerRequests = createServerFn({ method: "GET" })
+// Export writes an audit event and must pass the same origin checks as mutations.
+export const exportVolunteerRequests = createServerFn({ method: "POST" })
   .validator(
     requestFiltersSchema.omit({ page: true }).extend({
+      exportId: z.string().uuid().optional(),
       cursor: z
         .object({ fecha: z.string().datetime({ offset: true }), id: z.string().uuid() })
         .optional(),
@@ -48,7 +50,7 @@ export const exportVolunteerRequests = createServerFn({ method: "GET" })
   )
   .handler(async ({ data }) => {
     const { exportVolunteerRequests } = await import("./volunteer-service.server");
-    return exportVolunteerRequests(data, data.cursor, data.snapshot, data.revision);
+    return exportVolunteerRequests(data, data.cursor, data.snapshot, data.revision, data.exportId);
   });
 export const removeVolunteerRequest = createServerFn({ method: "POST" })
   .validator(z.object({ id: z.string().uuid() }))
