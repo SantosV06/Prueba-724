@@ -41,6 +41,7 @@ La variable es una confirmación operativa, no una detección automática: el c�
 - CSV con BOM UTF-8, comillas y neutralización de fórmulas para hojas de cálculo.
 - Mover a papelera no borra la solicitud: se puede restaurar desde el panel.
 - `admin_events` registra identidad del usuario y valores anterior/nuevo del estado y la papelera. Los eventos anteriores a las cuentas no tienen identidad atribuida. También registra creación de cuentas, cambios de contraseña y acceso, sin almacenar contraseñas.
+- Cada lote de exportación se solicita por POST y registra `export:batch` antes de entregar datos. El registro contiene usuario, fecha, identificador compartido de exportación, cantidad de filas, estado, papelera, revisión y si hubo búsqueda; no conserva el texto buscado ni copia datos de voluntarios. Si falla la auditoría, se cancela la entrega de ese lote. El evento acredita entrega desde el servidor, no que el archivo se haya guardado en el dispositivo; una exportación cancelada puede tener lotes anteriores registrados.
 - Sesiones aleatorias de 8 horas almacenadas como hash; cierre de sesión revocado en el servidor. Cambiar una contraseña o desactivar una cuenta invalida sus sesiones; cambiar `ADMIN_SESSION_SECRET` invalida todas. Cambiar `ADMIN_PASSWORD` tras la creación inicial no cambia la contraseña almacenada.
 - Cuentas individuales: un propietario administra usuarios y los administradores gestionan solicitudes. Contraseñas con scrypt y sal aleatoria; nunca se pueden consultar. No incluye segundo factor.
 - Límites: 60 solicitudes/hora/IP y 5/hora/correo; 60 accesos/15 minutos/IP y 8/15 minutos/usuario. Las claves se guardan como HMAC. Se reducen los bloqueos de redes compartidas, aunque siguen existiendo límites comunes de IP. Sesiones expiradas y claves de límite antiguas se limpian al recibir envíos o accesos.
@@ -108,4 +109,21 @@ La herramienta solo recupera propietarios activos existentes; no crea cuentas, n
 - Las vistas previas deben usar su propia rama de Neon; `PREVIEW_DATABASE_ISOLATED=true` es una declaración de configuración, no crea por sí sola esa separación.
 - Verifica la dirección institucional, teléfonos y destinatario de Zelle con documentación de la organización antes de modificarlos en `src/data/site.ts`.
 
-La CSP restringe recursos, conexiones, formularios e incrustaciones a orígenes permitidos. Conserva `unsafe-inline` para los scripts de hidratación y la inicialización del tema; no debe presentarse como una protección completa frente a XSS. No autoriza `unsafe-eval`.
+La CSP restringe recursos, conexiones, formularios e incrustaciones a orígenes permitidos. Bloquea manejadores JavaScript en atributos HTML (`script-src-attr 'none'`) y elementos `base` (`base-uri 'none'`). Conserva `unsafe-inline` para los scripts de hidratación y la inicialización del tema; no debe presentarse como una protección completa frente a XSS. No autoriza `unsafe-eval`. Sustituir los scripts inline por nonces o hashes requiere una adaptación coordinada del renderizado y de los scripts de plataforma.
+
+Para consultar las entregas CSV en Neon sin mostrar datos de voluntarios:
+
+```sql
+SELECT created_at, actor_username,
+       after_value->>'exportId' AS export_id,
+       (after_value->>'rowCount')::integer AS filas,
+       after_value->>'status' AS estado,
+       after_value->>'trash' AS papelera,
+       after_value->>'searchApplied' AS con_busqueda,
+       after_value->>'lastBatch' AS ultimo_lote
+FROM admin_events
+WHERE action = 'export:batch'
+ORDER BY created_at DESC;
+```
+
+No se requieren nuevas variables ni tablas para estos eventos. La política de conservación debe contemplar también la auditoría, las copias de seguridad y los archivos descargados: borrar una solicitud no elimina esas copias. No se automatiza una purga hasta que la organización defina el periodo y las excepciones aplicables.
