@@ -2,6 +2,7 @@
 import assert from "node:assert/strict";
 import { mkdirSync, readFileSync } from "node:fs";
 import { chromium } from "playwright";
+import { TOTP } from "otpauth";
 import { catalog } from "../src/lib/i18n/catalog.ts";
 import { checkedUrl } from "./browser-guard.mjs";
 
@@ -308,6 +309,89 @@ try {
     await row.getByRole("button", { name: "Restaurar" }).click();
     await page.getByRole("button", { name: "Ver solicitudes activas" }).click();
     await row.waitFor();
+    if (process.env.E2E_TOTP_ENABLED === "true") {
+      await page.locator("summary").filter({ hasText: "Seguridad de mi cuenta" }).click();
+      await page
+        .getByLabel("Contraseña actual", { exact: true })
+        .fill(process.env.E2E_ADMIN_PASSWORD);
+      await page.getByRole("button", { name: "Configurar autenticador", exact: true }).click();
+      const qr = page.getByRole("img", {
+        name: "Código QR para configurar tu autenticador de Fundación VNE",
+      });
+      await qr.waitFor();
+      assert.ok(await qr.evaluate((image) => image.complete && image.naturalWidth > 0));
+      const secret = await page.locator("details code").innerText();
+      const otp = new TOTP({ secret, algorithm: "SHA1", digits: 6, period: 30 });
+      for (const [name, width, height] of [
+        ["desktop", 1280, 900],
+        ["mobile", 390, 844],
+      ]) {
+        await page.setViewportSize({ width, height });
+        await qr.scrollIntoViewIfNeeded();
+        assert.equal(
+          await page.evaluate(() => document.documentElement.scrollWidth > innerWidth + 1),
+          false,
+        );
+        await page.screenshot({
+          path: `${screenshots}/vne-totp-${built ? "built" : "dev"}-${name}.png`,
+        });
+      }
+      await page
+        .getByLabel("Código del autenticador", { exact: true })
+        .fill(otp.generate({ timestamp: Date.now() - 30000 }));
+      await page.getByRole("button", { name: "Confirmar y activar 2FA", exact: true }).click();
+      await page
+        .getByRole("heading", {
+          name: "2FA activado: guarda tus códigos de recuperación",
+          exact: true,
+        })
+        .waitFor();
+      const codes = (await page.locator("pre").innerText()).trim().split("\n");
+      assert.equal(codes.length, 10);
+      assert.equal(await row.count(), 0, "enrollment revokes access and clears volunteer data");
+      await page.getByLabel("He guardado mis códigos de recuperación", { exact: true }).check();
+      await page.getByRole("button", { name: "Volver al inicio de sesión", exact: true }).click();
+      await page
+        .getByLabel("Contraseña administrativa", { exact: true })
+        .fill(process.env.E2E_ADMIN_PASSWORD);
+      await page.getByRole("button", { name: "Iniciar sesión", exact: true }).click();
+      await page
+        .getByLabel("Código del autenticador o de recuperación", { exact: false })
+        .fill(otp.generate());
+      assert.equal(await row.count(), 0, "password alone never opens the panel");
+      await page.getByRole("button", { name: "Iniciar sesión", exact: true }).click();
+      await row.waitFor();
+      await page.getByRole("button", { name: "Cerrar sesión", exact: true }).click();
+      await page
+        .getByLabel("Contraseña administrativa", { exact: true })
+        .fill(process.env.E2E_ADMIN_PASSWORD);
+      await page.getByRole("button", { name: "Iniciar sesión", exact: true }).click();
+      await page
+        .getByLabel("Código del autenticador o de recuperación", { exact: false })
+        .fill(codes[0]);
+      await page.getByRole("button", { name: "Iniciar sesión", exact: true }).click();
+      await row.waitFor();
+      await page.locator("summary").filter({ hasText: "Seguridad de mi cuenta" }).click();
+      await page
+        .getByText("2FA activo. Códigos de recuperación restantes: 9.", { exact: true })
+        .waitFor();
+      await page
+        .getByLabel("Contraseña actual", { exact: true })
+        .fill(process.env.E2E_ADMIN_PASSWORD);
+      await page
+        .getByLabel("Código del autenticador o de recuperación", { exact: true })
+        .fill(codes[1]);
+      await page
+        .getByRole("button", { name: "Desactivar 2FA y cerrar sesiones", exact: true })
+        .click();
+      await page.getByRole("button", { name: "Iniciar sesión", exact: true }).waitFor();
+      await page
+        .getByLabel("Contraseña administrativa", { exact: true })
+        .fill(process.env.E2E_ADMIN_PASSWORD);
+      await page.getByRole("button", { name: "Iniciar sesión", exact: true }).click();
+      await row.waitFor();
+      await page.setViewportSize({ width: 1280, height: 900 });
+    }
     await page.getByRole("button", { name: "Cerrar sesión" }).click();
     await page.getByRole("button", { name: "Iniciar sesión" }).waitFor();
     await page.getByLabel("Usuario", { exact: true }).fill(`equipo-${suffix}`);
@@ -342,6 +426,15 @@ try {
           "language switching with blocked storage",
           "owner creates accounts",
           "password reset",
+          ...(process.env.E2E_TOTP_ENABLED === "true"
+            ? [
+                "TOTP enrollment and QR on desktop/mobile",
+                "password alone cannot open 2FA panel",
+                "TOTP login",
+                "one-use recovery login",
+                "disable 2FA with a different recovery code",
+              ]
+            : []),
           "disable and reactivate account",
           "new account login and role restrictions",
           ...[

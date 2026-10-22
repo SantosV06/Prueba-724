@@ -17,11 +17,15 @@ export const getAdminStatus = createServerFn({ method: "GET" }).handler(async ()
 });
 export const loginAdmin = createServerFn({ method: "POST" })
   .validator(
-    z.object({ username: usernameSchema.default("admin"), password: z.string().min(1).max(256) }),
+    z.object({
+      username: usernameSchema.default("admin"),
+      password: z.string().min(1).max(256),
+      code: z.string().trim().max(100).default(""),
+    }),
   )
   .handler(async ({ data }) => {
     const { loginAdministrator } = await import("./volunteer-service.server");
-    return loginAdministrator(data.password, data.username);
+    return loginAdministrator(data.password, data.username, data.code);
   });
 export const logoutAdmin = createServerFn({ method: "POST" }).handler(async () => {
   const { logoutAdministrator } = await import("./volunteer-service.server");
