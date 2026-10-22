@@ -1,3 +1,4 @@
+import { T } from "@/lib/i18n";
 import type { ErrorComponentProps } from "@tanstack/react-router";
 import { TriangleAlert } from "lucide-react";
 
@@ -20,12 +21,14 @@ export function AppErrorComponent({ error }: ErrorComponentProps) {
       <span className="text-red-500" aria-hidden="true">
         <TriangleAlert className="size-10" strokeWidth={2} />
       </span>
-      <h1 className="text-lg font-semibold">Ocurrió un problema</h1>
+      <h1 className="text-lg font-semibold">
+        <T>Ocurrió un problema</T>
+      </h1>
       <p className="max-w-md text-sm break-words text-zinc-500 dark:text-zinc-400">
-        {errorMessage(error)}
+        <T>{errorMessage(error)}</T>
       </p>
       <a href="/" className="rounded-full border px-5 py-3 text-sm">
-        Volver al inicio
+        <T>Volver al inicio</T>
       </a>
     </main>
   );

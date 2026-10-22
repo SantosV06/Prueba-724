@@ -2,6 +2,7 @@
 import assert from "node:assert/strict";
 import { mkdirSync } from "node:fs";
 import { chromium } from "playwright";
+import { catalog } from "../src/lib/i18n/catalog.ts";
 import { checkedUrl } from "./browser-guard.mjs";
 
 const base = checkedUrl(process.argv[2] || "http://127.0.0.1:8080");
@@ -105,6 +106,108 @@ try {
       assert.equal(await page.getByRole("navigation", { name: "Móvil" }).count(), 0);
     }
   }
+  async function chooseLanguage(label) {
+    await page.getByRole("button", { name: /^(Idioma|Language):/ }).click();
+    await page.getByRole("menuitemradio", { name: label, exact: true }).click();
+  }
+  await chooseLanguage("English");
+  await page.waitForFunction(() => document.documentElement.lang === "en");
+  await page.reload({ waitUntil: "domcontentloaded" });
+  await page.waitForFunction(() => document.documentElement.lang === "en");
+  assert.equal(
+    await page.getByRole("heading", { level: 1 }).innerText(),
+    "An integrated system for social and economic development.",
+  );
+  assert.ok((await page.title()).includes("Self-sustaining"));
+  const paths = [
+    "/",
+    "/casas",
+    "/genesis",
+    "/liderazgo",
+    "/soporte",
+    "/donaciones",
+    "/voluntariado",
+    "/legal/privacidad",
+    "/legal/terminos",
+    "/legal/conflicto",
+    "/legal/no-discriminacion",
+  ];
+  for (const [language, label] of [
+    ["en", "English"],
+    ["pt", "Português"],
+  ]) {
+    await chooseLanguage(label);
+    for (const path of paths) {
+      await page.goto(`${base}${path}`, { waitUntil: "domcontentloaded" });
+      await page.waitForFunction((lang) => document.documentElement.lang === lang, language);
+      const untranslated = await page.locator("main").evaluate(
+        (root, translations) => {
+          const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+          const missing = [];
+          while (walker.nextNode()) {
+            const text = walker.currentNode.textContent.replace(/\s+/g, " ").trim();
+            if (translations[text] && translations[text] !== text) missing.push(text);
+          }
+          return missing;
+        },
+        Object.fromEntries(
+          Object.entries(catalog).map(([key, values]) => [key, values[language === "en" ? 0 : 1]]),
+        ),
+      );
+      assert.deepEqual(untranslated, [], `Untranslated content on ${path} in ${language}`);
+      assert.equal(
+        await page.evaluate(() => document.documentElement.scrollWidth > innerWidth + 1),
+        false,
+        `Overflow on ${path} in ${language}`,
+      );
+    }
+  }
+  await page.goto(`${base}/voluntariado`, { waitUntil: "domcontentloaded" });
+  await page.waitForFunction(() => document.documentElement.lang === "pt");
+  await page.getByLabel("Nome", { exact: true }).fill("Nombre sin traducir");
+  await chooseLanguage("English");
+  assert.equal(
+    await page.getByLabel("First name", { exact: true }).inputValue(),
+    "Nombre sin traducir",
+  );
+  await page.getByRole("button", { name: "Register application", exact: true }).click();
+  await page.getByRole("alert").filter({ hasText: "Complete your first name" }).waitFor();
+  await chooseLanguage("Español");
+  await page.goto(base, { waitUntil: "domcontentloaded" });
+  await page.setViewportSize({ width: 1280, height: 800 });
+  await chooseLanguage("English");
+  await page.screenshot({ path: `${screenshots}/vne-${built ? "built" : "dev"}-english.png` });
+  await page.setViewportSize({ width: 390, height: 844 });
+  await chooseLanguage("Português");
+  await page.screenshot({
+    path: `${screenshots}/vne-${built ? "built" : "dev"}-portuguese-mobile.png`,
+  });
+  await page.setViewportSize({ width: 320, height: 740 });
+  assert.equal(
+    await page.evaluate(() => document.documentElement.scrollWidth > innerWidth + 1),
+    false,
+  );
+  await chooseLanguage("Español");
+  // A blocked preference store must not break language switching or hydration.
+  const blocked = await browser.newContext();
+  await blocked.route(
+    /^https:\/\/(?:www\.google\.com|grok\.com|va\.vercel-scripts\.com)\//,
+    (route) => route.fulfill({ status: 200, contentType: "application/javascript", body: "" }),
+  );
+  await blocked.addInitScript(() => {
+    Object.defineProperty(window, "localStorage", {
+      get() {
+        throw new DOMException("Blocked", "SecurityError");
+      },
+    });
+  });
+  const blockedPage = await blocked.newPage();
+  await blockedPage.goto(base, { waitUntil: "domcontentloaded" });
+  await blockedPage.getByRole("button", { name: "Idioma: Español", exact: true }).click();
+  await blockedPage.getByRole("menuitemradio", { name: "English", exact: true }).click();
+  await blockedPage.waitForFunction(() => document.documentElement.lang === "en");
+  await blocked.close();
+  await page.setViewportSize({ width: 390, height: 844 });
   await page.getByRole("button", { name: "Usar tema oscuro" }).click();
   assert.equal(await page.locator("html").getAttribute("class"), "dark");
   await page.getByRole("button", { name: "Usar tema claro" }).click();
@@ -209,6 +312,10 @@ try {
           "mobile menu",
           "themes",
           "validation",
+          "all public pages in English and Portuguese",
+          "language persistence and translated metadata",
+          "form values survive language changes",
+          "language switching with blocked storage",
           "owner creates accounts",
           "password reset",
           "disable and reactivate account",
