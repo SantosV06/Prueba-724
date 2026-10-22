@@ -186,7 +186,7 @@ function Solicitudes() {
   }
   return (
     <Shell>
-      <section className="mx-auto max-w-6xl px-5 py-14 sm:px-6">
+      <section lang="es" className="mx-auto max-w-6xl px-5 py-14 sm:px-6">
         <p className="text-xs font-bold uppercase tracking-widest text-gold-deep">
           Administración privada
         </p>

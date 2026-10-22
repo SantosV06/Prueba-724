@@ -1,3 +1,4 @@
+import { T, useLanguage } from "@/lib/i18n";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import { PageIntro, Shell } from "@/components/shell";
@@ -29,6 +30,7 @@ type Fields = {
 const empty: Fields = { nombre: "", apellido: "", correo: "", telefono: "", mensaje: "" };
 
 function Voluntariado() {
+  const { t } = useLanguage();
   const [fields, setFields] = useState<Fields>(empty);
   const [error, setError] = useState("");
   const [sent, setSent] = useState<Fields | null>(null);
@@ -93,18 +95,28 @@ function Voluntariado() {
     <Shell>
       <PageIntro
         tone="forest"
-        kicker="Proyecto Génesis"
-        title="Voluntariado con oficio, no solo con buena voluntad."
-        lede="Buscamos personas dispuestas a aportar conocimiento, experiencia y tiempo a un modelo productivo. La solicitud se guarda de forma segura y centralizada para que nuestro equipo pueda revisarla."
+        kicker={t("Proyecto Génesis")}
+        title={t("Voluntariado con oficio, no solo con buena voluntad.")}
+        lede={t(
+          "Buscamos personas dispuestas a aportar conocimiento, experiencia y tiempo a un modelo productivo. La solicitud se guarda de forma segura y centralizada para que nuestro equipo pueda revisarla.",
+        )}
       />
 
       <section className="mx-auto grid max-w-6xl gap-10 px-5 py-14 sm:px-6 lg:grid-cols-12">
         <div className="lg:col-span-5">
-          <h2 className="font-display text-3xl text-navy dark:text-cream">Qué implica</h2>
+          <h2 className="font-display text-3xl text-navy dark:text-cream">
+            <T>Qué implica</T>
+          </h2>
           <ul className="mt-4 space-y-3 leading-relaxed text-mist dark:text-cream/75">
-            <li>Acompañar formación, producción o coordinación según tu experiencia.</li>
-            <li>Respetar el marco ético y las políticas de la organización.</li>
-            <li>No es un contrato laboral ni una plaza remunerada.</li>
+            <li>
+              <T>Acompañar formación, producción o coordinación según tu experiencia.</T>
+            </li>
+            <li>
+              <T>Respetar el marco ético y las políticas de la organización.</T>
+            </li>
+            <li>
+              <T>No es un contrato laboral ni una plaza remunerada.</T>
+            </li>
           </ul>
         </div>
 
@@ -115,11 +127,14 @@ function Voluntariado() {
               role="status"
             >
               <h2 className="font-display text-2xl text-navy dark:text-cream">
-                Solicitud registrada
+                <T>Solicitud registrada</T>
               </h2>
               <p className="editorial-justify mt-3 leading-relaxed text-mist dark:text-cream/75">
-                {sent.nombre}, tu solicitud quedó registrada correctamente. El equipo podrá
-                consultarla desde el panel administrativo.
+                {sent.nombre}
+                <T>
+                  , tu solicitud quedó registrada correctamente. El equipo podrá consultarla desde
+                  el panel administrativo.
+                </T>
               </p>
               <div className="mt-6 flex flex-col gap-3 sm:flex-row">
                 <button
@@ -127,7 +142,7 @@ function Voluntariado() {
                   onClick={() => setSent(null)}
                   className="inline-flex h-12 items-center justify-center rounded-full border border-line px-5 text-sm font-bold dark:border-white/15"
                 >
-                  Nueva solicitud
+                  <T>Nueva solicitud</T>
                 </button>
               </div>
             </div>
@@ -139,21 +154,21 @@ function Voluntariado() {
             >
               <div className="grid gap-4 sm:grid-cols-2">
                 <Field
-                  label="Nombre"
+                  label={t("Nombre")}
                   value={fields.nombre}
                   onChange={(value) => update("nombre", value)}
                   disabled={sending}
                   autoComplete="given-name"
                 />
                 <Field
-                  label="Apellido"
+                  label={t("Apellido")}
                   value={fields.apellido}
                   onChange={(value) => update("apellido", value)}
                   disabled={sending}
                   autoComplete="family-name"
                 />
                 <Field
-                  label="Correo"
+                  label={t("Correo")}
                   type="email"
                   value={fields.correo}
                   onChange={(value) => update("correo", value)}
@@ -161,7 +176,7 @@ function Voluntariado() {
                   autoComplete="email"
                 />
                 <Field
-                  label="Teléfono"
+                  label={t("Teléfono")}
                   type="tel"
                   value={fields.telefono}
                   onChange={(value) => update("telefono", value)}
@@ -171,7 +186,7 @@ function Voluntariado() {
                 />
               </div>
               <label className="mt-4 block text-sm font-semibold text-navy dark:text-cream">
-                Cómo puedes aportar
+                <T>Cómo puedes aportar</T>
                 <textarea
                   value={fields.mensaje}
                   onChange={(event) => update("mensaje", event.target.value)}
@@ -182,7 +197,7 @@ function Voluntariado() {
                 />
               </label>
               <label className="absolute -left-[9999px]" aria-hidden="true">
-                Sitio web
+                <T>Sitio web</T>
                 <input
                   tabIndex={-1}
                   autoComplete="off"
@@ -191,15 +206,16 @@ function Voluntariado() {
                 />
               </label>
               <p className="mt-4 text-sm text-mist dark:text-cream/75">
-                Usaremos tus datos para gestionar tu solicitud. Consulta la{" "}
+                <T>Usaremos tus datos para gestionar tu solicitud. Consulta la</T>
+                <T> </T>
                 <Link to="/legal/$slug" params={{ slug: "privacidad" }} className="underline">
-                  política de privacidad
+                  <T>política de privacidad</T>
                 </Link>
-                .
+                <T>.</T>
               </p>
               {error ? (
                 <p className="mt-3 text-sm font-semibold text-clay" role="alert">
-                  {error}
+                  <T>{error}</T>
                 </p>
               ) : null}
               <button
@@ -207,7 +223,7 @@ function Voluntariado() {
                 disabled={sending || !interactive}
                 className="mt-5 inline-flex h-12 items-center rounded-full bg-forest px-6 text-sm font-bold text-cream"
               >
-                {sending ? "Registrando…" : "Registrar solicitud"}
+                <T>{sending ? "Registrando…" : "Registrar solicitud"}</T>
               </button>
             </form>
           )}
@@ -236,7 +252,7 @@ function Field({
 }) {
   return (
     <label className="block text-sm font-semibold text-navy dark:text-cream">
-      {label}
+      <T>{label}</T>
       <input
         maxLength={type === "email" ? 254 : type === "tel" ? 40 : 100}
         required
@@ -247,7 +263,11 @@ function Field({
         onChange={(event) => onChange(event.target.value)}
         className="mt-1.5 h-12 w-full rounded-xl border border-line bg-paper px-3 text-base font-normal text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold dark:border-white/15 dark:bg-navy-deep dark:text-cream"
       />
-      {hint ? <span className="mt-1 block text-xs font-normal text-mist">{hint}</span> : null}
+      {hint ? (
+        <span className="mt-1 block text-xs font-normal text-mist">
+          <T>{hint}</T>
+        </span>
+      ) : null}
     </label>
   );
 }

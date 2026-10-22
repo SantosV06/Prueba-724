@@ -1,6 +1,8 @@
+import { T, useLanguage } from "@/lib/i18n";
 import { useEffect, useRef } from "react";
 
 export function MediaVideo({ src, title }: { src: string; title: string }) {
+  const { t } = useLanguage();
   const videoRef = useRef<HTMLVideoElement>(null);
 
   useEffect(() => {
@@ -69,11 +71,15 @@ export function MediaVideo({ src, title }: { src: string; title: string }) {
       playsInline
       preload="none"
       poster={src.replace(/\.mp4$/, "-poster.jpg")}
-      aria-label={title}
+      aria-label={t(title)}
       className="mt-6 aspect-video w-full rounded-card bg-navy-deep"
     >
       <source src={src} type="video/mp4" />
-      Tu navegador no admite este video. <a href={src}>Descargar {title}</a>
+      <T>Tu navegador no admite este video. </T>
+      <a href={src}>
+        <T>Descargar </T>
+        <T>{title}</T>
+      </a>
     </video>
   );
 }
