@@ -1,3 +1,4 @@
+import { localizedHead } from "@/lib/i18n/seo";
 import { T, useLanguage } from "@/lib/i18n";
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
@@ -5,16 +6,20 @@ import { PageIntro, Shell } from "@/components/shell";
 import { org } from "@/data/site";
 
 export const Route = createFileRoute("/donaciones")({
-  head: () => ({
-    meta: [
-      { title: "Donaciones | Fundación VNE" },
+  head: ({ matches }) =>
+    localizedHead(
       {
-        name: "description",
-        content:
-          "Donaciones voluntarias a Fundación VNE por Zelle. Número, banco y concepto, sin solicitar datos bancarios.",
+        meta: [
+          { title: "Donaciones | Fundación VNE" },
+          {
+            name: "description",
+            content:
+              "Donaciones voluntarias a Fundación VNE por Zelle. Número, banco y concepto, sin solicitar datos bancarios.",
+          },
+        ],
       },
-    ],
-  }),
+      matches.at(-1)?.search ?? {},
+    ),
   component: Donaciones,
 });
 

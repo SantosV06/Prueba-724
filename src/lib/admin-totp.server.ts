@@ -21,7 +21,7 @@ import {
 } from "./admin-totp-crypto.server.ts";
 
 export async function twoFactorStatus() {
-  const { sql, actor } = await requireAdmin();
+  const { sql, actor } = await requireAdmin({ allowEnrollment: true });
   const [row] = await sql.query<{ enabled: boolean; remaining: number }>(
     `SELECT totp_secret IS NOT NULL AS enabled,
       (SELECT count(*) FROM admin_recovery_codes WHERE user_id=$1) AS remaining FROM admin_users WHERE id=$1`,
@@ -31,7 +31,7 @@ export async function twoFactorStatus() {
 }
 async function reauthenticate(password: string) {
   setResponseHeader("Cache-Control", "private, no-store");
-  const context = await requireAdmin();
+  const context = await requireAdmin({ allowEnrollment: true });
   await enforceLimit(context.sql, "login", 8, 5, `mfa-manage:${context.actor.id}`);
   const [user] = await context.sql.query<StoredAdmin>(
     `SELECT id, username, password_hash AS "passwordHash", enabled, totp_secret, totp_version, totp_last_step FROM admin_users WHERE id=$1 AND enabled=true`,
@@ -108,6 +108,13 @@ export async function confirmTwoFactor(password: string, code: string) {
 export async function disableTwoFactor(password: string, code: string) {
   const { sql, user } = await reauthenticate(password);
   if (!user.totp_secret) throw new Error("2FA no está activo.");
+  const [policy] = await sql.query<{ required: boolean }>(
+    "SELECT require_two_factor AS required FROM admin_policy WHERE id=1",
+  );
+  if (policy.required)
+    throw new Error(
+      "El propietario exige 2FA. No puedes desactivarlo mientras esta política esté activa.",
+    );
   const recovery = recoveryHash(user.id, code);
   const step = recovery ? null : verifyTotpStep(decryptTotp(user.totp_secret, user.id), code);
   if (step === null && recovery === null)

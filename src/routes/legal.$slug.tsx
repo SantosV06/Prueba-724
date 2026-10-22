@@ -1,20 +1,24 @@
+import { localizedHead } from "@/lib/i18n/seo";
 import { T } from "@/lib/i18n";
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { legalPages, type LegalSlug } from "@/data/site";
 import { Shell } from "@/components/shell";
 
 export const Route = createFileRoute("/legal/$slug")({
-  head: ({ params }) => {
+  head: ({ params, matches }) => {
     const page = legalPages[params.slug as LegalSlug];
-    return {
-      meta: [
-        { title: page ? `${page.title} | Fundación VNE` : "Documento | Fundación VNE" },
-        {
-          name: "description",
-          content: page?.description ?? "Documento institucional de Fundación VNE.",
-        },
-      ],
-    };
+    return localizedHead(
+      {
+        meta: [
+          { title: page ? `${page.title} | Fundación VNE` : "Documento | Fundación VNE" },
+          {
+            name: "description",
+            content: page?.description ?? "Documento institucional de Fundación VNE.",
+          },
+        ],
+      },
+      matches.at(-1)?.search ?? {},
+    );
   },
   component: LegalPage,
 });

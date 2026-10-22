@@ -1,0 +1,30 @@
+name: Check production availability
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "17 * * * *"
+permissions:
+  contents: read
+concurrency:
+  group: production-availability
+  cancel-in-progress: false
+jobs:
+  availability:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - name: Check homepage and database health
+        env:
+          SITE: ${{ vars.MONITOR_SITE_URL || 'https://prueba-724.vercel.app' }}
+        run: |
+          node --input-type=module <<'JS'
+          const site = new URL(process.env.SITE);
+          if (site.protocol !== 'https:' || site.username || site.password) throw Error('Configure an HTTPS monitoring origin');
+          for (const path of ['/', '/api/health']) {
+            const response = await fetch(new URL(path, site), { signal: AbortSignal.timeout(25000), redirect: 'error' });
+            if (!response.ok) throw Error(`Availability check failed: ${path} HTTP ${response.status}`);
+            if (path === '/api/health' && (await response.json()).status !== 'ok') throw Error('Database health check failed');
+            if (path === '/' && !(await response.text()).includes('Fundación VNE')) throw Error('Homepage content missing');
+            console.log(`${path}: OK`);
+          }
+          JS

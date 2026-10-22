@@ -1,3 +1,5 @@
+import { AdminOperations, MyPassword } from "@/components/admin-operations";
+import { localizedHead } from "@/lib/i18n/seo";
 import { useAdminLanguage } from "@/lib/i18n/admin";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -20,12 +22,16 @@ import { volunteersToCsv } from "@/lib/volunteers";
 import type { VolunteerRequest, RequestFilters, RequestStatus } from "@/lib/volunteer-schema";
 
 export const Route = createFileRoute("/solicitudes")({
-  head: () => ({
-    meta: [
-      { title: "Administración de solicitudes | Fundación VNE" },
-      { name: "robots", content: "noindex, nofollow" },
-    ],
-  }),
+  head: ({ matches }) =>
+    localizedHead(
+      {
+        meta: [
+          { title: "Administración de solicitudes | Fundación VNE" },
+          { name: "robots", content: "noindex, nofollow" },
+        ],
+      },
+      matches.at(-1)?.search ?? {},
+    ),
   component: Solicitudes,
 });
 const states: RequestStatus[] = ["pendiente", "contactada", "aceptada", "descartada"];
@@ -48,6 +54,7 @@ function Solicitudes() {
   const [username, setUsername] = useState("admin");
   const [user, setUser] = useState<AdminIdentity | null>(null);
   const [showAccounts, setShowAccounts] = useState(false);
+  const [showOperations, setShowOperations] = useState(false);
   const [twoFactorRequired, setTwoFactorRequired] = useState(false);
   const [code, setCode] = useState("");
   const [recoveryCodes, setRecoveryCodes] = useState<string[]>([]);
@@ -97,11 +104,11 @@ function Solicitudes() {
     };
   }, []);
   useEffect(() => {
-    if (!authenticated) return;
+    if (!authenticated || user?.requiresEnrollment) return;
     void refresh().catch((cause) => {
       if (mounted.current) setError(message(cause));
     });
-  }, [authenticated, refresh]);
+  }, [authenticated, refresh, user?.requiresEnrollment]);
   // Clear personal data from the screen when a session expires or access is revoked.
   useEffect(() => {
     if (!authenticated) return;
@@ -112,6 +119,16 @@ function Solicitudes() {
       checking = true;
       try {
         const status = await getAdminStatus();
+        if (active && status.authenticated) {
+          setUser(status.user);
+          if (status.user?.requiresEnrollment) {
+            requestSequence.current++;
+            setRows([]);
+            setTotal(0);
+            setShowAccounts(false);
+            setShowOperations(false);
+          }
+        }
         if (active && !status.authenticated) {
           requestSequence.current++;
           setRows([]);
@@ -173,6 +190,7 @@ function Solicitudes() {
       setAuthenticated(false);
       setUser(null);
       setShowAccounts(false);
+      setShowOperations(false);
     } catch (cause) {
       setError(message(cause));
     } finally {
@@ -264,12 +282,12 @@ function Solicitudes() {
         ) : recoveryCodes.length ? (
           <div className="mt-8 max-w-lg rounded-card border border-line bg-card p-6 dark:border-white/15 dark:bg-navy">
             <h2 className="text-xl font-semibold">
-              2FA activado: guarda tus códigos de recuperación
+              {t("2FA activado: guarda tus códigos de recuperación")}
             </h2>
             <p className="mt-3 text-sm">
-              Se muestran una sola vez. Cada código permite iniciar sesión una vez si pierdes tu
-              autenticador. Guarda una copia privada fuera de este teléfono. Todas tus sesiones se
-              han cerrado.
+              {t(
+                "Se muestran una sola vez. Cada código permite iniciar sesión una vez si pierdes tu autenticador. Guarda una copia privada fuera de este teléfono. Todas tus sesiones se han cerrado.",
+              )}
             </p>
             <pre className="mt-4 whitespace-pre-wrap break-all rounded-lg border border-line p-4 text-sm">
               {recoveryCodes.join("\n")}
@@ -280,7 +298,7 @@ function Solicitudes() {
                 checked={savedCodes}
                 onChange={(e) => setSavedCodes(e.target.checked)}
               />
-              He guardado mis códigos de recuperación
+              {t("He guardado mis códigos de recuperación")}
             </label>
             <button
               className={`mt-4 ${buttonStyle}`}
@@ -290,7 +308,7 @@ function Solicitudes() {
                 setSavedCodes(false);
               }}
             >
-              Volver al inicio de sesión
+              {t("Volver al inicio de sesión")}
             </button>
           </div>
         ) : !authenticated ? (
@@ -326,7 +344,7 @@ function Solicitudes() {
             </label>
             {twoFactorRequired && (
               <label className="mt-4 block text-sm font-semibold">
-                Código del autenticador o de recuperación
+                {t("Código del autenticador o de recuperación")}
                 <input
                   autoFocus
                   autoComplete="one-time-code"
@@ -337,8 +355,9 @@ function Solicitudes() {
                   className={`mt-2 w-full ${inputStyle}`}
                 />
                 <span className="mt-2 block text-sm font-normal">
-                  Introduce los seis dígitos de tu app o uno de tus códigos de recuperación. Cada
-                  código se acepta una sola vez.
+                  {t(
+                    "Introduce los seis dígitos de tu app o uno de tus códigos de recuperación. Cada código se acepta una sola vez.",
+                  )}
                 </span>
               </label>
             )}
@@ -361,7 +380,7 @@ function Solicitudes() {
                   setError("");
                 }}
               >
-                Volver
+                {t("Volver")}
               </button>
             )}
             <p className="mt-4 text-sm text-mist dark:text-cream/75">
@@ -393,207 +412,248 @@ function Solicitudes() {
                 }
               }}
             />
-            {user?.role === "owner" && (
-              <button
-                className={`mt-4 ${buttonStyle}`}
-                onClick={() => setShowAccounts((value) => !value)}
-                aria-expanded={showAccounts}
-              >
-                {showAccounts ? t("Ocultar usuarios") : t("Administrar usuarios")}
-              </button>
-            )}
-            {showAccounts && user && (
-              <AdminAccounts
-                currentId={user.id}
-                onSignedOut={() => {
-                  requestSequence.current++;
-                  setAuthenticated(false);
-                  setUser(null);
-                  setRows([]);
-                  setTotal(0);
-                  setShowAccounts(false);
-                }}
-              />
-            )}
-            <div className="mt-7 flex flex-wrap gap-3">
-              <button
-                disabled={!total || busy || loading}
-                onClick={() => void download()}
-                className="rounded-full bg-navy px-5 py-3 text-sm font-bold text-cream disabled:opacity-40 dark:bg-gold dark:text-navy"
-              >
-                {busy ? t("Procesando…") : t("Exportar resultados CSV")}
-              </button>
-              <button
-                disabled={busy || loading}
-                onClick={() =>
-                  setFilters((current) => ({ ...current, trash: !current.trash, page: 1 }))
-                }
-                className={buttonStyle}
-              >
-                {filters.trash ? t("Ver solicitudes activas") : t("Ver papelera")}
-              </button>
-              <button disabled={busy} onClick={() => void logout()} className={buttonStyle}>
-                {t("Cerrar sesión")}
-              </button>
-              <Link
-                to="/voluntariado"
-                className="px-3 py-3 text-sm font-semibold text-forest dark:text-gold"
-              >
-                {t("Abrir formulario")}
-              </Link>
-            </div>
-            <form
-              onSubmit={(event) => {
-                event.preventDefault();
-                setError("");
-                setFilters((current) => ({ ...current, page: 1, search }));
-              }}
-              className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-end"
-            >
-              <label className="flex-1 text-sm font-semibold">
-                {t("Buscar por nombre, correo o teléfono")}
-                <input
-                  type="search"
-                  maxLength={100}
-                  value={search}
-                  onChange={(event) => setSearch(event.target.value)}
-                  className={`mt-2 w-full ${inputStyle}`}
+            {user?.requiresEnrollment ? (
+              <div className="mt-5 space-y-4" role="status">
+                <p>{t("Activa 2FA para acceder a los datos del panel.")}</p>
+                <button className={buttonStyle} disabled={busy} onClick={() => void logout()}>
+                  {t("Cerrar sesión")}
+                </button>
+              </div>
+            ) : (
+              <>
+                <MyPassword
+                  onSignedOut={() => {
+                    requestSequence.current++;
+                    setRows([]);
+                    setTotal(0);
+                    setAuthenticated(false);
+                    setUser(null);
+                    setShowAccounts(false);
+                    setShowOperations(false);
+                  }}
                 />
-              </label>
-              <label className="text-sm font-semibold">
-                {t("Estado")}
-                <select
-                  value={filters.status}
-                  disabled={busy}
-                  onChange={(event) =>
-                    setFilters((current) => ({
-                      ...current,
-                      page: 1,
-                      status: event.target.value as RequestStatus | "",
-                    }))
-                  }
-                  className={`mt-2 block w-full ${inputStyle}`}
-                >
-                  <option value="">{t("Todos")}</option>
-                  {states.map((state) => (
-                    <option key={t(state)} value={state}>
-                      {state}
-                    </option>
-                  ))}
-                </select>
-              </label>
-              <button disabled={busy || loading} type="submit" className={buttonStyle}>
-                {t("Buscar")}
-              </button>
-            </form>
-            <p className="mt-6 text-sm text-mist dark:text-cream/75" role="status">
-              {loading
-                ? t("Cargando…")
-                : `${total} ${t("solicitudes")}${filters.trash ? ` ${t("en papelera")}` : ""}. ${t("Página")} ${filters.page} ${t("de")} ${Math.max(1, Math.ceil(total / pageSize))}.`}
-            </p>
-            <ul className="mt-6 grid gap-4" aria-busy={loading}>
-              {rows.map((row) => (
-                <li
-                  key={row.id}
-                  className="rounded-card border border-line bg-card p-5 dark:border-white/10 dark:bg-navy"
-                >
-                  <div className="flex flex-wrap items-baseline justify-between gap-2">
-                    <h2 className="break-words font-display text-2xl text-navy dark:text-cream">
-                      {row.nombre} {row.apellido}
-                    </h2>
-                    <time dateTime={row.fecha} className="text-xs text-mist dark:text-cream/70">
-                      {new Date(row.fecha).toLocaleString(
-                        language === "es" ? "es-PA" : language === "en" ? "en-US" : "pt-BR",
-                      )}
-                    </time>
-                  </div>
-                  <p className="mt-2 break-words text-sm">
-                    {row.correo} · {row.telefono}
-                  </p>
-                  {row.mensaje && (
-                    <p className="mt-3 whitespace-pre-wrap break-words">{row.mensaje}</p>
-                  )}
-                  <div className="mt-4 flex flex-wrap items-end gap-4">
-                    {!filters.trash && (
-                      <label className="text-sm font-semibold">
-                        {t("Estado de")} {row.nombre}
-                        <select
-                          value={row.status}
-                          disabled={busy || loading}
-                          onChange={(event) =>
-                            void mutate(() =>
-                              updateVolunteerStatus({
-                                data: { id: row.id, status: event.target.value as RequestStatus },
-                              }),
-                            )
-                          }
-                          className={`mt-2 block ${inputStyle}`}
-                        >
-                          {states.map((state) => (
-                            <option key={state} value={state}>
-                              {state}
-                            </option>
-                          ))}
-                        </select>
-                      </label>
-                    )}
+                {user?.role === "owner" && (
+                  <>
                     <button
-                      disabled={busy || loading}
-                      onClick={() => {
-                        if (filters.trash)
-                          void mutate(() => restoreVolunteerRequest({ data: { id: row.id } }));
-                        else if (
-                          window.confirm(
-                            t("¿Mover esta solicitud a la papelera? Podrás restaurarla."),
-                          )
-                        )
-                          void mutate(() => removeVolunteerRequest({ data: { id: row.id } }));
-                      }}
-                      className={buttonStyle}
+                      className={`mt-4 mr-3 ${buttonStyle}`}
+                      aria-expanded={showOperations}
+                      onClick={() => setShowOperations((value) => !value)}
                     >
-                      {filters.trash ? t("Restaurar") : t("Mover a papelera")}
+                      {t(showOperations ? "Ocultar herramientas" : "Herramientas del propietario")}
                     </button>
-                    {filters.trash && user?.role === "owner" && (
-                      <button
-                        disabled={busy || loading}
-                        className={buttonStyle}
-                        onClick={() => {
-                          if (
-                            window.confirm(
-                              t(
-                                "¿Eliminar definitivamente los datos personales de esta solicitud? Esta acción no se puede deshacer.",
-                              ),
+                    {showOperations && <AdminOperations />}
+                  </>
+                )}
+                {user?.role === "owner" && (
+                  <button
+                    className={`mt-4 ${buttonStyle}`}
+                    onClick={() => setShowAccounts((value) => !value)}
+                    aria-expanded={showAccounts}
+                  >
+                    {showAccounts ? t("Ocultar usuarios") : t("Administrar usuarios")}
+                  </button>
+                )}
+                {showAccounts && user && (
+                  <AdminAccounts
+                    currentId={user.id}
+                    onSignedOut={() => {
+                      requestSequence.current++;
+                      setAuthenticated(false);
+                      setUser(null);
+                      setRows([]);
+                      setTotal(0);
+                      setShowAccounts(false);
+                    }}
+                  />
+                )}
+                <div className="mt-7 flex flex-wrap gap-3">
+                  <button
+                    disabled={!total || busy || loading}
+                    onClick={() => void download()}
+                    className="rounded-full bg-navy px-5 py-3 text-sm font-bold text-cream disabled:opacity-40 dark:bg-gold dark:text-navy"
+                  >
+                    {busy ? t("Procesando…") : t("Exportar resultados CSV")}
+                  </button>
+                  <button
+                    disabled={busy || loading}
+                    onClick={() =>
+                      setFilters((current) => ({ ...current, trash: !current.trash, page: 1 }))
+                    }
+                    className={buttonStyle}
+                  >
+                    {filters.trash ? t("Ver solicitudes activas") : t("Ver papelera")}
+                  </button>
+                  <button disabled={busy} onClick={() => void logout()} className={buttonStyle}>
+                    {t("Cerrar sesión")}
+                  </button>
+                  <Link
+                    to="/voluntariado"
+                    className="px-3 py-3 text-sm font-semibold text-forest dark:text-gold"
+                  >
+                    {t("Abrir formulario")}
+                  </Link>
+                </div>
+                <form
+                  onSubmit={(event) => {
+                    event.preventDefault();
+                    setError("");
+                    setFilters((current) => ({ ...current, page: 1, search }));
+                  }}
+                  className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-end"
+                >
+                  <label className="flex-1 text-sm font-semibold">
+                    {t("Buscar por nombre, correo o teléfono")}
+                    <input
+                      type="search"
+                      maxLength={100}
+                      value={search}
+                      onChange={(event) => setSearch(event.target.value)}
+                      className={`mt-2 w-full ${inputStyle}`}
+                    />
+                  </label>
+                  <label className="text-sm font-semibold">
+                    {t("Estado")}
+                    <select
+                      value={filters.status}
+                      disabled={busy}
+                      onChange={(event) =>
+                        setFilters((current) => ({
+                          ...current,
+                          page: 1,
+                          status: event.target.value as RequestStatus | "",
+                        }))
+                      }
+                      className={`mt-2 block w-full ${inputStyle}`}
+                    >
+                      <option value="">{t("Todos")}</option>
+                      {states.map((state) => (
+                        <option key={t(state)} value={state}>
+                          {t(state)}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                  <button disabled={busy || loading} type="submit" className={buttonStyle}>
+                    {t("Buscar")}
+                  </button>
+                </form>
+                <p className="mt-6 text-sm text-mist dark:text-cream/75" role="status">
+                  {loading
+                    ? t("Cargando…")
+                    : `${total} ${t("solicitudes")}${filters.trash ? ` ${t("en papelera")}` : ""}. ${t("Página")} ${filters.page} ${t("de")} ${Math.max(1, Math.ceil(total / pageSize))}.`}
+                </p>
+                <ul className="mt-6 grid gap-4" aria-busy={loading}>
+                  {rows.map((row) => (
+                    <li
+                      key={row.id}
+                      className="rounded-card border border-line bg-card p-5 dark:border-white/10 dark:bg-navy"
+                    >
+                      <div className="flex flex-wrap items-baseline justify-between gap-2">
+                        <h2 className="break-words font-display text-2xl text-navy dark:text-cream">
+                          {row.nombre} {row.apellido}
+                        </h2>
+                        <time dateTime={row.fecha} className="text-xs text-mist dark:text-cream/70">
+                          {new Date(row.fecha).toLocaleString(
+                            language === "es" ? "es-PA" : language === "en" ? "en-US" : "pt-BR",
+                          )}
+                        </time>
+                      </div>
+                      <p className="mt-2 break-words text-sm">
+                        {row.correo} · {row.telefono}
+                      </p>
+                      {row.mensaje && (
+                        <p className="mt-3 whitespace-pre-wrap break-words">{row.mensaje}</p>
+                      )}
+                      <div className="mt-4 flex flex-wrap items-end gap-4">
+                        {!filters.trash && (
+                          <label className="text-sm font-semibold">
+                            {t("Estado de")} {row.nombre}
+                            <select
+                              value={row.status}
+                              disabled={busy || loading}
+                              onChange={(event) =>
+                                void mutate(() =>
+                                  updateVolunteerStatus({
+                                    data: {
+                                      id: row.id,
+                                      status: event.target.value as RequestStatus,
+                                    },
+                                  }),
+                                )
+                              }
+                              className={`mt-2 block ${inputStyle}`}
+                            >
+                              {states.map((state) => (
+                                <option key={state} value={state}>
+                                  {t(state)}
+                                </option>
+                              ))}
+                            </select>
+                          </label>
+                        )}
+                        <button
+                          disabled={busy || loading}
+                          onClick={() => {
+                            if (filters.trash)
+                              void mutate(() => restoreVolunteerRequest({ data: { id: row.id } }));
+                            else if (
+                              window.confirm(
+                                t("¿Mover esta solicitud a la papelera? Podrás restaurarla."),
+                              )
                             )
-                          )
-                            void mutate(() => purgeVolunteerRequest({ data: { id: row.id } }));
-                        }}
-                      >
-                        {t("Eliminar definitivamente")}
-                      </button>
-                    )}
-                  </div>
-                </li>
-              ))}
-            </ul>
-            {!rows.length && !loading && (
-              <p className="mt-6">{t("No hay solicitudes que coincidan con estos filtros.")}</p>
+                              void mutate(() => removeVolunteerRequest({ data: { id: row.id } }));
+                          }}
+                          className={buttonStyle}
+                        >
+                          {filters.trash ? t("Restaurar") : t("Mover a papelera")}
+                        </button>
+                        {filters.trash && user?.role === "owner" && (
+                          <button
+                            disabled={busy || loading}
+                            className={buttonStyle}
+                            onClick={() => {
+                              if (
+                                window.confirm(
+                                  t(
+                                    "¿Eliminar definitivamente los datos personales de esta solicitud? Esta acción no se puede deshacer.",
+                                  ),
+                                )
+                              )
+                                void mutate(() => purgeVolunteerRequest({ data: { id: row.id } }));
+                            }}
+                          >
+                            {t("Eliminar definitivamente")}
+                          </button>
+                        )}
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+                {!rows.length && !loading && (
+                  <p className="mt-6">{t("No hay solicitudes que coincidan con estos filtros.")}</p>
+                )}
+                <div className="mt-7 flex flex-wrap gap-3">
+                  <button
+                    disabled={busy || loading || filters.page <= 1}
+                    onClick={() =>
+                      setFilters((current) => ({ ...current, page: current.page - 1 }))
+                    }
+                    className={buttonStyle}
+                  >
+                    {t("Anterior")}
+                  </button>
+                  <button
+                    disabled={busy || loading || filters.page * pageSize >= total}
+                    onClick={() =>
+                      setFilters((current) => ({ ...current, page: current.page + 1 }))
+                    }
+                    className={buttonStyle}
+                  >
+                    {t("Siguiente")}
+                  </button>
+                </div>
+              </>
             )}
-            <div className="mt-7 flex flex-wrap gap-3">
-              <button
-                disabled={busy || loading || filters.page <= 1}
-                onClick={() => setFilters((current) => ({ ...current, page: current.page - 1 }))}
-                className={buttonStyle}
-              >
-                {t("Anterior")}
-              </button>
-              <button
-                disabled={busy || loading || filters.page * pageSize >= total}
-                onClick={() => setFilters((current) => ({ ...current, page: current.page + 1 }))}
-                className={buttonStyle}
-              >
-                {t("Siguiente")}
-              </button>
-            </div>
           </>
         )}
       </section>

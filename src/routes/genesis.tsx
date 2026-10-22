@@ -1,3 +1,4 @@
+import { localizedHead } from "@/lib/i18n/seo";
 import { T, useLanguage } from "@/lib/i18n";
 import { media } from "@/data/media";
 import { type ReactNode } from "react";
@@ -5,16 +6,20 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { PageIntro, Shell } from "@/components/shell";
 
 export const Route = createFileRoute("/genesis")({
-  head: () => ({
-    meta: [
-      { title: "Proyecto Génesis | Inversión social productiva" },
+  head: ({ matches }) =>
+    localizedHead(
       {
-        name: "description",
-        content:
-          "Iniciativa de inversión social privada de Fundación VNE: productividad real, empresas y autosostenibilidad, con piloto en Nueva York.",
+        meta: [
+          { title: "Proyecto Génesis | Inversión social productiva" },
+          {
+            name: "description",
+            content:
+              "Iniciativa de inversión social privada de Fundación VNE: productividad real, empresas y autosostenibilidad, con piloto en Nueva York.",
+          },
+        ],
       },
-    ],
-  }),
+      matches.at(-1)?.search ?? {},
+    ),
   component: Genesis,
 });
 

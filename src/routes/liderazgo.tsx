@@ -1,19 +1,24 @@
+import { localizedHead } from "@/lib/i18n/seo";
 import { T, useLanguage } from "@/lib/i18n";
 import { media } from "@/data/media";
 import { createFileRoute } from "@tanstack/react-router";
 import { PageIntro, Shell } from "@/components/shell";
 
 export const Route = createFileRoute("/liderazgo")({
-  head: () => ({
-    meta: [
-      { title: "Liderazgo | Fundación VNE" },
+  head: ({ matches }) =>
+    localizedHead(
       {
-        name: "description",
-        content:
-          "Wilmer Solórzano, CEO y fundador, y la estructura institucional de Fundación Venezuela Nueva Esperanza.",
+        meta: [
+          { title: "Liderazgo | Fundación VNE" },
+          {
+            name: "description",
+            content:
+              "Wilmer Solórzano, CEO y fundador, y la estructura institucional de Fundación Venezuela Nueva Esperanza.",
+          },
+        ],
       },
-    ],
-  }),
+      matches.at(-1)?.search ?? {},
+    ),
   component: Liderazgo,
 });
 

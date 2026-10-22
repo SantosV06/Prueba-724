@@ -66,25 +66,34 @@ export async function currentAdministrator(): Promise<AdminIdentity | null> {
   const sql = await database();
   const [user] = await sql.query<StoredAdmin & { version: string }>(
     `SELECT u.id, u.username, u.display_name AS "displayName", u.role, u.enabled,
-      u.password_hash AS "passwordHash", s.credential_version AS version
-     FROM admin_sessions s JOIN admin_users u ON u.id = s.user_id
+      u.password_hash AS "passwordHash", s.credential_version AS version,
+      (p.require_two_factor AND u.totp_secret IS NULL) AS "requiresEnrollment"
+     FROM admin_sessions s JOIN admin_users u ON u.id = s.user_id CROSS JOIN admin_policy p
      WHERE s.token_hash = $1 AND s.expires_at > NOW() AND u.enabled = true AND s.totp_version = u.totp_version`,
     [tokenHash(raw)],
   );
   if (!user || !constantEquals(user.version, credentialVersion(user.passwordHash, sessionSecret())))
     return null;
-  return { id: user.id, username: user.username, displayName: user.displayName, role: user.role };
+  return {
+    id: user.id,
+    username: user.username,
+    displayName: user.displayName,
+    role: user.role,
+    requiresEnrollment: user.requiresEnrollment,
+  };
 }
 export async function isAdminAuthenticated(): Promise<boolean> {
   return (await currentAdministrator()) !== null;
 }
-export async function requireAdmin() {
+export async function requireAdmin({ allowEnrollment = false } = {}) {
   assertTrustedRequest();
   const actor = await currentAdministrator();
   if (!actor) throw new Error("Acceso no autorizado. Inicia sesión nuevamente.");
+  if (actor.requiresEnrollment && !allowEnrollment)
+    throw new Error("Activa 2FA para acceder a los datos del panel.");
   return { sql: await database(), actor };
 }
-async function requireOwner() {
+export async function requireOwner() {
   const context = await requireAdmin();
   if (context.actor.role !== "owner")
     throw new Error("Solo el propietario puede administrar usuarios.");
@@ -245,7 +254,7 @@ export async function loginAdministrator(inputPassword: string, username = "admi
 export async function listAdminAccounts(): Promise<AdminAccount[]> {
   const { sql } = await requireOwner();
   return sql.query<AdminAccount>(
-    `SELECT id, username, display_name AS "displayName", role, enabled FROM admin_users ORDER BY created_at, id`,
+    `SELECT id, username, display_name AS "displayName", role, enabled, totp_secret IS NOT NULL AS "twoFactorEnabled" FROM admin_users ORDER BY created_at, id`,
   );
 }
 export async function createAdminAccount(input: {

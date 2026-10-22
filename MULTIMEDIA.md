@@ -1,12 +1,30 @@
 # Multimedia
 
-Los originales se conservan en `public/assets/img/` con sus nombres existentes.
-Las versiones de entrega se guardan en `media-optimized/`: video H.264/AAC de hasta 1280×720 con faststart, imágenes WebP de hasta 1600 px y portadas JPG.
+## Fuentes y entrega
 
-El catálogo es `src/data/media-files.mjs`. `scripts/prepare-media.mjs` genera `.generated-public/` para Vite; publica solo los aliases `/media/...` optimizados y los recursos públicos del sitio, sin duplicar los originales. Nunca edites `.generated-public/` ni `public/media/`.
+Los originales se conservan en `public/assets/img/` con sus nombres existentes. Los derivados versionados están en `media-optimized/`: videos H.264/AAC de hasta 1280×720 con faststart, imágenes WebP de hasta 1600 px y portadas JPG.
 
-Para reemplazar una imagen o video, actualiza el original y regenera sus derivados con `python scripts/optimize-media.py` (requiere Python, Pillow y FFmpeg en el equipo de desarrollo). Incluye `media-optimized/` actualizado en el commit. Vercel y CI **no necesitan** FFmpeg ni Pillow: utilizan los derivados versionados.
+El catálogo es `src/data/media-files.mjs`; `src/data/media.ts` ofrece aliases a los componentes. `scripts/prepare-media.mjs` genera `.generated-public/` para Vite y Nitro. Publica los recursos `/media/...` optimizados sin duplicar los originales. No edites `.generated-public/`, `.vercel/output` ni `public/media/`: son resultados de preparación/compilación.
 
-Los videos se reproducen en bucle, silenciados, cuando son visibles; se pausan al ocultarse la pestaña. Se respeta reducción de movimiento/ahorro de datos. `preload=none` y las portadas evitan descargar video solo para mostrar el recuadro inicial.
+## Sustitución
 
-`public/favicon.svg`, `public/og.jpg` y `src/lib/og/site.json` contienen la identidad de la marca. El favicon mantiene el árbol y la tarjeta social usa el logo completo.
+1. Actualiza el original y el catálogo cuando corresponda.
+2. Ejecuta `python scripts/optimize-media.py` con Python, Pillow y FFmpeg disponibles en el entorno de desarrollo.
+3. Revisa calidad, dimensiones, portadas y nombres. Incluye los derivados de `media-optimized/` en el commit.
+4. Ejecuta build y verifica la reproducción en móvil/escritorio.
+
+Vercel y CI consumen los derivados versionados; no necesitan FFmpeg/Pillow. El script de preparación falla si faltan los recursos exigidos.
+
+## Reproducción y accesibilidad
+
+`MediaVideo` utiliza controles, bucle, silencio y `playsInline`, con `preload=none` y poster. Intenta reproducir cuando al menos una cuarta parte del video está visible; pausa fuera de vista o con la pestaña oculta. Respeta ahorro de datos y reducción de movimiento. Una pausa manual se conserva y el navegador puede rechazar autoplay.
+
+Estas medidas reducen descargas y reproducción innecesarias; no prometen consumo cero ni una puntuación de rendimiento concreta. Revisa compresión y derechos de uso antes de añadir archivos grandes. Las etiquetas y textos alternativos deben tener traducción. Los videos hablados necesitan subtítulos/transcripciones propios; no se generan automáticamente.
+
+## Identidad
+
+`public/favicon.svg` contiene el emblema del árbol; `public/og.jpg` y `src/lib/og/site.json` definen la tarjeta social con el logo completo. El encabezado usa el árbol y el pie muestra el logo completo. Preserva las rutas PWA, iconos, inyector de marca y puente de preview existentes.
+
+## Contenido editable
+
+El editor administrativo cambia solo el título y la introducción de portada. No sube imágenes o videos ni cambia estos archivos. Para su arquitectura y permisos consulta [ARCHITECTURE.md](ARCHITECTURE.md).

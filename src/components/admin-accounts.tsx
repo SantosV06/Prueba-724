@@ -147,6 +147,9 @@ export function AdminAccounts({
                   ? t("Administrador activo")
                   : t("Desactivado")}
             </span>
+            <span className="text-sm">
+              {t(account.twoFactorEnabled ? "2FA activado" : "2FA pendiente")}
+            </span>
             <div className="flex flex-wrap gap-2">
               <button
                 className={button}
