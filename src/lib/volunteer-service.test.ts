@@ -10,6 +10,7 @@ const cookies = new Map<string, string>();
 let address = "192.0.2.1";
 let site = "same-origin";
 let failRevocation = false;
+let failExportAudit = false;
 mock.module("@tanstack/react-start/server", {
   namedExports: {
     getCookie: (name: string) => cookies.get(name),
@@ -33,6 +34,8 @@ mock.module("./db.ts", {
       query: async (sql: string, params: unknown[] = []) => {
         if (failRevocation && sql.startsWith("DELETE FROM admin_sessions WHERE token_hash"))
           throw new Error("database unavailable");
+        if (failExportAudit && sql.startsWith("INSERT INTO admin_events"))
+          throw new Error("audit unavailable");
         return (await pg.query(sql, params)).rows;
       },
     }),
@@ -118,9 +121,18 @@ test("volunteer and admin workflow: durable data, limits, revocation, pagination
   let cursor;
   let snapshot;
   let revision;
+  let exportId: string | undefined;
   const exported = new Set<string>();
   do {
-    const result = await service.exportVolunteerRequests(filters, cursor, snapshot, revision);
+    const result = await service.exportVolunteerRequests(
+      filters,
+      cursor,
+      snapshot,
+      revision,
+      exportId,
+    );
+    if (exportId) assert.equal(result.exportId, exportId);
+    exportId = result.exportId;
     for (const row of result.rows) {
       assert.ok(!exported.has(row.id));
       exported.add(row.id);
@@ -130,6 +142,38 @@ test("volunteer and admin workflow: durable data, limits, revocation, pagination
     revision = result.revision;
   } while (cursor);
   assert.equal(exported.size, 1006, "export traverses beyond the old 1000-row limit");
+  const exportEvents = (
+    await pg.query<{
+      actor_username: string;
+      actor_id: string;
+      after_value: { exportId: string; rowCount: number; lastBatch: boolean };
+    }>("SELECT * FROM admin_events WHERE action='export:batch'")
+  ).rows;
+  assert.equal(exportEvents.length, 3, "every delivered batch is audited");
+  assert.equal(
+    exportEvents.reduce((sum, event) => sum + event.after_value.rowCount, 0),
+    1006,
+  );
+  assert.ok(exportEvents.every((event) => event.actor_username === "admin" && event.actor_id));
+  assert.ok(exportEvents.every((event) => event.after_value.exportId === exportId));
+  assert.equal(exportEvents.filter((event) => event.after_value.lastBatch).length, 1);
+  const filtered = await service.exportVolunteerRequests({ ...filters, search: input.correo });
+  const [filteredAudit] = (
+    await pg.query<{ after_value: { rowCount: number; searchApplied: boolean } }>(
+      "SELECT after_value FROM admin_events WHERE after_value->>'exportId'=$1",
+      [filtered.exportId],
+    )
+  ).rows;
+  assert.equal(filteredAudit.after_value.rowCount, 5);
+  assert.equal(filteredAudit.after_value.searchApplied, true);
+  assert.ok(!JSON.stringify(filteredAudit).includes(input.correo), "search text is not retained");
+  assert.ok(
+    !JSON.stringify(filteredAudit).includes(input.telefono),
+    "volunteer data is not copied",
+  );
+  failExportAudit = true;
+  await assert.rejects(service.exportVolunteerRequests(filters), /audit unavailable/);
+  failExportAudit = false;
   const batch = await service.exportVolunteerRequests(filters);
   await service.changeVolunteerRequest(id, "status", "pendiente");
   await assert.rejects(
@@ -143,6 +187,7 @@ test("volunteer and admin workflow: durable data, limits, revocation, pagination
   );
   await service.changeVolunteerRequest(id, "status", "contactada");
   site = "cross-site";
+  await assert.rejects(service.exportVolunteerRequests(filters), /cross-site/);
   await assert.rejects(service.changeVolunteerRequest(id, "trash"), /cross-site/);
   site = "same-origin";
   failRevocation = true;
@@ -161,6 +206,7 @@ test("volunteer and admin workflow: durable data, limits, revocation, pagination
     "copied cookie must be rejected after logout",
   );
   await assert.rejects(service.listVolunteerRequests(filters), /no autorizado/);
+  await assert.rejects(service.exportVolunteerRequests(filters), /no autorizado/);
   cookies.clear();
   await service.loginAdministrator(process.env.ADMIN_PASSWORD);
   const [owner] = await service.listAdminAccounts();
@@ -185,6 +231,17 @@ test("volunteer and admin workflow: durable data, limits, revocation, pagination
   await service.loginAdministrator("individual-password-1234", "equipo");
   const memberToken = cookies.get("vne-admin-session")!;
   assert.equal((await service.currentAdministrator())?.username, "equipo");
+  const teamExport = await service.exportVolunteerRequests({ ...filters, search: "no-matches" });
+  assert.equal(teamExport.rows.length, 0);
+  const [teamAudit] = (
+    await pg.query<{ actor_id: string; actor_username: string; after_value: { rowCount: number } }>(
+      "SELECT * FROM admin_events WHERE after_value->>'exportId'=$1",
+      [teamExport.exportId],
+    )
+  ).rows;
+  assert.equal(teamAudit.actor_id, member.id);
+  assert.equal(teamAudit.actor_username, "equipo");
+  assert.equal(teamAudit.after_value.rowCount, 0);
   await assert.rejects(service.listAdminAccounts(), /propietario/);
   await assert.rejects(
     service.createAdminAccount({

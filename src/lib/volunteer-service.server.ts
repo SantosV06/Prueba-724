@@ -290,8 +290,9 @@ export async function exportVolunteerRequests(
   cursor?: { fecha: string; id: string },
   snapshot?: string,
   revision?: string,
+  exportId: string = randomUUID(),
 ) {
-  const { sql } = await requireAdmin();
+  const { sql, actor } = await requireAdmin();
   const { where, params } = filterSql(filters);
   const until =
     snapshot ??
@@ -313,8 +314,31 @@ export async function exportVolunteerRequests(
   if (revision !== undefined && revision !== batch.revision)
     throw new Error("Las solicitudes cambiaron durante la exportación. Vuelve a descargar el CSV.");
   const rows = batch.rows;
+  // Record server delivery, not a completed local download. Never copy volunteer
+  // data or the search text into the audit log. If this write fails, no batch
+  // is returned to the browser.
+  await sql.query(
+    `INSERT INTO admin_events (id, action, actor_id, actor_username, after_value)
+     VALUES ($1, 'export:batch', $2, $3, $4::jsonb)`,
+    [
+      randomUUID(),
+      actor.id,
+      actor.username,
+      JSON.stringify({
+        exportId,
+        rowCount: rows.length,
+        status: filters.status,
+        trash: filters.trash,
+        searchApplied: filters.search.length > 0,
+        snapshot: until,
+        revision: batch.revision,
+        lastBatch: rows.length < 500,
+      }),
+    ],
+  );
   return {
     rows,
+    exportId,
     snapshot: until,
     revision: batch.revision,
     next: rows.length === 500 ? { fecha: rows[499].fecha, id: rows[499].id } : null,
