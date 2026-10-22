@@ -35,5 +35,12 @@
         }
       ]
     }
+  ],
+  "redirects": [
+    {
+      "source": "/__grok/:path*",
+      "destination": "/pwa/:path*",
+      "permanent": true
+    }
   ]
 }
