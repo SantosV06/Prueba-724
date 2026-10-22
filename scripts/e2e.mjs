@@ -19,14 +19,21 @@ try {
   const context = await browser.newContext();
   // External maps/chrome are outside the local application boundary. Avoid
   // network-dependent failures; no application API or DB call is intercepted.
-  await context.route(/^https:\/\/(?:www\.google\.com|grok\.com)\//, async (route) => {
-    excludedExternalHosts.add(new URL(route.request().url()).host);
-    const script = route.request().resourceType() === "script";
-    await route.fulfill({
-      status: 200,
-      contentType: script ? "application/javascript" : "text/html",
-      body: script ? "" : "<p>Mapa externo omitido en QA local.</p>",
-    });
+  await context.route(
+    /^https:\/\/(?:www\.google\.com|grok\.com|va\.vercel-scripts\.com)\//,
+    async (route) => {
+      excludedExternalHosts.add(new URL(route.request().url()).host);
+      const script = route.request().resourceType() === "script";
+      await route.fulfill({
+        status: 200,
+        contentType: script ? "application/javascript" : "text/html",
+        body: script ? "" : "<p>Mapa externo omitido en QA local.</p>",
+      });
+    },
+  );
+  await context.route(/\/_vercel\/(?:insights|speed-insights)\//, (route) => {
+    excludedExternalHosts.add("Vercel managed analytics (local preview)");
+    return route.fulfill({ status: 200, contentType: "application/javascript", body: "" });
   });
   const page = await context.newPage();
   page.on("response", (response) => {
@@ -61,8 +68,32 @@ try {
     const video = page.locator("video").first();
     assert.equal(await video.getAttribute("preload"), "none");
     assert.ok(await video.getAttribute("poster"));
+    if (name === "desktop") {
+      await video.scrollIntoViewIfNeeded();
+      await video.evaluate((node) => node.play());
+      await video.evaluate(
+        (node) =>
+          new Promise((resolve) => {
+            node.addEventListener("pause", resolve, { once: true });
+            node.pause();
+          }),
+      );
+      await page.evaluate(() => document.dispatchEvent(new Event("visibilitychange")));
+      await page.waitForTimeout(150);
+      assert.equal(
+        await video.evaluate((node) => node.paused),
+        true,
+        "manual pause survives visibility changes",
+      );
+    }
     if (name === "mobile") {
-      await page.getByRole("button", { name: "Menú", exact: true }).click();
+      const menu = page.getByRole("button", { name: "Menú", exact: true });
+      await menu.click();
+      await page.getByRole("navigation", { name: "Móvil" }).getByRole("link").first().waitFor();
+      await page.keyboard.press("Escape");
+      assert.equal(await page.getByRole("navigation", { name: "Móvil" }).count(), 0);
+      assert.ok(await menu.evaluate((node) => node === document.activeElement));
+      await menu.click();
       await page
         .getByRole("navigation", { name: "Móvil" })
         .getByRole("link", { name: "Casas VNE" })
@@ -78,7 +109,7 @@ try {
   await page.goto(`${base}/voluntariado`, { waitUntil: "domcontentloaded" });
   await page.getByRole("button", { name: "Registrar solicitud" }).click();
   await page.getByRole("alert").filter({ hasText: "Completa nombre" }).waitFor();
-  if (!built) {
+  {
     assert.ok(
       process.env.E2E_ADMIN_PASSWORD,
       "Supply a local test password; never use production credentials here.",
@@ -94,6 +125,7 @@ try {
     await page.getByRole("button", { name: "Registrar solicitud" }).click();
     await page.getByRole("heading", { name: "Solicitud registrada" }).waitFor();
     await page.goto(`${base}/solicitudes`, { waitUntil: "domcontentloaded" });
+    await page.getByLabel("Usuario", { exact: true }).fill("admin");
     await page.getByLabel("Contraseña administrativa").fill(process.env.E2E_ADMIN_PASSWORD);
     await page.getByRole("button", { name: "Iniciar sesión" }).click();
     const row = page
@@ -111,6 +143,37 @@ try {
     const csv = await download;
     assert.equal(csv.suggestedFilename(), "voluntarios-vne.csv");
     await page.screenshot({ path: `${screenshots}/vne-admin.png`, fullPage: true });
+    await page.getByRole("button", { name: "Administrar usuarios", exact: true }).click();
+    await page.getByLabel("Nombre de la persona", { exact: true }).fill("Equipo de prueba");
+    await page.getByLabel("Nuevo usuario", { exact: true }).fill(`equipo-${suffix}`);
+    await page
+      .getByLabel("Contraseña del nuevo usuario", { exact: true })
+      .fill("test-team-password-1234");
+    await page.getByRole("button", { name: "Crear usuario", exact: true }).click();
+    await page.getByRole("status").filter({ hasText: "Usuario creado" }).waitFor();
+    await page.screenshot({ path: `${screenshots}/vne-accounts.png`, fullPage: true });
+    await page
+      .getByRole("button", { name: `Cambiar contraseña de equipo-${suffix}`, exact: true })
+      .click();
+    await page
+      .getByLabel(`Nueva contraseña de equipo-${suffix}`, { exact: true })
+      .fill("test-replacement-password-1234");
+    await page.getByRole("button", { name: "Guardar contraseña", exact: true }).click();
+    await page.getByRole("status").filter({ hasText: "Contraseña actualizada" }).waitFor();
+    page.once("dialog", (dialog) => dialog.accept());
+    await page.getByRole("button", { name: `Desactivar equipo-${suffix}`, exact: true }).click();
+    await page.getByRole("button", { name: `Activar equipo-${suffix}`, exact: true }).waitFor();
+    page.once("dialog", (dialog) => dialog.accept());
+    await page.getByRole("button", { name: `Activar equipo-${suffix}`, exact: true }).click();
+    await page.getByRole("button", { name: `Desactivar equipo-${suffix}`, exact: true }).waitFor();
+    await page.setViewportSize({ width: 390, height: 844 });
+    assert.equal(
+      await page.evaluate(() => document.documentElement.scrollWidth > innerWidth + 1),
+      false,
+    );
+    await page.screenshot({ path: `${screenshots}/vne-accounts-mobile.png`, fullPage: true });
+    await page.setViewportSize({ width: 1280, height: 900 });
+    await page.getByRole("button", { name: "Ocultar usuarios", exact: true }).click();
     page.once("dialog", (dialog) => dialog.accept());
     await row.getByRole("button", { name: "Mover a papelera" }).click();
     await page.getByRole("button", { name: "Ver papelera" }).click();
@@ -119,9 +182,16 @@ try {
     await row.waitFor();
     await page.getByRole("button", { name: "Cerrar sesión" }).click();
     await page.getByRole("button", { name: "Iniciar sesión" }).waitFor();
-  } else {
-    await page.goto(`${base}/solicitudes`, { waitUntil: "domcontentloaded" });
-    await page.getByRole("button", { name: "Iniciar sesión" }).waitFor();
+    await page.getByLabel("Usuario", { exact: true }).fill(`equipo-${suffix}`);
+    await page.getByLabel("Contraseña administrativa").fill("test-replacement-password-1234");
+    await page.getByRole("button", { name: "Iniciar sesión" }).click();
+    await row.waitFor();
+    assert.equal(
+      await page.getByRole("button", { name: "Administrar usuarios", exact: true }).count(),
+      0,
+    );
+    await page.getByRole("button", { name: "Cerrar sesión", exact: true }).click();
+    await page.getByRole("button", { name: "Iniciar sesión", exact: true }).waitFor();
   }
   assert.deepEqual(errors, []);
   console.log(
@@ -136,16 +206,18 @@ try {
           "mobile menu",
           "themes",
           "validation",
-          ...(built
-            ? ["admin login screen"]
-            : [
-                "form to PostgreSQL",
-                "admin login",
-                "status update",
-                "CSV download",
-                "trash and restore",
-                "logout",
-              ]),
+          "owner creates accounts",
+          "password reset",
+          "disable and reactivate account",
+          "new account login and role restrictions",
+          ...[
+            "form to PostgreSQL",
+            "admin login",
+            "status update",
+            "CSV download",
+            "trash and restore",
+            "logout",
+          ],
         ],
       },
       null,

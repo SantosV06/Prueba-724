@@ -1,5 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { AdminAccounts } from "@/components/admin-accounts";
+import type { AdminIdentity } from "@/lib/admin-accounts";
 import { Shell } from "@/components/shell";
 import {
   getAdminStatus,
@@ -10,6 +12,7 @@ import {
   restoreVolunteerRequest,
   updateVolunteerStatus,
   exportVolunteerRequests,
+  purgeVolunteerRequest,
 } from "@/lib/volunteer-functions";
 import { volunteersToCsv } from "@/lib/volunteers";
 import type { VolunteerRequest, RequestFilters, RequestStatus } from "@/lib/volunteer-schema";
@@ -39,6 +42,9 @@ function Solicitudes() {
   const [ready, setReady] = useState(false);
   const [busy, setBusy] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [username, setUsername] = useState("admin");
+  const [user, setUser] = useState<AdminIdentity | null>(null);
+  const [showAccounts, setShowAccounts] = useState(false);
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const requestSequence = useRef(0);
@@ -68,7 +74,10 @@ function Solicitudes() {
     let active = true;
     void getAdminStatus()
       .then((status) => {
-        if (active) setAuthenticated(status.authenticated);
+        if (active) {
+          setAuthenticated(status.authenticated);
+          setUser(status.user);
+        }
       })
       .catch((cause) => {
         if (active) setError(message(cause));
@@ -91,7 +100,9 @@ function Solicitudes() {
     setBusy(true);
     setError("");
     try {
-      await loginAdmin({ data: { password } });
+      await loginAdmin({ data: { username, password } });
+      const status = await getAdminStatus();
+      setUser(status.user);
       setPassword("");
       setAuthenticated(true);
     } catch (cause) {
@@ -109,6 +120,8 @@ function Solicitudes() {
       setRows([]);
       setTotal(0);
       setAuthenticated(false);
+      setUser(null);
+      setShowAccounts(false);
     } catch (cause) {
       setError(message(cause));
     } finally {
@@ -131,16 +144,32 @@ function Solicitudes() {
     setBusy(true);
     setError("");
     try {
-      const all: VolunteerRequest[] = [];
+      const chunks: BlobPart[] = ["\uFEFF"];
+      let bytes = 0;
+      let revision: string | undefined;
+      let first = true;
       let cursor: { fecha: string; id: string } | undefined;
       let snapshot: string | undefined;
       do {
-        const result = await exportVolunteerRequests({ data: { ...filters, cursor, snapshot } });
-        all.push(...result.rows);
+        const result = await exportVolunteerRequests({
+          data: { ...filters, cursor, snapshot, revision },
+        });
+        let csv = volunteersToCsv(result.rows);
+        if (!first) csv = "\r\n" + csv.slice(csv.indexOf("\r\n") + 2);
+        if (!first && !result.rows.length) csv = "";
+        const chunk = new Blob([csv]);
+        bytes += chunk.size;
+        if (bytes > 25 * 1024 * 1024)
+          throw new Error(
+            "El CSV supera 25 MB. Filtra los resultados para descargarlos en grupos más pequeños.",
+          );
+        chunks.push(chunk);
+        first = false;
+        revision = result.revision;
         cursor = result.next ?? undefined;
         snapshot = result.snapshot;
       } while (cursor);
-      const blob = new Blob(["\uFEFF", volunteersToCsv(all)], { type: "text/csv;charset=utf-8" });
+      const blob = new Blob(chunks, { type: "text/csv;charset=utf-8" });
       const url = URL.createObjectURL(blob);
       const link = document.createElement("a");
       link.href = url;
@@ -184,6 +213,18 @@ function Solicitudes() {
             onSubmit={login}
             className="mt-8 max-w-md rounded-card border border-line bg-card p-6 dark:border-white/10 dark:bg-navy"
           >
+            <label className="mb-4 block text-sm font-semibold">
+              Usuario
+              <input
+                autoComplete="username"
+                autoCapitalize="none"
+                required
+                maxLength={50}
+                value={username}
+                onChange={(event) => setUsername(event.target.value)}
+                className={`mt-2 w-full ${inputStyle}`}
+              />
+            </label>
             <label className="block text-sm font-semibold">
               Contraseña administrativa
               <input
@@ -206,6 +247,31 @@ function Solicitudes() {
           </form>
         ) : (
           <>
+            <p className="mt-6 text-sm">
+              Sesión de {user?.displayName} ({user?.username})
+            </p>
+            {user?.role === "owner" && (
+              <button
+                className={`mt-4 ${buttonStyle}`}
+                onClick={() => setShowAccounts((value) => !value)}
+                aria-expanded={showAccounts}
+              >
+                {showAccounts ? "Ocultar usuarios" : "Administrar usuarios"}
+              </button>
+            )}
+            {showAccounts && user && (
+              <AdminAccounts
+                currentId={user.id}
+                onSignedOut={() => {
+                  requestSequence.current++;
+                  setAuthenticated(false);
+                  setUser(null);
+                  setRows([]);
+                  setTotal(0);
+                  setShowAccounts(false);
+                }}
+              />
+            )}
             <div className="mt-7 flex flex-wrap gap-3">
               <button
                 disabled={!total || busy || loading}
@@ -340,6 +406,22 @@ function Solicitudes() {
                     >
                       {filters.trash ? "Restaurar" : "Mover a papelera"}
                     </button>
+                    {filters.trash && user?.role === "owner" && (
+                      <button
+                        disabled={busy || loading}
+                        className={buttonStyle}
+                        onClick={() => {
+                          if (
+                            window.confirm(
+                              "¿Eliminar definitivamente los datos personales de esta solicitud? Esta acción no se puede deshacer.",
+                            )
+                          )
+                            void mutate(() => purgeVolunteerRequest({ data: { id: row.id } }));
+                        }}
+                      >
+                        Eliminar definitivamente
+                      </button>
+                    )}
                   </div>
                 </li>
               ))}

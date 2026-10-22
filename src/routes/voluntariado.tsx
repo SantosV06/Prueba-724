@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import { PageIntro, Shell } from "@/components/shell";
+import { isInternationalPhone, normalizePhone } from "@/lib/phone";
 import { submitVolunteer } from "@/lib/volunteer-functions";
 
 export const Route = createFileRoute("/voluntariado")({
@@ -61,10 +62,11 @@ function Voluntariado() {
       setError("El correo no tiene un formato válido.");
       return;
     }
-    if (!/^\+\d[\d\s()-]{6,}$/.test(data.telefono)) {
-      setError("El teléfono debe incluir código de país. Ejemplo: +1 917 555 0100.");
+    if (!isInternationalPhone(data.telefono)) {
+      setError("Incluye el código de país y entre 8 y 15 dígitos. Ejemplo: +507 6000 0000.");
       return;
     }
+    data.telefono = normalizePhone(data.telefono);
     submitting.current = true;
     requestKey.current ??= crypto.randomUUID();
     setSending(true);

@@ -12,16 +12,28 @@ export function MediaVideo({ src, title }: { src: string; title: string }) {
       .connection;
 
     let isVisible = false;
+    let manuallyPaused = false;
+    let automaticPause = false;
+    const onPause = () => {
+      if (automaticPause) automaticPause = false;
+      else manuallyPaused = true;
+    };
+    const onPlay = () => {
+      manuallyPaused = false;
+    };
+    video.addEventListener("pause", onPause);
+    video.addEventListener("play", onPlay);
 
     const syncPlayback = () => {
       const shouldPlay =
         isVisible && !document.hidden && !reducedMotion.matches && !connection?.saveData;
 
-      if (shouldPlay) {
+      if (shouldPlay && !manuallyPaused) {
         void video.play().catch(() => {
           // El navegador puede bloquear la reproducción automática.
         });
-      } else {
+      } else if (!shouldPlay && !video.paused) {
+        automaticPause = true;
         video.pause();
       }
     };
@@ -40,6 +52,8 @@ export function MediaVideo({ src, title }: { src: string; title: string }) {
 
     return () => {
       observer.disconnect();
+      video.removeEventListener("pause", onPause);
+      video.removeEventListener("play", onPlay);
       document.removeEventListener("visibilitychange", syncPlayback);
       reducedMotion.removeEventListener("change", syncPlayback);
       if (video.paused === false) video.pause();

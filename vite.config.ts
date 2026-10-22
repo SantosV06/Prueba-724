@@ -174,6 +174,8 @@ export default defineConfig(({ command, isPreview }) => ({
       ? [
           nitro({
             preset: "vercel",
+            // Preserve PGlite's WASM/data paths for full built-output tests.
+            traceDeps: ["@electric-sql/pglite*"],
             // Nitro also scans root/public independently of Vite. Disable that
             // source copy and publish only the generated, optimized directory.
             publicAssets: [{ dir: ".generated-public" }, { dir: "public", ignore: ["**"] }],

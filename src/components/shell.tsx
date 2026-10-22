@@ -1,6 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import { Instagram, Mail, Menu, Moon, Phone, Sun, X } from "lucide-react";
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { legalLinks, nav, org } from "@/data/site";
 import { media } from "@/data/media";
 
@@ -56,11 +56,40 @@ export function Shell({ children }: { children: ReactNode }) {
 function Header() {
   const { dark, toggle } = useTheme();
   const [open, setOpen] = useState(false);
+  const menuButton = useRef<HTMLButtonElement>(null);
+  const menuPanel = useRef<HTMLElement>(null);
 
   useEffect(() => {
-    document.body.style.overflow = open ? "hidden" : "";
+    if (!open) return;
+    const desktop = window.matchMedia("(min-width: 1024px)");
+    const overflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    menuPanel.current?.querySelector<HTMLElement>("a")?.focus();
+    const close = () => setOpen(false);
+    const keyboard = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        event.preventDefault();
+        close();
+        menuButton.current?.focus();
+      }
+    };
+    // This is a navigation disclosure, not a modal: Tab remains free to leave it.
+    const focus = (event: FocusEvent) => {
+      if (
+        event.target instanceof Node &&
+        !menuPanel.current?.contains(event.target) &&
+        !menuButton.current?.contains(event.target)
+      )
+        close();
+    };
+    document.addEventListener("keydown", keyboard);
+    document.addEventListener("focusin", focus);
+    desktop.addEventListener("change", close);
     return () => {
-      document.body.style.overflow = "";
+      document.body.style.overflow = overflow;
+      document.removeEventListener("keydown", keyboard);
+      document.removeEventListener("focusin", focus);
+      desktop.removeEventListener("change", close);
     };
   }, [open]);
 
@@ -117,6 +146,7 @@ function Header() {
           <button
             type="button"
             className="grid size-11 place-items-center rounded-full text-navy lg:hidden dark:text-cream"
+            ref={menuButton}
             aria-expanded={open}
             aria-controls="menu-movil"
             onClick={() => setOpen((value) => !value)}
@@ -129,6 +159,7 @@ function Header() {
 
       {open ? (
         <nav
+          ref={menuPanel}
           id="menu-movil"
           className="border-t border-line bg-paper px-4 py-3 lg:hidden dark:border-white/10 dark:bg-navy-deep"
           aria-label="Móvil"
@@ -310,7 +341,9 @@ export function PageIntro({
         <h1 className="mt-3 max-w-3xl font-display text-4xl leading-[1.15] font-semibold text-balance sm:text-5xl">
           {title}
         </h1>
-        <p className="editorial-justify mt-5 max-w-2xl text-lg leading-relaxed text-cream/85">{lede}</p>
+        <p className="editorial-justify mt-5 max-w-2xl text-lg leading-relaxed text-cream/85">
+          {lede}
+        </p>
       </div>
     </section>
   );

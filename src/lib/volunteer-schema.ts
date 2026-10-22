@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { isInternationalPhone, normalizePhone } from "./phone.ts";
 
 export const volunteerSchema = z.object({
   nombre: z.string().trim().min(1, "Escribe tu nombre.").max(100),
@@ -7,7 +8,12 @@ export const volunteerSchema = z.object({
   telefono: z
     .string()
     .trim()
-    .regex(/^\+[0-9][0-9 ()-]{6,39}$/, "Incluye el código de país, por ejemplo +507 6000 0000."),
+    .max(40)
+    .refine(
+      isInternationalPhone,
+      "Incluye el código de país y entre 8 y 15 dígitos, por ejemplo +507 6000 0000.",
+    )
+    .transform(normalizePhone),
   mensaje: z.string().trim().max(2000, "El mensaje admite hasta 2000 caracteres."),
   requestKey: z.string().uuid(),
   website: z.string().max(200).optional(),

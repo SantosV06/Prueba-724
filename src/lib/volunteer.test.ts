@@ -22,11 +22,15 @@ test("server validation rejects malformed input, oversized fields and invalid re
   for (const value of [
     { ...input, correo: "incorrecto" },
     { ...input, telefono: "6000" },
+    { ...input, telefono: "+1------" },
+    { ...input, telefono: "+0000000000" },
+    { ...input, telefono: "+1234567890123456" },
     { ...input, nombre: "x".repeat(101) },
     { ...input, mensaje: "x".repeat(2001) },
     { ...input, requestKey: "not-a-uuid" },
   ])
     assert.equal(volunteerSchema.safeParse(value).success, false);
+  assert.equal(volunteerSchema.parse(input).telefono, "+50760000000");
   assert.equal(requestFiltersSchema.safeParse({ page: -1 }).success, false);
   assert.equal(requestFiltersSchema.safeParse({ status: "invalid" }).success, false);
 });
