@@ -87,7 +87,22 @@ test("volunteer and admin workflow: durable data, limits, revocation, pagination
   address = "192.0.2.2";
   process.env.ADMIN_PASSWORD = "test-only-password-12345";
   await assert.rejects(service.loginAdministrator("wrong"), /incorrecta/);
+  const failures = (await pg.query("SELECT * FROM admin_events WHERE action='login:failure'")).rows;
+  assert.equal(failures.length, 1, "a rejected bootstrap login is audited");
+  for (const field of ["actor_id", "actor_username", "request_id", "before_value", "after_value"])
+    assert.equal(failures[0][field], null, "rejection audit does not retain submitted data");
   await service.loginAdministrator(process.env.ADMIN_PASSWORD);
+  await assert.rejects(service.loginAdministrator("wrong", "nonexistent-user"), /incorrecta/);
+  failExportAudit = true;
+  const auditErrors: unknown[] = [];
+  const errorLog = mock.method(console, "error", (...args: unknown[]) => auditErrors.push(args));
+  try {
+    await assert.rejects(service.loginAdministrator("wrong", "nonexistent-user"), /incorrecta/);
+  } finally {
+    failExportAudit = false;
+    errorLog.mock.restore();
+  }
+  assert.deepEqual(auditErrors, [[JSON.stringify({ event: "audit:login-failure-unavailable" })]]);
   assert.equal(
     (await pg.query("SELECT * FROM request_limits WHERE key_hash='old'")).rows.length,
     0,
@@ -297,11 +312,22 @@ test("volunteer and admin workflow: durable data, limits, revocation, pagination
   const replacementToken = cookies.get("vne-admin-session")!;
   // Exhausting an account/IP budget must not lock the owner out on another connection.
   address = "192.0.2.80";
+  const failureCount = async () =>
+    Number(
+      (await pg.query("SELECT count(*) AS total FROM admin_events WHERE action='login:failure'"))
+        .rows[0].total,
+    );
+  const beforeFailures = await failureCount();
   for (let i = 0; i < 8; i++)
     await assert.rejects(service.loginAdministrator("wrong", "admin"), /incorrecta/);
   await assert.rejects(
     service.loginAdministrator(process.env.ADMIN_PASSWORD, "admin"),
     /Demasiados/,
+  );
+  assert.equal(
+    await failureCount(),
+    beforeFailures + 8,
+    "rate-limited traffic cannot amplify audit writes",
   );
   address = "192.0.2.81";
   await service.loginAdministrator(process.env.ADMIN_PASSWORD, "admin");

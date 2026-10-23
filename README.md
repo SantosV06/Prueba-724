@@ -20,6 +20,8 @@ Sitio institucional de Fundación Venezuela Nueva Esperanza y aplicación privad
 
 Requiere Node **24.x** y npm **11.9.0**. Ejecuta `npm ci --include=dev` y `npm run dev`. Sin `DATABASE_URL`, desarrollo utiliza PGLite en memoria; sus datos se pierden al reiniciar. Usa únicamente credenciales ficticias en desarrollo y pruebas.
 
+Para cargar un archivo privado local, copia `.env.example` a `.env.local`, completa credenciales ficticias y ejecuta `node --env-file=.env.local --run dev`. Los scripts de operación requieren cargar ese archivo explícitamente; Vercel usa sus propias variables.
+
 Para formulario y panel local, proporciona `ADMIN_PASSWORD` y `ADMIN_SESSION_SECRET` mediante variables del proceso. Para probar TOTP añade una clave local `ADMIN_TOTP_ENCRYPTION_KEY`. No subas archivos de secretos a Git.
 
 ## Comandos
@@ -39,6 +41,8 @@ Para formulario y panel local, proporciona `ADMIN_PASSWORD` y `ADMIN_SESSION_SEC
 
 ## Guías vigentes
 
+- [Instalación completa desde cero](GUIA_INSTALACION_COMPLETA.md): clonación, Vercel, Neon y autenticación.
+- [Entrega a otra empresa](HANDOVER.md): instalación independiente, transferencia y criterios de aceptación.
 - [Configuración y despliegue](SETUP_DATABASE.md): variables, Neon, Vercel y primer acceso.
 - [Operación y recuperación](OPERATIONS.md): panel, alertas, respaldos, restauración y conservación.
 - [Seguridad](SECURITY.md): controles, límites y comunicación privada de incidencias.

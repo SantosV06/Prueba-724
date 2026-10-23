@@ -152,6 +152,19 @@ export async function saveVolunteerRequest(input: VolunteerInput) {
   );
   return { ok: true };
 }
+async function rejectLogin(sql: Sql, message: string): Promise<never> {
+  // Called only after request budgets pass. Never persist submitted usernames,
+  // IPs, passwords, codes or a reason that reveals whether an account exists.
+  try {
+    await sql.query("INSERT INTO admin_events (id, action) VALUES ($1, 'login:failure')", [
+      randomUUID(),
+    ]);
+  } catch {
+    // Failure to record a rejection must never allow login or expose DB errors.
+    console.error(JSON.stringify({ event: "audit:login-failure-unavailable" }));
+  }
+  throw new Error(message);
+}
 export async function loginAdministrator(inputPassword: string, username = "admin", code = "") {
   assertTrustedRequest();
   privateResponse();
@@ -169,7 +182,7 @@ export async function loginAdministrator(inputPassword: string, username = "admi
     if (Number(count.total) === 0) {
       const { password } = adminSettings();
       if (!constantEquals(inputPassword, password))
-        throw new Error("Usuario o contraseña incorrecta.");
+        return rejectLogin(sql, "Usuario o contraseña incorrecta.");
       const hash = await hashPassword(inputPassword);
       await sql.query(
         `INSERT INTO admin_users (id, username, display_name, password_hash, role, bootstrap_key)
@@ -185,7 +198,7 @@ export async function loginAdministrator(inputPassword: string, username = "admi
   const valid = user
     ? await verifyPassword(inputPassword, user.passwordHash)
     : (await hashPassword(inputPassword), false);
-  if (!user || !user.enabled || !valid) throw new Error("Usuario o contraseña incorrecta.");
+  if (!user || !user.enabled || !valid) return rejectLogin(sql, "Usuario o contraseña incorrecta.");
   const oldToken = getCookie(COOKIE);
   if (oldToken && validSessionToken(oldToken))
     await sql.query("DELETE FROM admin_sessions WHERE token_hash = $1", [tokenHash(oldToken)]);
@@ -201,7 +214,7 @@ export async function loginAdministrator(inputPassword: string, username = "admi
     recovery = recoveryHash(user.id, code);
     step = recovery ? null : verifyTotpStep(decryptTotp(user.totp_secret, user.id), code);
     if (step === null && recovery === null)
-      throw new Error("Código de autenticación inválido o ya utilizado.");
+      return rejectLogin(sql, "Código de autenticación inválido o ya utilizado.");
   }
   const token = newSessionToken();
   // Lock the account and consume proof in the SAME statement that creates the
@@ -241,7 +254,10 @@ export async function loginAdministrator(inputPassword: string, username = "admi
     ],
   );
   if (!inserted.length)
-    throw new Error("Código inválido o credenciales modificadas. Inicia sesión nuevamente.");
+    return rejectLogin(
+      sql,
+      "Código inválido o credenciales modificadas. Inicia sesión nuevamente.",
+    );
   setCookie(COOKIE, token, {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",

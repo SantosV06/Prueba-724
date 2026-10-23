@@ -11,7 +11,7 @@ Los administradores pueden consultar, exportar, actualizar estados, mover a pape
 ## Herramientas del propietario
 
 - **Seguridad del equipo:** muestra cuentas activas/protegidas y permite exigir 2FA después de proteger la cuenta del propietario. No puedes desactivar tu factor mientras se exija al equipo.
-- **Historial de actividad:** filtro exacto de usuario y acción, 25 eventos por página, orden estable por fecha/ID. Ejemplos de acción: `login:success`, `export:batch`, `account:create`, `security:2fa-policy`, `content:home`. Muestra fecha, responsable, acción e identificador de solicitud; no expone los JSON internos.
+- **Historial de actividad:** filtro exacto de usuario y acción, 25 eventos por página, orden estable por fecha/ID. Ejemplos de acción: `login:success`, `login:failure`, `export:batch`, `account:create`, `security:2fa-policy`, `content:home`. `login:failure` no tiene responsable asignado: filtra por acción y deja el usuario vacío para verlo. Muestra fecha, responsable, acción e identificador de solicitud; no expone los JSON internos.
 - **Editar portada:** título e introducción en español, inglés y portugués. Cada versión debe completarse. Se guarda texto simple, nunca HTML. Una revisión evita que una edición antigua sobrescriba otra. Si hay conflicto, vuelve a cargar y revisa los cambios. Los nuevos textos aparecen al recargar el inicio.
 
 Los metadatos SEO y las demás secciones siguen mantenidos en el repositorio. El editor no permite cambiar datos bancarios, documentos legales, multimedia ni el resto del contenido institucional.
@@ -72,3 +72,7 @@ La eliminación y el evento `retention:purge` se ejecutan atómicamente. Si fall
 En `/solicitudes`, abre **Herramientas del propietario → Idioma predeterminado**, elige Español, English o Português y guarda. Se almacena en Neon y se registra en auditoría. Solo el propietario puede cambiarlo. Para comprobarlo, abre una ventana privada sin idioma en la URL. Una URL con `lang` o una preferencia guardada tiene prioridad. Si la base no responde se usa español. No requiere nuevas variables. La migración `0008_site_language.sql` se aplica con el despliegue habitual.
 
 Las opciones internas de herramientas se cierran al tocar de nuevo el botón abierto; tocar otra opción abre esa sección.
+
+## Entrega y mantenimiento del repositorio
+
+Consulta [HANDOVER.md](HANDOVER.md) para instalación independiente, transferencia, protección de `main`, ensayo de restauración y aceptación. Los registros de rechazos no incluyen datos del intento y no generan alertas externas por sí mismos.

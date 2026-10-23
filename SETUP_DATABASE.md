@@ -17,7 +17,7 @@ Importa `SantosV06/Prueba-724`, rama `main`, Root Directory en la raíz. Usa Nod
 | `SITE_URL`                  | Origen HTTPS de producción, sin ruta ni parámetros. Ejemplo: `https://prueba-724.vercel.app`. Se usa para canónicas, alternativas y sitemap. Sin esta variable se intenta usar `VERCEL_PROJECT_PRODUCTION_URL`. |
 | `DATA_RETENTION_DAYS`       | Opcional: entero de 30–3650 días. La organización debe aprobar el plazo. Configurarlo no activa borrados ni un cron.                                                                                            |
 
-Los cuatro valores de credenciales/conexión son **Sensitive** y solo del servidor. No uses el prefijo `VITE_`, no los escribas en el código ni los compartas por chat. `SITE_URL` y el plazo no son secretos. Después de cambiar variables, realiza un nuevo despliegue para que las funciones las reciban.
+Los cuatro valores de credenciales/conexión son de tipo **Secret** (antes **Sensitive**) y solo del servidor. No uses el prefijo `VITE_`, no los escribas en el código ni los compartas por chat. `SITE_URL` y el plazo no son secretos. Después de cambiar variables, realiza un nuevo despliegue para que las funciones las reciban.
 
 Genera claves desde una terminal privada con Node instalado:
 
@@ -29,7 +29,7 @@ Ejecuta el comando por separado para cada secreto. Guarda una copia segura de la
 
 ## 3. Neon y migraciones
 
-Crea o utiliza la base asociada al proyecto. Copia su conexión **pooled** con SSL a `DATABASE_URL` de Production. El despliegue valida la configuración y aplica pendientes con `pg_advisory_xact_lock` dentro de una transacción. `_migrations` registra las versiones aplicadas.
+Crea o utiliza la base asociada al proyecto. Copia su conexión **pooled** con SSL a `DATABASE_URL` de Production. El despliegue rechaza también una `ADMIN_TOTP_ENCRYPTION_KEY` ausente, de tamaño incorrecto o Base64 no canónico, sin imprimirla. Valida la configuración y aplica pendientes con `pg_advisory_xact_lock` dentro de una transacción. `_migrations` registra las versiones aplicadas.
 
 | Migración | Finalidad                                                                       |
 | --------- | ------------------------------------------------------------------------------- |
@@ -40,6 +40,7 @@ Crea o utiliza la base asociada al proyecto. Copia su conexión **pooled** con S
 | `0005`    | TOTP, configuración pendiente y códigos de recuperación.                        |
 | `0006`    | Versiones de seguridad y revocación de sesiones mediante triggers.              |
 | `0007`    | Política de 2FA, índices de auditoría y contenido editable de portada.          |
+| `0008`    | Idioma predeterminado del sitio y revisión para evitar ediciones simultáneas.   |
 
 `0007` es aditiva: conserva solicitudes y credenciales y deja 2FA obligatorio desactivado. No edites migraciones aplicadas. Los cambios futuros necesitan un archivo nuevo y compatibilidad con las funciones todavía activas durante el despliegue.
 
