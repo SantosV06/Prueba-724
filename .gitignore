@@ -3,6 +3,7 @@ node_modules/
 .github_repo
 .env
 .env.*
+!.env.example
 
 # Generated public aliases for Foundation multimedia
 /public/media/

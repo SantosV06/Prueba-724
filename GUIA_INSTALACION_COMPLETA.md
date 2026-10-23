@@ -20,7 +20,7 @@ Esta guía complementa [SETUP_DATABASE.md](SETUP_DATABASE.md), [OPERATIONS.md](O
 ## 3. Importar el repositorio en Vercel
 
 1. En Vercel, **Add New → Project → Import Git Repository**.
-2. Autoriza GitHub si se solicita y elige `SantosV06/Prueba-724`.
+2. Autoriza GitHub si se solicita y elige tu copia autorizada de `Prueba-724` (o `SantosV06/Prueba-724` si mantienes el proyecto original).
 3. Usa la rama `main` y **Root Directory: `./`** (raíz).
 4. Configura **Node.js 24.x** en Project Settings.
 5. Mantén el comando de instalación definido en `vercel.json`: `npm ci --include=dev --no-audit --no-fund`.
@@ -30,14 +30,14 @@ Esta guía complementa [SETUP_DATABASE.md](SETUP_DATABASE.md), [OPERATIONS.md](O
 
 En **Project → Settings → Environment Variables**, configura para **Production**:
 
-| Nombre | Valor | ¿Secreto? |
-| --- | --- | --- |
-| `DATABASE_URL` | Cadena pooled de Neon con SSL | Sí |
-| `ADMIN_PASSWORD` | Contraseña inicial robusta de 14 a 256 caracteres | Sí |
-| `ADMIN_SESSION_SECRET` | Valor aleatorio de al menos 32 caracteres | Sí |
-| `ADMIN_TOTP_ENCRYPTION_KEY` | 32 bytes aleatorios codificados en Base64 | Sí |
-| `SITE_URL` | URL HTTPS pública, por ejemplo `https://prueba-724.vercel.app` | No |
-| `DATA_RETENTION_DAYS` | Opcional, entero de 30 a 3650; **no activa** borrado automático | No |
+| Nombre                      | Valor                                                           | ¿Secreto? |
+| --------------------------- | --------------------------------------------------------------- | --------- |
+| `DATABASE_URL`              | Cadena pooled de Neon con SSL                                   | Sí        |
+| `ADMIN_PASSWORD`            | Contraseña inicial robusta de 14 a 256 caracteres               | Sí        |
+| `ADMIN_SESSION_SECRET`      | Valor aleatorio de al menos 32 caracteres                       | Sí        |
+| `ADMIN_TOTP_ENCRYPTION_KEY` | 32 bytes aleatorios codificados en Base64                       | Sí        |
+| `SITE_URL`                  | URL HTTPS pública, por ejemplo `https://prueba-724.vercel.app`  | No        |
+| `DATA_RETENTION_DAYS`       | Opcional, entero de 30 a 3650; **no activa** borrado automático | No        |
 
 Para generar cada secreto aleatorio desde una terminal privada con Node:
 
@@ -45,7 +45,7 @@ Para generar cada secreto aleatorio desde una terminal privada con Node:
 node -e "console.log(require('node:crypto').randomBytes(32).toString('base64'))"
 ```
 
-Ejecuta **dos veces** y guarda valores diferentes para `ADMIN_SESSION_SECRET` y `ADMIN_TOTP_ENCRYPTION_KEY`. No uses la contraseña del administrador como clave de sesión. Conserva especialmente la clave TOTP: perderla impide descifrar los autenticadores existentes. Los cuatro valores sensibles deben quedar únicamente en el servidor y no llevar prefijo `VITE_`.
+Ejecuta **dos veces** y guarda valores diferentes para `ADMIN_SESSION_SECRET` y `ADMIN_TOTP_ENCRYPTION_KEY`. No uses la contraseña del administrador como clave de sesión. Conserva especialmente la clave TOTP: perderla impide descifrar los autenticadores existentes. Guarda los cuatro valores sensibles como **Secret** (antes **Sensitive**). Deben quedar únicamente en el servidor y no llevar prefijo `VITE_`.
 
 ## 5. Desplegar y crear las tablas
 
@@ -89,6 +89,10 @@ npm ci --include=dev
 npm run dev
 ```
 
+Para cargar credenciales locales, copia `.env.example` a `.env.local` (`cp .env.example .env.local` en Bash o `Copy-Item .env.example .env.local` en PowerShell). Completa el archivo con un editor privado y valores ficticios; arranca con `node --env-file=.env.local --run dev`. No reutilices credenciales de producción.
+
+Los comandos privados de Node no cargan `.env.local` automáticamente. Por ejemplo: `node --env-file=.env.local --run db:verify` o `node --env-file=.env.local --run db:migrate`. Verifica antes que la conexión corresponde a la rama que quieres operar. Las variables ya presentes en el proceso tienen prioridad sobre ese archivo; no mezcles una terminal con credenciales de producción con pruebas locales.
+
 Sin `DATABASE_URL`, el desarrollo usa PGLite en memoria y pierde los datos al reiniciar. Para probar el panel proporciona localmente `ADMIN_PASSWORD` y `ADMIN_SESSION_SECRET` mediante variables de entorno privadas; para 2FA añade `ADMIN_TOTP_ENCRYPTION_KEY`. No subas archivos de secretos.
 
 ## 9. Actualizaciones, recuperación y límites
@@ -100,3 +104,7 @@ Sin `DATABASE_URL`, el desarrollo usa PGLite en memoria y pierde los datos al re
 - Actualmente **no hay correos automáticos** ni procesamiento de pagos Zelle. No configures proveedores de correo o cobro como si ya estuvieran implementados.
 
 Consulta [OPERATIONS.md](OPERATIONS.md) para copias de seguridad, incidentes, retención y recuperación; [SECURITY.md](SECURITY.md) para medidas y límites de seguridad.
+
+## 10. Entrega a otro equipo
+
+Sigue [HANDOVER.md](HANDOVER.md) para distinguir una instalación vacía de la transferencia del servicio existente, comprobar autenticación y datos, proteger `main` y registrar aceptación.

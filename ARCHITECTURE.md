@@ -21,11 +21,19 @@ TanStack Start combina renderizado de servidor, React y funciones del servidor. 
 | `scripts/`                            | Migraciones, validación, navegador y utilidades de operación.              |
 | `.github/workflows/`                  | CI y monitor de disponibilidad.                                            |
 
+## Componentes heredados y autenticación activa
+
+La autenticación del panel es propia: `volunteer-functions.ts` → `volunteer-service.server.ts`, cuentas `admin_users`, cookie `vne-admin-session` y módulos `admin-totp*`. No depende de activar `VITE_AUTH_ENABLED` ni de proveedores OAuth.
+
+El sistema alternativo bajo `src/lib/auth/`, `app-data/` y `multiplayer/`, junto con referencias de `.project-tools/` y `migrations/auth/`, procede del generador. No es el contrato de instalación del panel. `AuthProvider` es actualmente un contenedor sin lógica de sesión. No copiar el esquema alternativo a la raíz para intentar reparar el login de `/solicitudes`.
+
+El puente de preview y los plugins/middleware de instalación y marca sí están integrados en la compilación. Cualquier simplificación futura requiere revisar consumidores y pruebas; no borrar carpetas enteras por su nombre. `foundation-vne/` sigue siendo únicamente el sitio histórico. Para entregar el proyecto, usar [HANDOVER.md](HANDOVER.md).
+
 ## Flujos
 
 Formulario → validación del servidor → control de origen/límites → inserción con clave de reintento → confirmación en pantalla. No hay correo en este flujo.
 
-Login → contraseña → segundo factor si está inscrito → sesión revocable → verificación de rol/política en cada operación. Si se exige 2FA y la cuenta no está inscrita, solo se permite gestionar la inscripción y cerrar sesión.
+Login → límites → contraseña → segundo factor si está inscrito → sesión revocable → verificación de rol/política en cada operación. Los rechazos de credenciales/pruebas admitidos por los límites registran `login:failure` sin datos del intento. Si se exige 2FA y la cuenta no está inscrita, solo se permite gestionar la inscripción y cerrar sesión.
 
 Editor de portada → autorización de propietario → validación de tres idiomas y revisión → escritura/auditoría → lectura pública al recargar inicio. Si la base está indisponible, la portada usa el contenido original y emite un evento genérico. El formulario y panel no confirman escrituras fallidas.
 

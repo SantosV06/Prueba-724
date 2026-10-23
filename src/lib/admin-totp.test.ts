@@ -117,6 +117,15 @@ test("real DB: enrollment, no bypass, atomic one-use proofs, revocation, limits 
     assert.equal(await service.currentAdministrator(), null);
     await assert.rejects(service.loginAdministrator("wrong", "admin", codes[0]), /incorrecta/);
     await assert.rejects(service.loginAdministrator(password, "admin", activationCode), /inválido/);
+    const failedLogins = (await pg.query("SELECT * FROM admin_events WHERE action='login:failure'"))
+      .rows;
+    assert.equal(failedLogins.length, 2, "invalid passwords and consumed TOTP proofs are audited");
+    assert.ok(
+      failedLogins.every((event) => event.actor_username === null && event.after_value === null),
+    );
+    const failureText = JSON.stringify(failedLogins);
+    for (const sensitive of [password, codes[0], activationCode, active.secret])
+      assert.ok(!failureText.includes(sensitive), "audit never stores credentials or factors");
     await assert.rejects(
       service.listVolunteerRequests({ page: 1, search: "", status: "", trash: false }),
       /no autorizado/,

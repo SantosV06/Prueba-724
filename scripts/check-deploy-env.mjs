@@ -19,6 +19,10 @@ export function validateDeployEnv(env) {
     throw new Error("ADMIN_PASSWORD must contain 14–256 characters.");
   if ((env.ADMIN_SESSION_SECRET ?? "").length < 32)
     throw new Error("ADMIN_SESSION_SECRET must contain at least 32 characters.");
+  const encodedKey = env.ADMIN_TOTP_ENCRYPTION_KEY ?? "";
+  const key = Buffer.from(encodedKey, "base64");
+  if (key.length !== 32 || key.toString("base64") !== encodedKey)
+    throw new Error("ADMIN_TOTP_ENCRYPTION_KEY must contain 32 random bytes encoded as Base64.");
   if (env.SITE_URL) {
     const site = new URL(env.SITE_URL);
     if (

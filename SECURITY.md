@@ -11,10 +11,12 @@
 - Límites persistentes por conexión, cuenta/conexión y correo. Los intentos TOTP tienen un presupuesto por cuenta después de verificar la contraseña.
 - TOTP de seis dígitos y 30 segundos, tolerancia de un intervalo, prueba consumida atómicamente y códigos de recuperación de un solo uso guardados como hash.
 - Secretos TOTP cifrados mediante AES-256-GCM, vinculados a la cuenta. Los triggers bloquean sesiones con una versión de factor antigua.
-- Auditoría de accesos, exportaciones, operaciones de solicitudes/cuentas, política y publicación de portada. Los cambios de datos y su evento comparten sentencia o transacción cuando corresponde.
+- Auditoría de accesos exitosos y rechazos de credenciales/factores (`login:failure`), exportaciones, operaciones de solicitudes/cuentas, política y publicación de portada. Los cambios de datos y su evento comparten sentencia o transacción cuando corresponde.
 - Panel sin caché ni indexación. Vistas previas de datos bloqueadas hasta confirmar una base aislada.
 - CSP con nonce por respuesta para el HTML institucional en Nitro. El servidor asigna el nonce antes de renderizar los scripts de TanStack y del tema. La política base conserva compatibilidad con recursos estáticos y la página heredada de instalación; estilos inline siguen permitidos.
 - Editor con campos y longitudes limitados, texto escapado por React y control de revisión. No publica HTML ni modifica destinos de pago.
+
+Los rechazos de login se guardan sin usuario introducido, IP, contraseña, código ni motivo específico. Solo se registran intentos admitidos por los límites, no cada petición bloqueada; tampoco errores de configuración/base ni una solicitud normal del segundo factor. Si falla esa escritura, el acceso sigue rechazado y se emite únicamente `audit:login-failure-unavailable` en el log del servidor. No es un registro exhaustivo de tráfico ni sustituye un monitor de abuso.
 
 ## Límites y decisiones de operación
 
