@@ -52,7 +52,17 @@ export const submitVolunteer = createServerFn({ method: "POST" })
     // No guardar el token de seguridad en la base de datos.
     const { turnstileToken: _turnstileToken, ...volunteerData } = data;
     const { saveVolunteerRequest } = await import("./volunteer-service.server");
-    return saveVolunteerRequest(volunteerData);
+    const result = await saveVolunteerRequest(volunteerData);
+    if (result.created) {
+      try {
+        const { notifyNewVolunteer } = await import("./brevo-email.server");
+        await notifyNewVolunteer(volunteerData);
+      } catch {
+        // The request is already saved; mail infrastructure must not fail the form.
+        console.error(JSON.stringify({ event: "email:notification-unavailable" }));
+      }
+    }
+    return { ok: true };
   });
 export const getAdminStatus = createServerFn({ method: "GET" }).handler(async () => {
   const { currentAdministrator } = await import("./volunteer-service.server");
