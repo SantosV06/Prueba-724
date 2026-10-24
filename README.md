@@ -7,7 +7,7 @@ Sitio institucional de Fundación Venezuela Nueva Esperanza y aplicación privad
 - Páginas institucionales, programas, contacto, instrucciones para donar por Zelle y documentos públicos.
 - Español, English y Português, idioma inicial configurable desde las herramientas del propietario, tema claro/oscuro y navegación móvil accesible.
 - Enlaces por idioma: `/casas?lang=es`, `/casas?lang=en` y `/casas?lang=pt`. El HTML y los metadatos se traducen en el servidor; las canónicas y alternativas `hreflang` usan el dominio configurado.
-- Formulario de voluntariado con validación del servidor, protección contra reintentos duplicados, campo trampa y límites por conexión/correo.
+- Formulario de voluntariado con validación en servidor mediante Cloudflare Turnstile, protección contra reintentos duplicados, campo trampa y límites por conexión/correo. El token se verifica antes de guardar en Neon y nunca se persiste.
 - Panel `/solicitudes`: búsqueda, estados, paginación, CSV por lotes, papelera, restauración y borrado definitivo de solicitudes en papelera.
 - Cuentas individuales, propietario/administradores, restablecimiento por el propietario y cambio de contraseña personal. Los cambios revocan las sesiones de esa cuenta.
 - TOTP con QR generado localmente, secretos cifrados y códigos de recuperación de un solo uso. El propietario puede exigirlo al equipo tras activarlo en su propia cuenta.
@@ -39,6 +39,18 @@ Para formulario y panel local, proporciona `ADMIN_PASSWORD` y `ADMIN_SESSION_SEC
 | `npm run admin:recover -- admin`             | Recuperación privada del propietario con acceso directo a Neon. Conserva 2FA.                                                                  |
 | `npm run admin:recover -- admin --reset-2fa` | Recuperación de emergencia: nueva contraseña, retirada del factor y revocación de sesiones.                                                    |
 
+## Cloudflare Turnstile
+
+El formulario de `/voluntariado` requiere un widget de Turnstile y el servidor valida el token con `siteverify` antes de escribir en Neon. Para producción:
+
+1. En Cloudflare Turnstile crea un widget de tipo adecuado para el formulario.
+2. Añade el hostname real `prueba-724.vercel.app` a **Allowed Hostnames**. Si usas un dominio personalizado, añade también su hostname exacto. No incluyas `https://`, rutas ni comodines innecesarios.
+3. En Vercel → Project → Settings → Environment Variables, añade `VITE_TURNSTILE_SITE_KEY` con la **Site Key** pública y `TURNSTILE_SECRET_KEY` con la **Secret Key** privada, ambas para **Production**. Mantén la secreta como Secret y no uses el prefijo `VITE_` para ella.
+4. Guarda los cambios y despliega de nuevo para que la clave pública esté disponible en la compilación y el servidor reciba la secreta.
+5. Comprueba `/voluntariado` en el dominio real y envía una solicitud de prueba controlada. No uses claves de prueba de CI en producción.
+
+La CSP de `vercel.json` permite `https://challenges.cloudflare.com` en `script-src`, `frame-src` y `connect-src`; no desactives la CSP para solucionar errores del widget.
+
 ## Guías vigentes
 
 - [Instalación completa desde cero](GUIA_INSTALACION_COMPLETA.md): clonación, Vercel, Neon y autenticación.
@@ -54,6 +66,6 @@ Para formulario y panel local, proporciona `ADMIN_PASSWORD` y `ADMIN_SESSION_SEC
 
 ## Validación y límites
 
-GitHub Actions valida cada PR y cambio en `main`: pruebas con PGLite, servicios sobre PostgreSQL 17 desechable, compilación y navegador en desarrollo/compilación. Las credenciales de CI son públicas y exclusivas de las bases de prueba. Los mapas y scripts externos se sustituyen en QA; el formulario y el backend sí se ejecutan.
+GitHub Actions valida cada PR y cambio en `main`: pruebas con PGLite, servicios sobre PostgreSQL 17 desechable, compilación y navegador en desarrollo/compilación. CI usa exclusivamente las claves oficiales de prueba de Turnstile; nunca las uses en producción. Las pruebas de navegador interceptan el SDK de Cloudflare para no depender del servicio real. En producción, configura el widget de Turnstile para el hostname `prueba-724.vercel.app` (o el dominio personalizado vigente) y define `VITE_TURNSTILE_SITE_KEY` y `TURNSTILE_SECRET_KEY` en Vercel. La clave `VITE_` es pública; la clave secreta es exclusivamente del servidor.
 
 Una validación verde no acredita configuración de producción, accesibilidad completa, carga máxima ni restauración de Neon. La ejecución de producción y la custodia de secretos deben comprobarse por separado. El repositorio no incluye una licencia de redistribución; las condiciones de uso de contenido y marcas corresponden a sus titulares.
