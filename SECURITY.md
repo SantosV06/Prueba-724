@@ -8,6 +8,7 @@
 - Verificación de sesión y rol en las funciones del servidor. Una política de 2FA activa restringe las sesiones sin factor a su configuración/cierre; ocultar un botón no es el control de acceso.
 - Cierre de sesión con revocación en la base; cambios de contraseña, desactivación y cambios de factor invalidan sesiones.
 - Comprobaciones de Origin/Fetch Metadata para operaciones del panel y formulario.
+- Cloudflare Turnstile para el formulario público: el token se verifica en el servidor contra `siteverify` antes de guardar la solicitud; el token no se persiste. El honeypot `website` se conserva como defensa complementaria.
 - Límites persistentes por conexión, cuenta/conexión y correo. Los intentos TOTP tienen un presupuesto por cuenta después de verificar la contraseña.
 - TOTP de seis dígitos y 30 segundos, tolerancia de un intervalo, prueba consumida atómicamente y códigos de recuperación de un solo uso guardados como hash.
 - Secretos TOTP cifrados mediante AES-256-GCM, vinculados a la cuenta. Los triggers bloquean sesiones con una versión de factor antigua.
@@ -17,6 +18,10 @@
 - Editor con campos y longitudes limitados, texto escapado por React y control de revisión. No publica HTML ni modifica destinos de pago.
 
 Los rechazos de login se guardan sin usuario introducido, IP, contraseña, código ni motivo específico. Solo se registran intentos admitidos por los límites, no cada petición bloqueada; tampoco errores de configuración/base ni una solicitud normal del segundo factor. Si falla esa escritura, el acceso sigue rechazado y se emite únicamente `audit:login-failure-unavailable` en el log del servidor. No es un registro exhaustivo de tráfico ni sustituye un monitor de abuso.
+
+## Turnstile y despliegue
+
+En producción deben configurarse `VITE_TURNSTILE_SITE_KEY` (clave pública de compilación) y `TURNSTILE_SECRET_KEY` (secreto de servidor). El widget de Cloudflare debe permitir el hostname real `prueba-724.vercel.app`; si se añade un dominio propio, debe registrarse también su hostname exacto. La CSP permite `https://challenges.cloudflare.com` en `script-src`, `frame-src` y `connect-src`. Las claves oficiales de prueba de CI no deben utilizarse en producción, y las pruebas E2E simulan el SDK para no depender de Cloudflare.
 
 ## Límites y decisiones de operación
 
