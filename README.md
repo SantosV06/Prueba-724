@@ -4,7 +4,7 @@ Sitio institucional de Fundación Venezuela Nueva Esperanza y aplicación privad
 
 ## Estado del repositorio y código activo
 
-La aplicación desplegable está en la raíz (`src/`, `server/`, `migrations/` y la configuración de Vercel). La versión histórica de Cloudflare queda fuera del despliegue actual. El código de Better Auth, los conectores de sandbox y P2P no forman parte del flujo de autenticación del panel; el acceso real utiliza `volunteer-service.server.ts` y los módulos `admin-*`.
+La aplicación desplegable está en la raíz (`src/`, `server/`, `migrations/` y la configuración de Vercel). La versión histórica de Cloudflare queda fuera del despliegue actual. La autenticación del panel utiliza el servicio propio `volunteer-service.server.ts` y los módulos `admin-*`; no depende de Better Auth ni de conectores de sandbox o P2P.
 
 ## Funciones actuales
 
