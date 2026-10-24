@@ -54,8 +54,13 @@ export const submitVolunteer = createServerFn({ method: "POST" })
     const { saveVolunteerRequest } = await import("./volunteer-service.server");
     const result = await saveVolunteerRequest(volunteerData);
     if (result.created) {
-      const { notifyNewVolunteer } = await import("./brevo-email.server");
-      await notifyNewVolunteer(volunteerData);
+      try {
+        const { notifyNewVolunteer } = await import("./brevo-email.server");
+        await notifyNewVolunteer(volunteerData);
+      } catch {
+        // The request is already saved; mail infrastructure must not fail the form.
+        console.error(JSON.stringify({ event: "email:notification-unavailable" }));
+      }
     }
     return { ok: true };
   });
