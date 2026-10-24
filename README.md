@@ -44,7 +44,7 @@ Para formulario y panel local, proporciona `ADMIN_PASSWORD` y `ADMIN_SESSION_SEC
 El formulario de `/voluntariado` requiere un widget de Turnstile y el servidor valida el token con `siteverify` antes de escribir en Neon. Para producción:
 
 1. En Cloudflare Turnstile crea un widget de tipo adecuado para el formulario.
-2. Añade el hostname real `prueba-724.vercel.app` a **Allowed Hostnames**. Si usas un dominio personalizado, añade también su hostname exacto. No incluyas `https://`, rutas ni comodines innecesarios.
+2. Añade `prueba-724.vercel.app` a **Allowed Hostnames** para el despliegue de esta versión en Vercel. El dominio `foundation.vne` apunta a la versión histórica alojada en Cloudflare, no a esta aplicación; no lo añadas al widget de Prueba-724 solo por ser el dominio institucional. Añádelo únicamente si decides servir también esta versión de Vercel bajo ese hostname. Los hostnames se registran sin `https://` ni rutas.
 3. En Vercel → Project → Settings → Environment Variables, añade `VITE_TURNSTILE_SITE_KEY` con la **Site Key** pública y `TURNSTILE_SECRET_KEY` con la **Secret Key** privada, ambas para **Production**. Mantén la secreta como Secret y no uses el prefijo `VITE_` para ella.
 4. Guarda los cambios y despliega de nuevo para que la clave pública esté disponible en la compilación y el servidor reciba la secreta.
 5. Comprueba `/voluntariado` en el dominio real y envía una solicitud de prueba controlada. No uses claves de prueba de CI en producción.
@@ -68,6 +68,6 @@ La CSP de `vercel.json` permite `https://challenges.cloudflare.com` en `script-s
 
 ## Validación y límites
 
-GitHub Actions valida cada PR y cambio en `main`: pruebas con PGLite, servicios sobre PostgreSQL 17 desechable, compilación y navegador en desarrollo/compilación. CI usa exclusivamente las claves oficiales de prueba de Turnstile; nunca las uses en producción. Las pruebas de navegador interceptan el SDK de Cloudflare para no depender del servicio real. En producción, configura el widget de Turnstile para el hostname `prueba-724.vercel.app` (o el dominio personalizado vigente) y define `VITE_TURNSTILE_SITE_KEY` y `TURNSTILE_SECRET_KEY` en Vercel. La clave `VITE_` es pública; la clave secreta es exclusivamente del servidor.
+GitHub Actions valida cada PR y cambio en `main`: pruebas con PGLite, servicios sobre PostgreSQL 17 desechable, compilación y navegador en desarrollo/compilación. CI usa exclusivamente las claves oficiales de prueba de Turnstile; nunca las uses en producción. Las pruebas de navegador interceptan el SDK de Cloudflare para no depender del servicio real. En producción, configura el widget de Turnstile de esta aplicación para `prueba-724.vercel.app` y define `VITE_TURNSTILE_SITE_KEY` y `TURNSTILE_SECRET_KEY` en Vercel. `foundation.vne` sigue apuntando a la versión histórica de Cloudflare y debe conservar su configuración independiente. La clave `VITE_` es pública; la clave secreta es exclusivamente del servidor.
 
 Una validación verde no acredita configuración de producción, accesibilidad completa, carga máxima ni restauración de Neon. La ejecución de producción y la custodia de secretos deben comprobarse por separado. El repositorio no incluye una licencia de redistribución; las condiciones de uso de contenido y marcas corresponden a sus titulares.
