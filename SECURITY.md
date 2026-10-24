@@ -21,7 +21,7 @@ Los rechazos de login se guardan sin usuario introducido, IP, contraseña, códi
 
 ## Turnstile y despliegue
 
-En producción deben configurarse `VITE_TURNSTILE_SITE_KEY` (clave pública de compilación) y `TURNSTILE_SECRET_KEY` (secreto de servidor). El widget de Cloudflare debe permitir el hostname real `prueba-724.vercel.app`; si se añade un dominio propio, debe registrarse también su hostname exacto. La CSP permite `https://challenges.cloudflare.com` en `script-src`, `frame-src` y `connect-src`. Las claves oficiales de prueba de CI no deben utilizarse en producción, y las pruebas E2E simulan el SDK para no depender de Cloudflare.
+En producción deben configurarse `VITE_TURNSTILE_SITE_KEY` (clave pública de compilación) y `TURNSTILE_SECRET_KEY` (secreto de servidor). El widget de Cloudflare para esta versión de Vercel debe permitir `prueba-724.vercel.app`. El dominio `foundation.vne` sirve la versión histórica alojada en Cloudflare y mantiene una configuración independiente; no se debe asumir que esta aplicación de Vercel está desplegada allí. Solo registra `foundation.vne` en este widget si esta versión también va a servirse bajo ese hostname. La CSP permite `https://challenges.cloudflare.com` en `script-src`, `frame-src` y `connect-src`. Las claves oficiales de prueba de CI no deben utilizarse en producción, y las pruebas E2E simulan el SDK para no depender de Cloudflare.
 
 ## Límites y decisiones de operación
 
