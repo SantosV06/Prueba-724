@@ -4,7 +4,7 @@ El módulo `src/lib/brevo-email.server.ts` ya forma parte de `main`. Después de
 
 ## Estado de la prueba real
 
-El responsable del proyecto informó que configuró las variables de correo en Vercel Production, envió una solicitud de prueba y recibió un correo real. Esto confirma que **al menos un mensaje llegó en esa prueba concreta**. No debe interpretarse como evidencia de que se comprobaron ambos destinatarios, la idempotencia, el fallo del proveedor o la entrega bajo carga; registra esas comprobaciones por separado si las realizas.
+El responsable del proyecto confirmó que configuró las variables de correo en Vercel Production, envió una solicitud de prueba, comprobó que el formulario guardó correctamente la solicitud y recibió al menos un correo real. Esto valida ese recorrido concreto; no demuestra que ambos mensajes, la idempotencia, los fallos del proveedor o la entrega bajo carga estén completamente probados. No debe interpretarse como evidencia de que se comprobaron ambos destinatarios, la idempotencia, el fallo del proveedor o la entrega bajo carga; registra esas comprobaciones por separado si las realizas.
 
 No puedo leer ni modificar las variables secretas de Vercel desde este repositorio. Esta guía indica cómo configurarlas sin copiar secretos a GitHub.
 
