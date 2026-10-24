@@ -47,7 +47,18 @@ node -e "console.log(require('node:crypto').randomBytes(32).toString('base64'))"
 
 Ejecuta **dos veces** y guarda valores diferentes para `ADMIN_SESSION_SECRET` y `ADMIN_TOTP_ENCRYPTION_KEY`. No uses la contraseña del administrador como clave de sesión. Conserva especialmente la clave TOTP: perderla impide descifrar los autenticadores existentes. Guarda los cuatro valores sensibles como **Secret** (antes **Sensitive**). Deben quedar únicamente en el servidor y no llevar prefijo `VITE_`.
 
-## 5. Desplegar y crear las tablas
+## 5. Configurar Turnstile para la versión de Vercel
+
+El formulario de esta aplicación usa Cloudflare Turnstile y verifica el token en el servidor antes de guardar solicitudes.
+
+1. En Cloudflare Turnstile, crea o selecciona el widget destinado a la aplicación desplegada en Vercel.
+2. En **Allowed Hostnames**, incluye `prueba-724.vercel.app` (sin protocolo ni ruta).
+3. En Vercel → Project → Settings → Environment Variables, configura `VITE_TURNSTILE_SITE_KEY` con la Site Key pública y `TURNSTILE_SECRET_KEY` con la Secret Key privada. La secreta debe ser de tipo Secret y nunca llevar prefijo `VITE_`.
+4. Vuelve a desplegar para que la clave pública se incorpore al build y el servidor reciba la clave secreta. Prueba el formulario en `https://prueba-724.vercel.app/voluntariado`.
+
+**Importante sobre `foundation.vne`:** ese dominio sigue mostrando la versión histórica alojada en Cloudflare, no esta versión de Prueba-724 en Vercel. No lo configures como hostname de este widget por defecto ni cambies el sitio histórico. Si en el futuro migras el dominio o decides servir esta versión también en `foundation.vne`, configura el hostname y el enrutamiento de forma deliberada, y vuelve a probarlo.
+
+## 6. Desplegar y crear las tablas
 
 1. Inicia el despliegue o ejecuta **Redeploy** tras guardar las variables.
 2. Comprueba que la compilación finaliza correctamente en Vercel.
@@ -55,7 +66,7 @@ Ejecuta **dos veces** y guarda valores diferentes para `ADMIN_SESSION_SECRET` y 
 4. Las migraciones pendientes se aplican transaccionalmente a Neon y se registran en `_migrations`. No edites migraciones ya aplicadas ni ejecutes scripts de la versión histórica.
 5. Si falla la compilación, revisa primero `DATABASE_URL`, SSL, credenciales, conexión de Neon y logs de Vercel. **No borres las tablas para intentar arreglarlo**.
 
-## 6. Primer acceso al panel
+## 7. Primer acceso al panel
 
 1. Abre `https://TU-DOMINIO/solicitudes`.
 2. Entra con usuario `admin` y la contraseña configurada en `ADMIN_PASSWORD`. El primer acceso válido crea el propietario cuando no existen cuentas.
@@ -66,7 +77,7 @@ Ejecuta **dos veces** y guarda valores diferentes para `ADMIN_SESSION_SECRET` y 
 
 `ADMIN_PASSWORD` **no es una puerta trasera**: una vez creada la cuenta, cambiar esa variable no sustituye la contraseña guardada. Para recuperar el propietario sigue [OPERATIONS.md](OPERATIONS.md).
 
-## 7. Verificar funcionamiento
+## 8. Verificar funcionamiento
 
 - Visita la portada, navegación, imágenes y páginas públicas.
 - Abre `/api/health`; debería responder con estado `ok` cuando el esquema está operativo, o con HTTP 503 genérico si no lo está.
@@ -76,7 +87,7 @@ Ejecuta **dos veces** y guarda valores diferentes para `ADMIN_SESSION_SECRET` y 
 - Confirma en Neon la política de respaldos y recuperación que ofrece tu plan.
 - Si necesitas verificar una restauración, usa `npm run db:verify` con las credenciales privadas de la **rama correcta**.
 
-## 8. Previews y desarrollo local
+## 9. Previews y desarrollo local
 
 Para **Preview**, usa una rama Neon separada, con sus propias credenciales y secretos. Solo tras confirmar el aislamiento establece `PREVIEW_DATABASE_ISOLATED=true` en Preview. Esta variable no comprueba por sí sola que la base sea distinta; nunca apuntes un Preview de pruebas a producción.
 
@@ -95,7 +106,7 @@ Los comandos privados de Node no cargan `.env.local` automáticamente. Por ejemp
 
 Sin `DATABASE_URL`, el desarrollo usa PGLite en memoria y pierde los datos al reiniciar. Para probar el panel proporciona localmente `ADMIN_PASSWORD` y `ADMIN_SESSION_SECRET` mediante variables de entorno privadas; para 2FA añade `ADMIN_TOTP_ENCRYPTION_KEY`. No subas archivos de secretos.
 
-## 9. Actualizaciones, recuperación y límites
+## 10. Actualizaciones, recuperación y límites
 
 - Los cambios incorporados a `main` activan el flujo de despliegue vinculado a Vercel.
 - Los cambios de variables de entorno requieren un nuevo despliegue.
@@ -105,6 +116,6 @@ Sin `DATABASE_URL`, el desarrollo usa PGLite en memoria y pierde los datos al re
 
 Consulta [OPERATIONS.md](OPERATIONS.md) para copias de seguridad, incidentes, retención y recuperación; [SECURITY.md](SECURITY.md) para medidas y límites de seguridad.
 
-## 10. Entrega a otro equipo
+## 11. Entrega a otro equipo
 
 Sigue [HANDOVER.md](HANDOVER.md) para distinguir una instalación vacía de la transferencia del servicio existente, comprobar autenticación y datos, proteger `main` y registrar aceptación.
