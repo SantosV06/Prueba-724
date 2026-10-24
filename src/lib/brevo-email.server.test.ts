@@ -70,7 +70,9 @@ test("sends confirmation and internal notification with safe content", async () 
     }
 
     assert.equal(requests.length, 2);
-    assert.ok(requests.every((request) => request.url === "https://api.brevo.com/v3/smtp/email"));
+    assert.ok(
+      requests.every((request) => request.url === "https://api.brevo.com/v3/smtp/email"),
+    );
     assert.ok(requests.every((request) => request.init.method === "POST"));
     assert.ok(
       requests.every(
@@ -79,8 +81,12 @@ test("sends confirmation and internal notification with safe content", async () 
       ),
     );
 
-    const confirmation = requests.find((request) => request.body.to[0].email === volunteer.correo);
-    const notification = requests.find((request) => request.body.to[0].email === "team@example.com");
+    const confirmation = requests.find(
+      (request) => request.body.to[0].email === volunteer.correo,
+    );
+    const notification = requests.find(
+      (request) => request.body.to[0].email === "team@example.com",
+    );
     assert.ok(confirmation, "confirmation goes to the volunteer");
     assert.ok(notification, "internal notification goes to the configured mailbox");
     assert.match(confirmation.body.htmlContent, /&lt;script&gt;/);
@@ -101,7 +107,11 @@ test("skips sending when required configuration is missing without exposing conf
       return new Response(null, { status: 201 });
     });
     const warningLog: unknown[][] = [];
-    const warningMock = mock.method(console, "warn", (...args: unknown[]) => warningLog.push(args));
+    const warningMock = mock.method(
+      console,
+      "warn",
+      (...args: unknown[]) => warningLog.push(args),
+    );
     try {
       await notifyNewVolunteer(volunteer);
     } finally {
@@ -136,7 +146,9 @@ test("handles non-success HTTP responses without logging response bodies or pers
   });
 });
 
-test("handles network errors without rejecting the saved-request notification flow or logging secrets", async () => {
+test(
+  "handles network errors without rejecting the saved-request notification flow or logging secrets",
+  async () => {
   await withBrevoEnv({}, async () => {
     const errors: unknown[][] = [];
     const errorMock = mock.method(console, "error", (...args: unknown[]) => errors.push(args));
