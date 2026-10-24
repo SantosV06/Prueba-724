@@ -12,7 +12,7 @@ let site = "same-origin";
 let failRevocation = false;
 let failExportAudit = false;
 mock.module("@tanstack/react-start/server", {
-  namedExports: {
+  exports: {
     getCookie: (name: string) => cookies.get(name),
     setCookie: (name: string, value: string) => {
       cookies.set(name, value);
@@ -28,7 +28,7 @@ mock.module("@tanstack/react-start/server", {
   },
 });
 mock.module("./db.ts", {
-  namedExports: {
+  exports: {
     dbSource: "neon",
     getSql: async () => ({
       query: async (sql: string, params: unknown[] = []) => {
