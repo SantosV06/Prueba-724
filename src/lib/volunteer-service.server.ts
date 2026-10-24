@@ -134,23 +134,16 @@ export async function saveVolunteerRequest(input: StoredVolunteerInput) {
   const existing = await sql.query("SELECT id FROM volunteer_requests WHERE request_key = $1", [
     input.requestKey,
   ]);
-  if (existing.length) return { ok: true };
+  if (existing.length) return { ok: true, created: false };
   await enforceLimit(sql, "volunteer", 60, 60);
   await enforceLimit(sql, "volunteer", 5, 60, `email:${input.correo.toLowerCase()}`);
-  await sql.query(
+  const inserted = await sql.query(
     `INSERT INTO volunteer_requests (id, nombre, apellido, correo, telefono, mensaje, request_key)
-     VALUES ($1, $2, $3, $4, $5, $6, $7) ON CONFLICT (request_key) DO NOTHING`,
-    [
-      randomUUID(),
-      input.nombre,
-      input.apellido,
-      input.correo,
-      input.telefono,
-      input.mensaje,
-      input.requestKey,
-    ],
+     VALUES ($1, $2, $3, $4, $5, $6, $7)
+     ON CONFLICT (request_key) DO NOTHING RETURNING id`,
+    [randomUUID(), input.nombre, input.apellido, input.correo, input.telefono, input.mensaje, input.requestKey],
   );
-  return { ok: true };
+  return { ok: true, created: inserted.length > 0 };
 }
 async function rejectLogin(sql: Sql, message: string): Promise<never> {
   // Called only after request budgets pass. Never persist submitted usernames,
