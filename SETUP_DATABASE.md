@@ -15,9 +15,11 @@ Importa `SantosV06/Prueba-724`, rama `main`, Root Directory en la raíz. Usa Nod
 | `ADMIN_SESSION_SECRET`      | Secreto aleatorio de al menos 32 caracteres. Rotarlo invalida todas las sesiones.                                                                                                                               |
 | `ADMIN_TOTP_ENCRYPTION_KEY` | Clave aleatoria de 32 bytes en Base64. Necesaria para configurar y verificar autenticadores. No es el secreto de sesión.                                                                                        |
 | `SITE_URL`                  | Origen HTTPS de producción, sin ruta ni parámetros. Ejemplo: `https://prueba-724.vercel.app`. Se usa para canónicas, alternativas y sitemap. Sin esta variable se intenta usar `VERCEL_PROJECT_PRODUCTION_URL`. |
+| `VITE_TURNSTILE_SITE_KEY`   | Site Key pública del widget de Cloudflare Turnstile, restringido al hostname de producción. Disponible en compilación; no es una contraseña. |
+| `TURNSTILE_SECRET_KEY`      | Secret Key privada de Turnstile. Solo servidor, tipo **Secret**; jamás la expongas con prefijo `VITE_`. |
 | `DATA_RETENTION_DAYS`       | Opcional: entero de 30–3650 días. La organización debe aprobar el plazo. Configurarlo no activa borrados ni un cron.                                                                                            |
 
-Los cuatro valores de credenciales/conexión son de tipo **Secret** (antes **Sensitive**) y solo del servidor. No uses el prefijo `VITE_`, no los escribas en el código ni los compartas por chat. `SITE_URL` y el plazo no son secretos. Después de cambiar variables, realiza un nuevo despliegue para que las funciones las reciban.
+Las credenciales de base de datos, administración, sesión, cifrado TOTP y `TURNSTILE_SECRET_KEY` son de tipo **Secret** y solo del servidor. No las escribas en el código ni las compartas por chat. `VITE_TURNSTILE_SITE_KEY` es pública por diseño y se incluye en la compilación; `SITE_URL` y el plazo tampoco son secretos. Después de cambiar variables, realiza un nuevo despliegue para que la compilación y las funciones reciban sus valores.
 
 Genera claves desde una terminal privada con Node instalado:
 
@@ -27,7 +29,18 @@ node -e "console.log(require('node:crypto').randomBytes(32).toString('base64'))"
 
 Ejecuta el comando por separado para cada secreto. Guarda una copia segura de la clave de cifrado TOTP: perderla impide descifrar los factores existentes. Su rotación requiere un proceso de recifrado o recuperación controlada; no basta con sustituirla.
 
-## 3. Neon y migraciones
+## 3. Cloudflare Turnstile (formulario de voluntariado)
+
+1. En Cloudflare Dashboard → Turnstile, crea un widget para el formulario.
+2. En **Allowed Hostnames**, registra el hostname real `prueba-724.vercel.app` (sin protocolo, ruta ni barra final). Si la web usa un dominio propio, añade ese hostname exacto también.
+3. Copia la **Site Key** a `VITE_TURNSTILE_SITE_KEY` y la **Secret Key** a `TURNSTILE_SECRET_KEY` en Vercel → Settings → Environment Variables, para Production.
+4. Marca `TURNSTILE_SECRET_KEY` como **Secret**. Nunca uses una clave secreta en una variable `VITE_*` ni la publiques en GitHub.
+5. Redeploy tras configurar las variables. La Site Key se incorpora durante el build; la Secret Key se utiliza en el servidor para llamar a `https://challenges.cloudflare.com/turnstile/v0/siteverify` antes de guardar la solicitud en Neon.
+6. Prueba `/voluntariado` en el dominio real. CI usa claves oficiales de prueba y un mock del SDK, por lo que un CI verde no confirma por sí solo que las claves reales de producción estén configuradas.
+
+La política CSP en `vercel.json` autoriza el origen de Cloudflare en `script-src`, `frame-src` y `connect-src`. No elimines la CSP ni copies las claves de CI a Production.
+
+## 4. Neon y migraciones
 
 Crea o utiliza la base asociada al proyecto. Copia su conexión **pooled** con SSL a `DATABASE_URL` de Production. El despliegue rechaza también una `ADMIN_TOTP_ENCRYPTION_KEY` ausente, de tamaño incorrecto o Base64 no canónico, sin imprimirla. Valida la configuración y aplica pendientes con `pg_advisory_xact_lock` dentro de una transacción. `_migrations` registra las versiones aplicadas.
 
@@ -44,7 +57,7 @@ Crea o utiliza la base asociada al proyecto. Copia su conexión **pooled** con S
 
 `0007` es aditiva: conserva solicitudes y credenciales y deja 2FA obligatorio desactivado. No edites migraciones aplicadas. Los cambios futuros necesitan un archivo nuevo y compatibilidad con las funciones todavía activas durante el despliegue.
 
-## 4. Primer acceso y equipo
+## 5. Primer acceso y equipo
 
 1. Espera a que el despliegue de `main` esté Ready.
 2. Abre `/solicitudes`, usuario `admin`, contraseña inicial `ADMIN_PASSWORD`.
@@ -56,7 +69,7 @@ Crea o utiliza la base asociada al proyecto. Copia su conexión **pooled** con S
 
 El propietario puede crear administradores, restablecer contraseñas y desactivar cuentas. Cada persona puede cambiar su propia contraseña con la actual. Los cambios de contraseña no retiran 2FA. La interfaz no permite al propietario consultar contraseñas, secretos ni códigos de recuperación ajenos.
 
-## 5. Preview y desarrollo
+## 6. Preview y desarrollo
 
 En Preview utiliza una rama Neon independiente y secretos distintos. Solo después configura `PREVIEW_DATABASE_ISOLATED=true` en ese entorno. Sin esta confirmación el formulario, el panel y las migraciones quedan bloqueados en Preview.
 
@@ -64,7 +77,7 @@ Esta variable no compara automáticamente conexiones: el operador debe confirmar
 
 En desarrollo, sin conexión externa, se usa PGLite en memoria. En una compilación local que necesite probar el backend con esa base se permite `E2E_LOCAL_DATABASE=true` únicamente fuera de Vercel. No configures esa excepción en producción.
 
-## 6. Comprobación posterior
+## 7. Comprobación posterior
 
 - Visita las páginas públicas y `/api/health`; la salud responde `{"status":"ok"}` o HTTP 503 con un mensaje genérico.
 - Comprueba idiomas con `?lang=en` y `?lang=pt`, canónicas, `hreflang`, sitemap y el login privado.
