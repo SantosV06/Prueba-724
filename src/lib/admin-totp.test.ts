@@ -16,7 +16,7 @@ let site = "same-origin";
 let isolatedLoginRequests = false;
 let lastIssuedCookie = "";
 mock.module("@tanstack/react-start/server", {
-  namedExports: {
+  exports: {
     getCookie: (name: string) => (isolatedLoginRequests ? undefined : cookies.get(name)),
     setCookie: (name: string, value: string) => {
       cookies.set(name, value);
@@ -33,7 +33,7 @@ mock.module("@tanstack/react-start/server", {
   },
 });
 mock.module("./db.ts", {
-  namedExports: {
+  exports: {
     dbSource: "neon",
     getSql: async () => ({
       query: async (sql: string, params: unknown[] = []) => (await pg.query(sql, params)).rows,
