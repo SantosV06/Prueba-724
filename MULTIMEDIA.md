@@ -2,14 +2,14 @@
 
 ## Fuentes y entrega
 
-Los originales se conservan en `public/assets/img/` con sus nombres existentes. Los derivados versionados están en `media-optimized/`: videos H.264/AAC de hasta 1280×720 con faststart, imágenes WebP de hasta 1600 px y portadas JPG.
+Los derivados versionados en `media-optimized/` son la fuente de entrega para los recursos optimizados: videos H.264/AAC de hasta 1280×720 con faststart, imágenes WebP de hasta 1600 px y portadas JPG. Se retiraron del repositorio los originales grandes/duplicados que ya tienen derivados verificados; conserva los derivados versionados.
 
 El catálogo es `src/data/media-files.mjs`; `src/data/media.ts` ofrece aliases a los componentes. `scripts/prepare-media.mjs` genera `.generated-public/` para Vite y Nitro. Publica los recursos `/media/...` optimizados sin duplicar los originales. No edites `.generated-public/`, `.vercel/output` ni `public/media/`: son resultados de preparación/compilación.
 
 ## Sustitución
 
-1. Actualiza el original y el catálogo cuando corresponda.
-2. Ejecuta `python scripts/optimize-media.py` con Python, Pillow y FFmpeg disponibles en el entorno de desarrollo.
+1. Para un recurso nuevo o reemplazado, añade temporalmente el original en `public/assets/img/` y actualiza el catálogo si corresponde.
+2. Ejecuta `python scripts/optimize-media.py` con Python, Pillow y FFmpeg disponibles en el entorno de desarrollo. Los recursos cuyo original ya no está se conservan si sus derivados requeridos existen.
 3. Revisa calidad, dimensiones, portadas y nombres. Incluye los derivados de `media-optimized/` en el commit.
 4. Ejecuta build y verifica la reproducción en móvil/escritorio.
 
@@ -23,7 +23,7 @@ Estas medidas reducen descargas y reproducción innecesarias; no prometen consum
 
 ## Identidad
 
-`public/favicon.svg` contiene el emblema del árbol; `public/og.jpg` y `src/lib/og/site.json` definen la tarjeta social con el logo completo. El encabezado usa el árbol y el pie muestra el logo completo. Preserva las rutas PWA, iconos, inyector de marca y puente de preview existentes.
+`public/favicon.svg` contiene el emblema del árbol; `public/og.jpg` y `src/lib/og/site.json` definen la tarjeta social con el logo completo. El encabezado usa el árbol y el pie muestra el logo completo. La aplicación no depende de rutas PWA del generador; conserva el favicon y la tarjeta social que sí utiliza la web.
 
 ## Contenido editable
 
