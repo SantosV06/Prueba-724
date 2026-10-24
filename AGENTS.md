@@ -30,10 +30,10 @@ La CSP del HTML usa el nonce generado por middleware antes de SSR. Mantén sincr
 
 Usa los tokens, contraste, fuentes y componentes del sitio. Mantén teclado, estados de carga/error y vista móvil sin desbordamiento. Traduce etiquetas nuevas en español/inglés/portugués, incluidos errores y texto accesible. Conserva `lang`, metadatos, canónicas, query de idioma y `hreflang`.
 
-El editor de portada publica texto simple con revisión; no debe aceptar HTML, URLs de pago ni archivos ejecutables. Los cambios legales y bancarios requieren su alcance propio. Los correos están pendientes de definición: no añadas proveedor ni envíos sin instrucciones.
+El editor de portada publica texto simple con revisión; no debe aceptar HTML, URLs de pago ni archivos ejecutables. Los cambios legales y bancarios requieren su alcance propio. El correo transaccional existente usa `src/lib/brevo-email.server.ts`: no añadas tipos de mensaje, destinatarios ni nuevos flujos sin revisar privacidad, documentación y pruebas. Los envíos reales requieren configuración y autorización por entorno; nunca uses credenciales reales en CI.
 
 ## Verificación y entrega
 
-Ejecuta `npm run check`, `npm run build` y las pruebas relevantes de navegador contra desarrollo y compilación. Revisa visualmente escritorio y móvil cuando cambie la interfaz. `npm run test:postgres` valida servicios en PostgreSQL local desechable si hay un servicio disponible; CI lo ejecuta con su propio PostgreSQL.
+Ejecuta `npm run check`, `npm run build` y las pruebas relevantes de navegador contra desarrollo y compilación. Revisa visualmente escritorio y móvil cuando cambie la interfaz. `npm run test:postgres` valida servicios en PostgreSQL local desechable si hay un servicio disponible; CI lo ejecuta con PostgreSQL 17 desechable. El workflow `.github/workflows/ci.yml` usa Node 24 y `actions/checkout@v7` / `actions/setup-node@v7`; el monitor `.github/workflows/availability.yml` es independiente. No confundas CI verde con la configuración real de Vercel, Neon o Brevo.
 
 Identifica limitaciones del entorno en lugar de afirmar pruebas no ejecutadas. No confundas PGLite con un ensayo de restauración de Neon ni una respuesta HTTP 200 con una interfaz funcional. Antes de entregar, revisa el diff, evita archivos temporales y comprueba el estado de CI del commit publicado.
