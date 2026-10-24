@@ -15,9 +15,15 @@ Importa `SantosV06/Prueba-724`, rama `main`, Root Directory en la raíz. Usa Nod
 | `ADMIN_SESSION_SECRET`      | Secreto aleatorio de al menos 32 caracteres. Rotarlo invalida todas las sesiones.                                                                                                                               |
 | `ADMIN_TOTP_ENCRYPTION_KEY` | Clave aleatoria de 32 bytes en Base64. Necesaria para configurar y verificar autenticadores. No es el secreto de sesión.                                                                                        |
 | `SITE_URL`                  | Origen HTTPS de producción, sin ruta ni parámetros. Ejemplo: `https://prueba-724.vercel.app`. Se usa para canónicas, alternativas y sitemap. Sin esta variable se intenta usar `VERCEL_PROJECT_PRODUCTION_URL`. |
+| `VITE_TURNSTILE_SITE_KEY`  | Clave pública/site key de Cloudflare Turnstile para el hostname de Production. Necesaria para renderizar el widget; se incorpora durante el build. |
+| `TURNSTILE_SECRET_KEY`     | Clave secreta del mismo widget Turnstile. Necesaria para validar el token en el servidor; nunca usar prefijo `VITE_`. |
+| `BREVO_API_KEY`            | API key privada de Brevo. Necesaria para enviar correo transaccional. |
+| `BREVO_SENDER_EMAIL`       | Remitente autenticado/verificado en Brevo. |
+| `BREVO_SENDER_NAME`        | Opcional: nombre visible del remitente. |
+| `VOLUNTEER_NOTIFICATION_EMAIL` | Buzón interno que recibe avisos de nuevas solicitudes. |
 | `DATA_RETENTION_DAYS`       | Opcional: entero de 30–3650 días. La organización debe aprobar el plazo. Configurarlo no activa borrados ni un cron.                                                                                            |
 
-Los cuatro valores de credenciales/conexión son de tipo **Secret** (antes **Sensitive**) y solo del servidor. No uses el prefijo `VITE_`, no los escribas en el código ni los compartas por chat. `SITE_URL` y el plazo no son secretos. Después de cambiar variables, realiza un nuevo despliegue para que las funciones las reciban.
+Las cadenas de conexión, contraseñas, secretos de sesión/cifrado, `TURNSTILE_SECRET_KEY` y `BREVO_API_KEY` deben configurarse como secretos del servidor. No uses el prefijo `VITE_` para claves privadas ni las escribas en el código o las compartas por chat. `VITE_TURNSTILE_SITE_KEY` es pública y se incluye durante el build; `SITE_URL` y el plazo no son secretos. Después de cambiar variables, realiza un nuevo despliegue.
 
 Genera claves desde una terminal privada con Node instalado:
 
