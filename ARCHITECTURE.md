@@ -9,6 +9,7 @@ TanStack Start combina renderizado de servidor, React y funciones del servidor. 
 | `src/routes/`                         | Páginas, shell del documento y salud HTTP.                                 |
 | `src/components/`                     | Navegación, multimedia y componentes administrativos.                      |
 | `src/lib/volunteer-functions.ts`      | Frontera HTTP: validación y funciones del servidor de solicitudes/cuentas. |
+| `src/lib/brevo-email.server.ts`         | Correo transaccional del servidor; confirmación y aviso interno tras una solicitud nueva. |
 | `src/lib/volunteer-service.server.ts` | Acceso, roles, sesiones, límites y consultas de solicitudes/cuentas.       |
 | `src/lib/admin-totp*`                 | Inscripción, cifrado, validación y recuperación TOTP.                      |
 | `src/lib/admin-operations*`           | Auditoría, política, cambio personal de contraseña y contenido de portada. |
@@ -54,6 +55,8 @@ Las migraciones se aplican antes de publicar funciones del nuevo despliegue. No 
 - Tipos y lint con `npm run check`.
 - Pruebas de scripts, seguridad de peticiones, traducciones, CSV y consultas sobre PGLite.
 - Servicios con PostgreSQL 17 en CI mediante `TEST_DATABASE_URL`, que solo permite una base local desechable y crea un esquema aleatorio por proceso.
+- `.github/workflows/ci.yml` ejecuta validación en cada PR y push a `main`, usa Node.js 24 y `actions/checkout@v7` / `actions/setup-node@v7`, y prueba navegador contra desarrollo y preview compilado.
+- `src/lib/brevo-email.server.test.ts` simula la API de Brevo; no envía correos reales ni verifica la autenticación del dominio o la entrega del proveedor.
 - Navegador sobre desarrollo y compilación: páginas/móvil, temas, idioma en SSR, formulario, cuentas, auditoría, portada, contraseñas, sesiones y TOTP. Las solicitudes de la aplicación no se simulan; recursos externos se excluyen de QA.
 
 Los resultados deben consultarse en la ejecución del commit correspondiente. Un documento no sustituye logs de pruebas ni garantiza que producción use las mismas variables.
