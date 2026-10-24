@@ -16,6 +16,7 @@ const input = {
   telefono: "+507 6000 0000",
   mensaje: "Ayudar",
   requestKey: "3e7a61ad-6491-4893-95e2-af04df8ed012",
+  turnstileToken: "test-token",
 };
 test("server validation rejects malformed input, oversized fields and invalid request keys", () => {
   assert.equal(volunteerSchema.safeParse(input).success, true);
