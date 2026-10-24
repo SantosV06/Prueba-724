@@ -166,3 +166,39 @@
     backdrop-filter: none;
   }
 }
+
+
+.min-h-screen:has(.vne-hero) > header a[href="/donaciones"] {
+  background: var(--color-gold);
+  color: var(--color-navy-deep);
+}
+
+.min-h-screen:has(.vne-hero) > header a[href="/donaciones"]:hover {
+  background: #d6b77e;
+  color: var(--color-navy-deep);
+}
+
+#sobre-vne {
+  scroll-margin-top: 5rem;
+}
+
+/* Las tarjetas de la portada ganan profundidad sin convertir toda la web en una cuadrícula de cajas. */
+.min-h-screen:has(.vne-hero) > main > section:not(.vne-hero) article {
+  transition:
+    transform 220ms ease,
+    box-shadow 220ms ease,
+    border-color 220ms ease;
+}
+
+@media (hover: hover) and (prefers-reduced-motion: no-preference) {
+  .min-h-screen:has(.vne-hero) > main > section:not(.vne-hero) article:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 18px 40px rgb(19 30 61 / 9%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .min-h-screen:has(.vne-hero) > main > section:not(.vne-hero) article {
+    transition: none;
+  }
+}
