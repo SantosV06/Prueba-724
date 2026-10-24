@@ -51,6 +51,8 @@ El formulario de `/voluntariado` requiere un widget de Turnstile y el servidor v
 
 La CSP de `vercel.json` permite `https://challenges.cloudflare.com` en `script-src`, `frame-src` y `connect-src`; no desactives la CSP para solucionar errores del widget.
 
+> **Registro de batalla:** React decía «no», Cloudflare pedía pruebas, la CSP cerraba la puerta y GitHub Actions no perdonaba. Todo para guardar un formulario. En Prueba-724 hasta el captcha necesita pasar CI antes de dejarte trabajar. 😂
+
 ## Guías vigentes
 
 - [Instalación completa desde cero](GUIA_INSTALACION_COMPLETA.md): clonación, Vercel, Neon y autenticación.
