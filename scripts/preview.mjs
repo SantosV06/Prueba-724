@@ -10,6 +10,7 @@
  *   node scripts/preview.mjs stop|restart
  */
 import { spawn } from "node:child_process";
+import { tmpdir } from "node:os";
 import {
   existsSync,
   mkdirSync,
@@ -27,8 +28,8 @@ const PREVIEW_PORT = 8081;
 const PREVIEW_URL = `http://127.0.0.1:${PREVIEW_PORT}/`;
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
-const PID_FILE = join(ROOT, ".project-tools/preview.pid");
-const LOG_FILE = join(ROOT, ".project-tools/preview.log");
+const PID_FILE = join(tmpdir(), "prueba-724-preview.pid");
+const LOG_FILE = join(tmpdir(), "prueba-724-preview.log");
 const READY_TIMEOUT_MS = Number(process.env.PREVIEW_READY_TIMEOUT_MS || 60000);
 const GRACE_MS = 3000;
 const POLL_MS = 100;
@@ -80,8 +81,7 @@ export function looksLikePreviewProcess(cmdline) {
     .split("\0")
     .filter(Boolean)
     .join(" ");
-  // The sandbox service runs scripts/preview-thumbnail.mjs in this box, and
-  // this script can be running concurrently: neither is ever a target.
+  // Avoid signalling another preview-management script running concurrently.
   if (/\bpreview[\w-]*\.mjs\b/.test(argv)) return false;
   // The `npm run preview` wrapper (`npm-cli.js run preview`) and its vite child.
   // `preview` must be the whole script name: `run preview:stop`/`preview:restart`
