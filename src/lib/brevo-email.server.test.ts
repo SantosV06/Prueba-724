@@ -20,7 +20,10 @@ const volunteer: StoredVolunteerInput = {
   requestKey: "3e7a61ad-6491-4893-95e2-af04df8ed012",
 };
 
-function withBrevoEnv(overrides: Partial<Record<(typeof envKeys)[number], string>>, run: () => Promise<void>) {
+function withBrevoEnv(
+  overrides: Partial<Record<(typeof envKeys)[number], string>>,
+  run: () => Promise<void>,
+) {
   const previous = Object.fromEntries(envKeys.map((key) => [key, process.env[key]]));
   for (const key of envKeys) {
     delete process.env[key];
@@ -43,13 +46,19 @@ function withBrevoEnv(overrides: Partial<Record<(typeof envKeys)[number], string
 
 test("sends confirmation and internal notification with safe content", async () => {
   await withBrevoEnv({}, async () => {
-    const requests: Array<{ url: string; init: RequestInit; body: Record<string, any> }> = [];
+    type CapturedMessage = {
+      to: Array<{ email: string }>;
+      htmlContent: string;
+      textContent: string;
+      subject: string;
+    };
+    const requests: Array<{ url: string; init: RequestInit; body: CapturedMessage }> = [];
     const fetchMock = mock.method(
       globalThis,
       "fetch",
       async (input: string | URL | Request, init?: RequestInit) => {
         const url = input instanceof Request ? input.url : String(input);
-        const body = JSON.parse(String(init?.body)) as Record<string, any>;
+        const body = JSON.parse(String(init?.body)) as CapturedMessage;
         requests.push({ url, init: init ?? {}, body });
         return new Response(JSON.stringify({ messageId: "mock-message-id" }), { status: 201 });
       },
@@ -63,7 +72,12 @@ test("sends confirmation and internal notification with safe content", async () 
     assert.equal(requests.length, 2);
     assert.ok(requests.every((request) => request.url === "https://api.brevo.com/v3/smtp/email"));
     assert.ok(requests.every((request) => request.init.method === "POST"));
-    assert.ok(requests.every((request) => (request.init.headers as Record<string, string>)["api-key"] === "test-api-key-not-real"));
+    assert.ok(
+      requests.every(
+        (request) =>
+          (request.init.headers as Record<string, string>)["api-key"] === "test-api-key-not-real",
+      ),
+    );
 
     const confirmation = requests.find((request) => request.body.to[0].email === volunteer.correo);
     const notification = requests.find((request) => request.body.to[0].email === "team@example.com");
