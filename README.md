@@ -14,7 +14,7 @@ Sitio institucional de Fundación Venezuela Nueva Esperanza y aplicación privad
 - Herramientas del propietario: cobertura de 2FA, visor de auditoría y editor del título e introducción de portada en los tres idiomas. No es un CMS completo.
 - Diagnóstico genérico `/api/health`, comprobación horaria desde GitHub Actions y utilidades privadas de verificación de la base y retención.
 
-**Correos transaccionales con Brevo (rama de integración).** La rama `feat/brevo-volunteer-emails` añade confirmación al voluntario y aviso interno al recibir una solicitud nueva. Requiere configurar variables privadas en Vercel y verificar la dirección remitente en Brevo. Los correos no son una recuperación de contraseña ni cambian el estado de la solicitud. Zelle es una página de instrucciones: el sitio no procesa, confirma ni concilia pagos.
+**Correos transaccionales con Brevo.** La integración está incorporada en `main`: cuando se crea una solicitud nueva y están configuradas las variables de Brevo, intenta enviar una confirmación al voluntario y un aviso interno. Si falta configuración o el proveedor falla, la solicitud guardada sigue siendo válida. Antes de activar envíos en Production, configura y verifica el remitente, autoriza el entorno y completa la prueba de aceptación descrita en [BREVO_SETUP.md](BREVO_SETUP.md). Estos correos no son recuperación de contraseña ni cambian el estado de la solicitud. Zelle sigue siendo una página de instrucciones: el sitio no procesa, confirma ni concilia pagos.
 
 ## Empezar
 
@@ -55,6 +55,6 @@ Para formulario y panel local, proporciona `ADMIN_PASSWORD` y `ADMIN_SESSION_SEC
 
 ## Validación y límites
 
-GitHub Actions valida cada PR y cambio en `main`: pruebas con PGLite, servicios sobre PostgreSQL 17 desechable, compilación y navegador en desarrollo/compilación. Las credenciales de CI son públicas y exclusivas de las bases de prueba. Los mapas y scripts externos se sustituyen en QA; el formulario y el backend sí se ejecutan.
+GitHub Actions valida cada PR y cambio en `main` mediante `.github/workflows/ci.yml`: Node.js 24, instalación reproducible con `npm ci`, pruebas contra PostgreSQL 17 desechable, compilación y pruebas de navegador contra desarrollo y la compilación de preview. El workflow usa `actions/checkout@v7` y `actions/setup-node@v7`; `.github/workflows/availability.yml` es un monitor horario independiente, no un requisito de CI. Las credenciales de CI son ficticias y exclusivas de pruebas. Las pruebas de Brevo simulan la API y nunca demuestran entrega real. Los mapas y scripts externos se sustituyen en QA; el formulario y el backend sí se ejecutan.
 
 Una validación verde no acredita configuración de producción, accesibilidad completa, carga máxima ni restauración de Neon. La ejecución de producción y la custodia de secretos deben comprobarse por separado. El repositorio no incluye una licencia de redistribución; las condiciones de uso de contenido y marcas corresponden a sus titulares.
