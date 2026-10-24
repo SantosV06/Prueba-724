@@ -46,6 +46,7 @@ Para formulario y panel local, proporciona `ADMIN_PASSWORD` y `ADMIN_SESSION_SEC
 - [Configuración y despliegue](SETUP_DATABASE.md): variables, Neon, Vercel y primer acceso.
 - [Operación y recuperación](OPERATIONS.md): panel, alertas, respaldos, restauración y conservación.
 - [Seguridad](SECURITY.md): controles, límites y comunicación privada de incidencias.
+- [Configuración de Brevo](BREVO_SETUP.md): variables privadas, autenticación del dominio y pruebas en Preview.
 - [Arquitectura](ARCHITECTURE.md): rutas, servicios, datos y pruebas.
 - [Multimedia](MULTIMEDIA.md): originales, derivados y reproducción.
 - [Instrucciones de mantenimiento](AGENTS.md): contratos que debe preservar quien modifique el código.
