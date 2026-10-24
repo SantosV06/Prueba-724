@@ -4,9 +4,17 @@ import { mkdirSync, readFileSync } from "node:fs";
 import { chromium } from "playwright";
 import { TOTP } from "otpauth";
 import { catalog } from "../src/lib/i18n/catalog.ts";
-import { checkedUrl } from "./browser-guard.mjs";
 
-const base = checkedUrl(process.argv[2] || "http://127.0.0.1:8080");
+
+const base = process.argv[2] || "http://127.0.0.1:8080";
+const parsedBase = new URL(base);
+if (
+  !["http:", "https:"].includes(parsedBase.protocol) ||
+  (!["127.0.0.1", "localhost", "::1", "[::1]"].includes(parsedBase.hostname) &&
+    process.env.BROWSER_ALLOW_EXTERNAL_HOST !== "1")
+) {
+  throw new Error("E2E only targets a local HTTP(S) server unless BROWSER_ALLOW_EXTERNAL_HOST=1.");
+}
 const built = process.argv.includes("--built");
 // GitHub runners do not have write access to /workspace. Keep local QA captures there.
 const screenshots = process.env.GITHUB_WORKSPACE
@@ -55,7 +63,7 @@ try {
   // External maps/chrome are outside the local application boundary. Avoid
   // network-dependent failures; no application API or DB call is intercepted.
   await context.route(
-    /^https:\/\/(?:www\.google\.com|grok\.com|va\.vercel-scripts\.com)\//,
+    /^https:\/\/(?:www\.google\.com|va\.vercel-scripts\.com)\//,
     async (route) => {
       excludedExternalHosts.add(new URL(route.request().url()).host);
       const script = route.request().resourceType() === "script";
@@ -259,7 +267,7 @@ try {
   // A blocked preference store must not break language switching or hydration.
   const blocked = await browser.newContext();
   await blocked.route(
-    /^https:\/\/(?:www\.google\.com|grok\.com|va\.vercel-scripts\.com)\//,
+    /^https:\/\/(?:www\.google\.com|va\.vercel-scripts\.com)\//,
     (route) => route.fulfill({ status: 200, contentType: "application/javascript", body: "" }),
   );
   await blocked.addInitScript(() => {

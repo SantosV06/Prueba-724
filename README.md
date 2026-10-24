@@ -2,6 +2,10 @@
 
 Sitio institucional de Fundación Venezuela Nueva Esperanza y aplicación privada de gestión de voluntariado. Despliegue: **Vercel**. Datos persistentes: **Neon PostgreSQL**. Stack: React, TanStack Start/Router, TypeScript, Vite, Nitro y Tailwind CSS.
 
+## Estado del repositorio y código activo
+
+La aplicación desplegable está en la raíz (`src/`, `server/`, `migrations/` y la configuración de Vercel). La versión histórica de Cloudflare queda fuera del despliegue actual. La autenticación del panel utiliza el servicio propio `volunteer-service.server.ts` y los módulos `admin-*`; no depende de Better Auth ni de conectores de sandbox o P2P.
+
 ## Funciones actuales
 
 - Páginas institucionales, programas, contacto, instrucciones para donar por Zelle y documentos públicos.
@@ -49,9 +53,8 @@ Para formulario y panel local, proporciona `ADMIN_PASSWORD` y `ADMIN_SESSION_SEC
 - [Configuración de Brevo](BREVO_SETUP.md): variables privadas, autenticación del dominio y pruebas en Preview.
 - [Arquitectura](ARCHITECTURE.md): rutas, servicios, datos y pruebas.
 - [Multimedia](MULTIMEDIA.md): originales, derivados y reproducción.
-- [Instrucciones de mantenimiento](AGENTS.md): contratos que debe preservar quien modifique el código.
 
-`foundation-vne/` es la versión histórica de Cloudflare y no se despliega. `.project-tools/` conserva herramientas y plantillas heredadas del generador; no describe el entorno actual ni sustituye estas guías.
+La versión activa se despliega desde la raíz en Vercel. Los archivos históricos o de herramientas del generador no forman parte del contrato de despliegue.
 
 ## Validación y límites
 
