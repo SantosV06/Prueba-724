@@ -51,7 +51,6 @@ function Voluntariado() {
 
   function update(key: keyof Fields, value: string) {
     requestKey.current = null;
-    setTurnstileToken("")
     setFields((current) => ({ ...current, [key]: value }));
   }
 
