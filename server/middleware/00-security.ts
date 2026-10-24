@@ -1,23 +1,18 @@
-import { isInstallQuery, isDocumentPath, acceptsHtml } from "../../scripts/grok-pwa-shared.mjs";
 import { randomBytes } from "node:crypto";
 import config from "../../vercel.json";
+
 interface SecurityEvent {
   req: Request;
   url: URL;
 }
+
 export default async function securityHeaders(
   event: SecurityEvent,
   next: () => unknown | Promise<unknown>,
 ) {
-  if (
-    event.req.method !== "GET" ||
-    (isInstallQuery(event.url.pathname + event.url.search) &&
-      isDocumentPath(event.url.pathname) &&
-      acceptsHtml(event.req.headers.get("accept")))
-  )
-    return next();
-  // Generate before SSR so TanStack's hydration scripts and the theme script
-  // use the SAME nonce as the response header. Ignore caller-supplied values.
+  if (event.req.method !== "GET") return next();
+
+  // Generate before SSR so hydration and theme scripts use the response nonce.
   const nonce = randomBytes(18).toString("base64");
   event.req.headers.set("x-vne-csp-nonce", nonce);
   const response = await next();
@@ -26,6 +21,7 @@ export default async function securityHeaders(
     !response.headers.get("content-type")?.includes("text/html")
   )
     return response;
+
   const baseline = config.headers[0].headers.find(
     (header) => header.key === "Content-Security-Policy",
   )!.value;
