@@ -56,7 +56,7 @@ El formulario de esta aplicación usa Cloudflare Turnstile y verifica el token e
 3. En Vercel → Project → Settings → Environment Variables, configura `VITE_TURNSTILE_SITE_KEY` con la Site Key pública y `TURNSTILE_SECRET_KEY` con la Secret Key privada. La secreta debe ser de tipo Secret y nunca llevar prefijo `VITE_`.
 4. Vuelve a desplegar para que la clave pública se incorpore al build y el servidor reciba la clave secreta. Prueba el formulario en `https://prueba-724.vercel.app/voluntariado`.
 
-**Importante sobre `foundation.vne`:** ese dominio sigue mostrando la versión histórica alojada en Cloudflare, no esta versión de Prueba-724 en Vercel. No lo configures como hostname de este widget por defecto ni cambies el sitio histórico. Si en el futuro migras el dominio o decides servir esta versión también en `foundation.vne`, configura el hostname y el enrutamiento de forma deliberada, y vuelve a probarlo.
+**Si la empresa conecta un dominio propio:** primero debe asignarlo al proyecto Vercel y completar la verificación DNS que indique Vercel; luego debe añadir el hostname exacto al widget de Turnstile, actualizar `SITE_URL` con el origen HTTPS definitivo y revisar `MONITOR_SITE_URL` en GitHub Actions. Después, redeplegar y probar el formulario en ese dominio. No se incluye la migración ni la configuración de dominios de otros despliegues.
 
 ## 6. Desplegar y crear las tablas
 
