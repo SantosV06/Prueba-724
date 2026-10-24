@@ -38,7 +38,7 @@ Antes de habilitar un entorno:
 6. Ejecuta `npm run check` y `npm run build`; las pruebas unitarias simulan Brevo y no envían mensajes reales.
 7. Para aceptación real, envía una solicitud de prueba con datos ficticios, verifica que se guarda una vez y comprueba por separado la confirmación y el aviso interno. La idempotencia y el comportamiento ante fallo requieren pruebas específicas y autorizadas.
 
-El responsable del proyecto informó de una prueba real en Production en la que recibió al menos un correo. Esto confirma únicamente ese mensaje concreto, no la entrega de ambos mensajes ni la idempotencia. La ausencia de errores en CI no demuestra que el remitente esté autenticado ni que Brevo entregue mensajes. Consulta [BREVO_SETUP.md](BREVO_SETUP.md) para el procedimiento completo.
+El responsable del proyecto confirmó una prueba real en Production: el formulario guardó correctamente la solicitud y llegó al menos un correo. Esto valida ese recorrido concreto, no la entrega de ambos mensajes ni la idempotencia. La ausencia de errores en CI no demuestra que el remitente esté autenticado ni que Brevo entregue mensajes. Consulta [BREVO_SETUP.md](BREVO_SETUP.md) para el procedimiento completo.
 
 ## Respaldo y ensayo de restauración de Neon
 
