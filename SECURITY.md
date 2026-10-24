@@ -34,6 +34,10 @@ El lockfile fija las versiones instaladas. ESLint y su configuración se actuali
 
 CI usa bases desechables y credenciales ficticias. Las pruebas de servicios pueden ejecutarse contra PostgreSQL local con un esquema independiente por proceso; rechazan hosts remotos para evitar tocar Neon. No ejecutes E2E de escritura contra producción.
 
+## Correo transaccional y privacidad
+
+El módulo de Brevo usa `BREVO_API_KEY` únicamente en el servidor. No expongas esa clave al cliente ni la guardes en el repositorio, logs o variables `VITE_`. Los mensajes incluyen datos de contacto necesarios para gestionar la solicitud; el aviso interno omite el mensaje personal del voluntario. Los valores dinámicos que se insertan en HTML se escapan. Los errores del proveedor se registran sin cuerpos de respuesta, direcciones, contenido personal ni claves. La integración no garantiza entrega, no cambia el estado de una solicitud y no debe utilizarse para enviar datos adicionales sin una revisión de privacidad. Las pruebas automatizadas simulan la API y no sustituyen una prueba de aceptación autorizada.
+
 ## Comunicación de incidencias
 
 Contacta privadamente al propietario del repositorio por un canal acordado. No publiques secretos ni datos de voluntarios en Issues o PRs. Incluye ruta, comportamiento, impacto y pasos mínimos con datos ficticios. Si se expone una credencial, revócala o rótala, revisa accesos y sigue el procedimiento de recuperación apropiado; borrar el texto del último commit no elimina su historial.
