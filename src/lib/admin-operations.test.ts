@@ -7,7 +7,7 @@ import { homeContentSchema } from "./admin-operations.ts";
 const db = testDatabase();
 const cookies = new Map<string, string>();
 mock.module("@tanstack/react-start/server", {
-  namedExports: {
+  exports: {
     getCookie: (name: string) => cookies.get(name),
     setCookie: (name: string, value: string) => cookies.set(name, value),
     deleteCookie: (name: string) => cookies.delete(name),
@@ -19,7 +19,7 @@ mock.module("@tanstack/react-start/server", {
   },
 });
 mock.module("./db.ts", {
-  namedExports: {
+  exports: {
     dbSource: "neon",
     getSql: async () => ({
       query: async (text: string, params: unknown[] = []) => (await db.query(text, params)).rows,
