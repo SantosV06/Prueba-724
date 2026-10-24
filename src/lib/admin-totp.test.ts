@@ -31,7 +31,7 @@ mock.module("@tanstack/react-start/server", {
         headers: { "sec-fetch-site": site, "x-forwarded-for": "192.0.2.90" },
       }),
   },
-} as unknown as Parameters<typeof mock.module>[1]);
+});
 mock.module("./db.ts", {
   exports: {
     dbSource: "neon",
@@ -39,7 +39,7 @@ mock.module("./db.ts", {
       query: async (sql: string, params: unknown[] = []) => (await pg.query(sql, params)).rows,
     }),
   },
-} as unknown as Parameters<typeof mock.module>[1]);
+});
 const service = await import("./volunteer-service.server.ts");
 const mfa = await import("./admin-totp.server.ts");
 const password = "local-test-password-only-123";
