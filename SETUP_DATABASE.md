@@ -32,8 +32,8 @@ Ejecuta el comando por separado para cada secreto. Guarda una copia segura de la
 ## 3. Cloudflare Turnstile (formulario de voluntariado)
 
 1. En Cloudflare Dashboard → Turnstile, crea un widget para el formulario.
-2. En **Allowed Hostnames**, registra `prueba-724.vercel.app` para esta aplicación de Vercel (sin protocolo, ruta ni barra final). `foundation.vne` continúa sirviendo la versión histórica en Cloudflare; no lo agregues a este widget salvo que decidas mover o servir también esta versión bajo ese dominio. La configuración Turnstile de la versión histórica es independiente.
-3. Copia la **Site Key** a `VITE_TURNSTILE_SITE_KEY` y la **Secret Key** a `TURNSTILE_SECRET_KEY` en Vercel → Settings → Environment Variables, para Production.
+2. En **Allowed Hostnames**, registra `prueba-724.vercel.app` para el despliegue inicial (sin protocolo, ruta ni barra final). Si el equipo conecta después un dominio propio a Vercel, añade también el hostname exacto de ese dominio al widget. No reutilices la configuración de otro sitio o despliegue.
+3. Copia la **Site Key** a `VITE_TURNSTILE_SITE_KEY` y la **Secret Key** a `TURNSTILE_SECRET_KEY` en Vercel → Settings → Environment Variables, para Production. Si conectas un dominio personalizado, confirma que el widget lo permite antes de probar el formulario.
 4. Marca `TURNSTILE_SECRET_KEY` como **Secret**. Nunca uses una clave secreta en una variable `VITE_*` ni la publiques en GitHub.
 5. Redeploy tras configurar las variables. La Site Key se incorpora durante el build; la Secret Key se utiliza en el servidor para llamar a `https://challenges.cloudflare.com/turnstile/v0/siteverify` antes de guardar la solicitud en Neon.
 6. Prueba `/voluntariado` en el dominio real. CI usa claves oficiales de prueba y un mock del SDK, por lo que un CI verde no confirma por sí solo que las claves reales de producción estén configuradas.
