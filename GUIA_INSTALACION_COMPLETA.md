@@ -1,4 +1,4 @@
-# Instalación completa desde cero: GitHub, Neon, Cloudflare, Brevo y Vercel
+# Instalación completa desde cero: GitHub, Neon, Turnstile, Brevo y Vercel
 
 Esta guía permite preparar una instalación nueva de Prueba-724. Describe la aplicación activa en la raíz del repositorio; **no despliegues `foundation-vne/`**, que es la versión histórica. Para detalles operativos consulta [OPERATIONS.md](OPERATIONS.md), [SECURITY.md](SECURITY.md) y [BREVO_SETUP.md](BREVO_SETUP.md).
 
