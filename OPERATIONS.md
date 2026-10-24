@@ -31,12 +31,14 @@ El código intenta enviar dos mensajes solo después de crear una solicitud nuev
 Antes de habilitar un entorno:
 
 1. Sigue [BREVO_SETUP.md](BREVO_SETUP.md) para autenticar el dominio y comprobar SPF/DKIM/DMARC según la configuración de Brevo.
-2. Configura `BREVO_API_KEY`, `BREVO_SENDER_EMAIL` y `VOLUNTEER_NOTIFICATION_EMAIL` como variables privadas del servidor. `BREVO_SENDER_NAME` es opcional; `SITE_URL` permite construir el enlace al panel. No uses prefijo `VITE_` para secretos.
-3. En Preview, confirma que la base está aislada antes de `PREVIEW_DATABASE_ISOLATED=true`. Usa destinatarios de prueba controlados y nunca habilites envíos reales solo para hacer pasar CI.
-4. Ejecuta `npm run check` y `npm run build`; las pruebas unitarias simulan Brevo y no envían mensajes reales.
-5. Para aceptación real, autoriza expresamente el entorno y verifica ambos mensajes, reintento idempotente y comportamiento ante fallo. Documenta resultado y responsable antes de activar Production.
+2. Para que el formulario funcione, configura `VITE_TURNSTILE_SITE_KEY` como clave pública del cliente y `TURNSTILE_SECRET_KEY` como secreto del servidor. Deben corresponder al mismo widget y hostname.
+3. Para los correos, configura `BREVO_API_KEY`, `BREVO_SENDER_EMAIL` y `VOLUNTEER_NOTIFICATION_EMAIL`; `BREVO_SENDER_NAME` es opcional. `SITE_URL` debe ser el origen HTTPS público correcto.
+4. En Vercel, asigna cada variable al entorno apropiado (Production/Preview/Development) y crea un nuevo despliegue después de los cambios. No uses prefijo `VITE_` en claves privadas.
+5. En Preview, confirma que la base está aislada antes de `PREVIEW_DATABASE_ISOLATED=true`. Usa destinatarios controlados y no apuntes Preview a Production.
+6. Ejecuta `npm run check` y `npm run build`; las pruebas unitarias simulan Brevo y no envían mensajes reales.
+7. Para aceptación real, envía una solicitud de prueba con datos ficticios, verifica que se guarda una vez y comprueba por separado la confirmación y el aviso interno. La idempotencia y el comportamiento ante fallo requieren pruebas específicas y autorizadas.
 
-La ausencia de errores en CI no demuestra que el remitente esté autenticado ni que Brevo entregue mensajes. Consulta [BREVO_SETUP.md](BREVO_SETUP.md) para los detalles técnicos y la lista completa de aceptación.
+El responsable del proyecto informó de una prueba real en Production en la que recibió al menos un correo. Esto confirma únicamente ese mensaje concreto, no la entrega de ambos mensajes ni la idempotencia. La ausencia de errores en CI no demuestra que el remitente esté autenticado ni que Brevo entregue mensajes. Consulta [BREVO_SETUP.md](BREVO_SETUP.md) para el procedimiento completo.
 
 ## Respaldo y ensayo de restauración de Neon
 
