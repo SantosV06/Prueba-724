@@ -93,3 +93,25 @@
     overflow-wrap: break-word;
   }
 }
+
+/* Rediseño editorial VNE: imagen de portada con contraste estable y movimiento reducido. */
+@layer components {
+  .vne-hero {
+    isolation: isolate;
+  }
+
+  .vne-hero img {
+    animation: vne-hero-reveal 900ms ease-out both;
+  }
+
+  @keyframes vne-hero-reveal {
+    from { opacity: 0.72; transform: scale(1.035); }
+    to { opacity: 1; transform: scale(1); }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .vne-hero img {
+      animation: none;
+    }
+  }
+}
