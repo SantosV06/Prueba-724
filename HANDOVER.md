@@ -88,6 +88,6 @@ El monitor de Actions es horario y puede retrasarse. No hay un servicio externo 
 | Capacidad medida                      | Pendiente / entorno, carga, umbrales y resultados               |
 | Monitor y alertas                     | Responsable y prueba de recepción                               |
 | Recuperación y ventana de cambio      | Responsable, plan y resultado                                   |
-| Pendientes aceptados                  | Correos, pagos, licencia/permisos y otras decisiones aplicables |
+| Pendientes aceptados                  | Aceptación/configuración de Brevo, pagos, licencia/permisos y otras decisiones aplicables |
 
 No completar estos campos con supuestos. La entrega se acepta cuando ambas partes revisan la evidencia y los pendientes.
