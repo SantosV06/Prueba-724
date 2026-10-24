@@ -3,12 +3,56 @@ import { z } from "zod";
 import { usernameSchema, createAccountSchema, accountPasswordSchema } from "./admin-accounts";
 import { volunteerSchema, requestFiltersSchema, requestStatusSchema } from "./volunteer-schema";
 
+
 export const submitVolunteer = createServerFn({ method: "POST" })
   .validator(volunteerSchema)
   .handler(async ({ data }) => {
+    // Mantener el honeypot existente.
     if (data.website) return { ok: true };
+    const token = data.turnstileToken;
+    if (!token) {
+      throw new Error("Completa la verificación de seguridad.");
+    }
+    const secret = process.env.TURNSTILE_SECRET_KEY;
+    if (!secret) {
+      console.error("Falta configurar TURNSTILE_SECRET_KEY en el servidor.");
+      throw new Error("El servicio de verificación no está disponible.");
+    }
+    let verification: { success: boolean; hostname?: string };
+    try {
+      const response = await fetch(
+        "https://challenges.cloudflare.com/turnstile/v0/siteverify",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            secret,
+            response: token,
+          }),
+          signal: AbortSignal.timeout(10_000),
+        },
+      );
+      if (!response.ok) {
+        throw new Error("Falló la comunicación con Cloudflare.");
+      }
+      verification = await response.json();
+    } catch {
+      console.error("No fue posible verificar el token de Turnstile.");
+      throw new Error(
+        "No se pudo verificar la seguridad. Inténtalo nuevamente.",
+      );
+    }
+    if (!verification.success) {
+      throw new Error(
+        "La verificación de seguridad ha fallado. Inténtalo nuevamente.",
+      );
+    }
+    // No guardar el token de seguridad en la base de datos.
+    const { turnstileToken: _turnstileToken, ...volunteerData } = data;
     const { saveVolunteerRequest } = await import("./volunteer-service.server");
-    return saveVolunteerRequest(data);
+    return saveVolunteerRequest(volunteerData);
   });
 export const getAdminStatus = createServerFn({ method: "GET" }).handler(async () => {
   const { currentAdministrator } = await import("./volunteer-service.server");
