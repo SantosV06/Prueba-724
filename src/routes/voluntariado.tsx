@@ -5,6 +5,7 @@ import { useEffect, useRef, useState } from "react";
 import { PageIntro, Shell } from "@/components/shell";
 import { isInternationalPhone, normalizePhone } from "@/lib/phone";
 import { submitVolunteer } from "@/lib/volunteer-functions";
+import { Turnstile } from "@marsidev/react-turnstile";
 
 export const Route = createFileRoute("/voluntariado")({
   head: ({ matches }) =>
@@ -45,9 +46,12 @@ function Voluntariado() {
   const [website, setWebsite] = useState("");
   const requestKey = useRef<string | null>(null);
   const submitting = useRef(false);
+  const [turnstileToken, setTurnstileToken] = useState("");
+  const [turnstileKey, setTurnstileKey] = useState(0);
 
   function update(key: keyof Fields, value: string) {
     requestKey.current = null;
+    setTurnstileToken("")
     setFields((current) => ({ ...current, [key]: value }));
   }
 
@@ -60,7 +64,7 @@ function Voluntariado() {
       correo: fields.correo.trim(),
       telefono: fields.telefono.trim(),
       mensaje: fields.mensaje.trim(),
-    };
+    }
     if (!data.nombre || !data.apellido || !data.correo || !data.telefono) {
       setError("Completa nombre, apellido, correo y teléfono.");
       return;
@@ -73,17 +77,29 @@ function Voluntariado() {
       setError("Incluye el código de país y entre 8 y 15 dígitos. Ejemplo: +507 6000 0000.");
       return;
     }
+    if (!turnstileToken) {
+      setError("Completa la verificación de seguridad de Cloudflare.");
+      return;
+    }
     data.telefono = normalizePhone(data.telefono);
     submitting.current = true;
     requestKey.current ??= crypto.randomUUID();
     setSending(true);
     try {
-      await submitVolunteer({ data: { ...data, website, requestKey: requestKey.current } });
+      await submitVolunteer({
+        data: { ...data,
+               website,
+               requestKey: requestKey.current,
+               turnstileToken,
+              }
+      });
       setError("");
       setSent(data);
       setFields(empty);
       setWebsite("");
       requestKey.current = null;
+      setTurnstileToken("");
+      setTurnstileKey((current) => current + 1);
     } catch (error) {
       setError(
         error instanceof Error
@@ -201,6 +217,34 @@ function Voluntariado() {
                   className="mt-1.5 w-full rounded-xl border border-line bg-paper px-3 py-3 text-base font-normal text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold dark:border-white/15 dark:bg-navy-deep dark:text-cream"
                 />
               </label>
+              
+              <div className="mt-5">
+                  <p className="mb-2 text-sm font-semibold text-navy dark:text-cream">
+                    <T>Verificación de seguridad</T>
+                  </p>
+                  
+                  <Turnstile
+                    key={turnstileKey}
+                    siteKey={import.meta.env.VITE_TURNSTILE_SITE_KEY}
+                    onSuccess={(token) => {
+                      setTurnstileToken(token);
+                      setError("");
+                    }}
+                    onExpire={() => {
+                      setTurnstileToken("");
+                      setError("La verificación expiró. Vuelve a verificarte.");
+                    }}
+                    onError={() => {
+                      setTurnstileToken("");
+                      setError("No se pudo cargar la verificación de seguridad.");
+                    }}
+                    options={{
+                      theme: "auto",
+                      size: "flexible",
+                    }}
+                    />
+                </div>
+              
               <label className="absolute -left-[9999px]" aria-hidden="true">
                 <T>Sitio web</T>
                 <input
@@ -225,7 +269,7 @@ function Voluntariado() {
               ) : null}
               <button
                 type="submit"
-                disabled={sending || !interactive}
+                disabled={sending || !interactive || !turnstileToken}
                 className="mt-5 inline-flex h-12 items-center rounded-full bg-forest px-6 text-sm font-bold text-cream"
               >
                 <T>{sending ? "Registrando…" : "Registrar solicitud"}</T>
