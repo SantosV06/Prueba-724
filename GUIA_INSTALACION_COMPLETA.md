@@ -101,7 +101,8 @@ Sin `DATABASE_URL`, el desarrollo usa PGLite en memoria y pierde los datos al re
 - Los cambios de variables de entorno requieren un nuevo despliegue.
 - El comando de recuperación privada es `npm run admin:recover -- admin`; con pérdida del segundo factor, `npm run admin:recover -- admin --reset-2fa`. Requiere una terminal interactiva y conexión privada a Neon; nunca lo expongas como endpoint.
 - La eliminación por antigüedad **no es automática**: `npm run data:retention` informa y `npm run data:retention -- --apply` aplica el borrado según la política.
-- Actualmente **no hay correos automáticos** ni procesamiento de pagos Zelle. No configures proveedores de correo o cobro como si ya estuvieran implementados.
+- Los correos transaccionales de voluntariado están implementados con Brevo, pero requieren configuración privada y autorización por entorno. Sigue [BREVO_SETUP.md](BREVO_SETUP.md) para autenticar el remitente y validar los dos mensajes antes de activar Production.
+- Zelle sigue siendo solo una página de instrucciones: la aplicación no procesa, confirma ni concilia pagos.
 
 Consulta [OPERATIONS.md](OPERATIONS.md) para copias de seguridad, incidentes, retención y recuperación; [SECURITY.md](SECURITY.md) para medidas y límites de seguridad.
 
