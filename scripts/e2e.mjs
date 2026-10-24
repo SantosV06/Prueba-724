@@ -26,7 +26,7 @@ try {
   // SDK with a deterministic test double; server-side verification still runs
   // against the official test secret configured in CI.
   await context.route(
-    /^https:\/\/challenges\\.cloudflare\\.com\/turnstile\/v0\/api\\.js(?:\\?.*)?$/,
+    /^https:\/\/challenges\.cloudflare\.com\/turnstile\/v0\/api\.js(?:\?.*)?$/,
     async (route) => {
       await route.fulfill({
         status: 200,
