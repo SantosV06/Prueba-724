@@ -118,6 +118,10 @@ No se debe considerar funcional el formulario solo porque la portada cargue o `/
 
 Cambiar `ADMIN_PASSWORD` en Vercel no restablece la contraseña de una cuenta existente. Para recuperación consulta [OPERATIONS.md](OPERATIONS.md).
 
+### Idioma predeterminado del sitio
+
+En `/solicitudes`, abre **Herramientas del propietario → Idioma predeterminado**, selecciona **Español**, **English** o **Português** y guarda. El ajuste se almacena en Neon y afecta a las visitas sin un idioma explícito en la URL. Para verificarlo, abre una ventana privada y visita la portada sin `?lang=...`. Una URL con `?lang=en`, `?lang=es` o `?lang=pt` tiene prioridad. Si la base de datos no está disponible, el sitio usa español como alternativa. Este ajuste es una preferencia persistida de la instalación, no una modificación del código ni una variable de Vercel.
+
 ## 10. Prueba de aceptación del formulario y del correo
 
 Haz una prueba controlada con un correo que controles y datos ficticios marcados como prueba:
