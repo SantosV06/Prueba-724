@@ -53,7 +53,6 @@ Para formulario y panel local, proporciona `ADMIN_PASSWORD` y `ADMIN_SESSION_SEC
 - [Configuración de Brevo](BREVO_SETUP.md): variables privadas, autenticación del dominio y pruebas en Preview.
 - [Arquitectura](ARCHITECTURE.md): rutas, servicios, datos y pruebas.
 - [Multimedia](MULTIMEDIA.md): originales, derivados y reproducción.
-- [Instrucciones de mantenimiento](AGENTS.md): contratos vigentes de la aplicación y su operación.
 
 La versión activa se despliega desde la raíz en Vercel. Los archivos históricos o de herramientas del generador no forman parte del contrato de despliegue.
 
