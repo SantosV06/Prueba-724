@@ -24,6 +24,20 @@ Los metadatos SEO y las demás secciones siguen mantenidos en el repositorio. El
 
 El horario de GitHub puede retrasarse. Para avisos inmediatos o una garantía contractual necesitas un monitor externo independiente. Analytics y Speed Insights ayudan con uso/rendimiento, pero no sustituyen monitorización de errores del frontend. Los fallos de salud y de lectura del contenido público emiten eventos genéricos sin datos personales en los logs de Vercel.
 
+## Correo transaccional con Brevo
+
+El código intenta enviar dos mensajes solo después de crear una solicitud nueva: confirmación de recepción al voluntario y aviso al buzón interno. Un reintento idempotente no debe duplicar la solicitud ni los correos. El mensaje personal del formulario no se incluye en el aviso interno. Si faltan variables o Brevo falla, la solicitud guardada sigue siendo válida; el log contiene solo un evento genérico de omisión/fallo, no la API key ni datos personales. Cambiar el estado de una solicitud no envía correo.
+
+Antes de habilitar un entorno:
+
+1. Sigue [BREVO_SETUP.md](BREVO_SETUP.md) para autenticar el dominio y comprobar SPF/DKIM/DMARC según la configuración de Brevo.
+2. Configura `BREVO_API_KEY`, `BREVO_SENDER_EMAIL` y `VOLUNTEER_NOTIFICATION_EMAIL` como variables privadas del servidor. `BREVO_SENDER_NAME` es opcional; `SITE_URL` permite construir el enlace al panel. No uses prefijo `VITE_` para secretos.
+3. En Preview, confirma que la base está aislada antes de `PREVIEW_DATABASE_ISOLATED=true`. Usa destinatarios de prueba controlados y nunca habilites envíos reales solo para hacer pasar CI.
+4. Ejecuta `npm run check` y `npm run build`; las pruebas unitarias simulan Brevo y no envían mensajes reales.
+5. Para aceptación real, autoriza expresamente el entorno y verifica ambos mensajes, reintento idempotente y comportamiento ante fallo. Documenta resultado y responsable antes de activar Production.
+
+La ausencia de errores en CI no demuestra que el remitente esté autenticado ni que Brevo entregue mensajes. Consulta [BREVO_SETUP.md](BREVO_SETUP.md) para los detalles técnicos y la lista completa de aceptación.
+
 ## Respaldo y ensayo de restauración de Neon
 
 Un CSV no es un respaldo completo: faltan cuentas, factores cifrados, auditoría y esquema. Comprueba en la cuenta Neon la ventana de recuperación y las condiciones de tu plan. Guarda también secretos de cifrado, configuración y acceso del operador en un gestor seguro.
@@ -65,7 +79,7 @@ La eliminación y el evento `retention:purge` se ejecutan atómicamente. Si fall
 - Activar 2FA en su cuenta, custodiar clave y códigos y decidir si se exige al equipo.
 - Revisar las notificaciones de Actions y ejecutar manualmente el monitor una vez.
 - Realizar el ensayo de restauración y decidir conservación.
-- Definir servicio y comportamiento de los correos antes de implementarlos.
+- Verificar la configuración de Brevo y completar una prueba de aceptación autorizada antes de habilitar envíos reales en Production.
 
 ## Idioma inicial del sitio
 
