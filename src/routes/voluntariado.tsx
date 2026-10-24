@@ -51,7 +51,6 @@ function Voluntariado() {
 
   function update(key: keyof Fields, value: string) {
     requestKey.current = null;
-    setTurnstileToken("")
     setFields((current) => ({ ...current, [key]: value }));
   }
 
@@ -226,7 +225,7 @@ function Voluntariado() {
                   <Turnstile
                     key={turnstileKey}
                     siteKey={import.meta.env.VITE_TURNSTILE_SITE_KEY}
-                    onSuccess={(token) => {
+                    onSuccess={(token: string) => {
                       setTurnstileToken(token);
                       setError("");
                     }}

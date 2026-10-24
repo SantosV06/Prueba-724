@@ -27,6 +27,7 @@ export const requestFiltersSchema = z.object({
   trash: z.boolean().default(false),
 });
 export type VolunteerInput = z.infer<typeof volunteerSchema>;
+export type StoredVolunteerInput = Omit<VolunteerInput, "turnstileToken">;
 export type RequestFilters = z.infer<typeof requestFiltersSchema>;
 export type RequestStatus = z.infer<typeof requestStatusSchema>;
 export type VolunteerRequest = {

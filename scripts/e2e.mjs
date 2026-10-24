@@ -22,6 +22,36 @@ const excludedExternalHosts = new Set();
 const errors = [];
 try {
   const context = await browser.newContext();
+  // Turnstile is an external anti-bot service. In E2E only, replace its browser
+  // SDK with a deterministic test double; server-side verification still runs
+  // against the official test secret configured in CI.
+  await context.route(
+    /^https:\/\/challenges\.cloudflare\.com\/turnstile\/v0\/api\.js(?:\?.*)?$/,
+    async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: "application/javascript",
+        body: `(() => {
+          const token = "e2e-turnstile-test-token";
+          window.turnstile = {
+            render(container, options = {}) {
+              const id = "e2e-turnstile-widget";
+              queueMicrotask(() => options.callback?.(token));
+              return id;
+            },
+            reset(widgetId) {},
+            remove(widgetId) {},
+            getResponse(widgetId) { return token; },
+            isExpired(widgetId) { return false; },
+          };
+          const callbackName = new URL(document.currentScript.src).searchParams.get("onload");
+          if (callbackName && typeof window[callbackName] === "function") {
+            window[callbackName]();
+          }
+        })();`,
+      });
+    },
+  );
   // External maps/chrome are outside the local application boundary. Avoid
   // network-dependent failures; no application API or DB call is intercepted.
   await context.route(

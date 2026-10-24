@@ -21,7 +21,7 @@ import {
 import { hashPassword, verifyPassword } from "./password.server.ts";
 import type { AdminIdentity, AdminAccount } from "./admin-accounts.ts";
 import type {
-  VolunteerInput,
+  StoredVolunteerInput,
   VolunteerRequest,
   RequestFilters,
   RequestStatus,
@@ -127,7 +127,7 @@ export async function enforceLimit(
   if (Number(rows[0]?.hits ?? allowed + 1) > allowed)
     throw new Error("Demasiados intentos desde esta conexión. Vuelve a intentarlo más tarde.");
 }
-export async function saveVolunteerRequest(input: VolunteerInput) {
+export async function saveVolunteerRequest(input: StoredVolunteerInput) {
   assertTrustedRequest();
   const sql = await database();
   // A retry of the same request must not create a second record or consume its limit again.
