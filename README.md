@@ -14,7 +14,7 @@ Sitio institucional de Fundación Venezuela Nueva Esperanza y aplicación privad
 - Herramientas del propietario: cobertura de 2FA, visor de auditoría y editor del título e introducción de portada en los tres idiomas. No es un CMS completo.
 - Diagnóstico genérico `/api/health`, comprobación horaria desde GitHub Actions y utilidades privadas de verificación de la base y retención.
 
-**Correos automáticos pendientes de definir con el propietario.** No hay proveedor de correo, SMTP, recuperación por email ni envíos. Zelle es una página de instrucciones: el sitio no procesa, confirma ni concilia pagos.
+**Correos transaccionales con Brevo (rama de integración).** La rama `feat/brevo-volunteer-emails` añade confirmación al voluntario y aviso interno al recibir una solicitud nueva. Requiere configurar variables privadas en Vercel y verificar la dirección remitente en Brevo. Los correos no son una recuperación de contraseña ni cambian el estado de la solicitud. Zelle es una página de instrucciones: el sitio no procesa, confirma ni concilia pagos.
 
 ## Empezar
 
