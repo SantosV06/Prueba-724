@@ -23,11 +23,10 @@ const volunteer: StoredVolunteerInput = {
 function withBrevoEnv(
   overrides: Partial<Record<(typeof envKeys)[number], string>>,
   run: () => Promise<void>,
-) {
+): Promise<void> {
   const previous = Object.fromEntries(envKeys.map((key) => [key, process.env[key]]));
-  for (const key of envKeys) {
-    delete process.env[key];
-  }
+  for (const key of envKeys) delete process.env[key];
+
   Object.assign(process.env, {
     BREVO_API_KEY: "test-api-key-not-real",
     BREVO_SENDER_EMAIL: "verified@example.com",
@@ -35,6 +34,7 @@ function withBrevoEnv(
     SITE_URL: "https://preview.example.com",
     ...overrides,
   });
+
   return run().finally(() => {
     for (const key of envKeys) {
       const value = previous[key];
@@ -63,6 +63,7 @@ test("sends confirmation and internal notification with safe content", async () 
         return new Response(JSON.stringify({ messageId: "mock-message-id" }), { status: 201 });
       },
     );
+
     try {
       await notifyNewVolunteer(volunteer);
     } finally {
@@ -87,6 +88,7 @@ test("sends confirmation and internal notification with safe content", async () 
     const notification = requests.find(
       (request) => request.body.to[0].email === "team@example.com",
     );
+
     assert.ok(confirmation, "confirmation goes to the volunteer");
     assert.ok(notification, "internal notification goes to the configured mailbox");
     assert.match(confirmation.body.htmlContent, /&lt;script&gt;/);
@@ -112,58 +114,81 @@ test("skips sending when required configuration is missing without exposing conf
       "warn",
       (...args: unknown[]) => warningLog.push(args),
     );
+
     try {
       await notifyNewVolunteer(volunteer);
     } finally {
       fetchMock.mock.restore();
       warningMock.mock.restore();
     }
+
     assert.equal(calls, 0);
     assert.equal(warningLog.length, 1);
     assert.match(String(warningLog[0][0]), /brevo-not-configured/);
-    assert.doesNotMatch(JSON.stringify(warningLog), /test-api-key-not-real|ana@example\.com/);
+    assert.doesNotMatch(
+      JSON.stringify(warningLog),
+      /test-api-key-not-real|ana@example\.com/,
+    );
   });
 });
 
 test("handles non-success HTTP responses without logging response bodies or personal data", async () => {
   await withBrevoEnv({}, async () => {
     const errors: unknown[][] = [];
-    const errorMock = mock.method(console, "error", (...args: unknown[]) => errors.push(args));
-    const fetchMock = mock.method(globalThis, "fetch", async () =>
-      new Response("private provider detail and ana@example.com", { status: 401 }),
+    const errorMock = mock.method(
+      console,
+      "error",
+      (...args: unknown[]) => errors.push(args),
     );
+    const fetchMock = mock.method(
+      globalThis,
+      "fetch",
+      async () => new Response("private provider detail and ana@example.com", { status: 401 }),
+    );
+
     try {
       await notifyNewVolunteer(volunteer);
     } finally {
       fetchMock.mock.restore();
       errorMock.mock.restore();
     }
+
     assert.equal(errors.length, 2);
     const logs = JSON.stringify(errors);
     assert.match(logs, /email:send-failed/);
     assert.match(logs, /401/);
-    assert.doesNotMatch(logs, /test-api-key-not-real|ana@example\.com|private provider detail/);
+    assert.doesNotMatch(
+      logs,
+      /test-api-key-not-real|ana@example\.com|private provider detail/,
+    );
   });
 });
 
 test(
   "handles network errors without rejecting the saved-request notification flow or logging secrets",
   async () => {
-  await withBrevoEnv({}, async () => {
-    const errors: unknown[][] = [];
-    const errorMock = mock.method(console, "error", (...args: unknown[]) => errors.push(args));
-    const fetchMock = mock.method(globalThis, "fetch", async () => {
-      throw new Error("network failed with test-api-key-not-real for ana@example.com");
+    await withBrevoEnv({}, async () => {
+      const errors: unknown[][] = [];
+      const errorMock = mock.method(
+        console,
+        "error",
+        (...args: unknown[]) => errors.push(args),
+      );
+      const fetchMock = mock.method(globalThis, "fetch", async () => {
+        throw new Error("network failed with test-api-key-not-real for ana@example.com");
+      });
+
+      try {
+        await assert.doesNotReject(notifyNewVolunteer(volunteer));
+      } finally {
+        fetchMock.mock.restore();
+        errorMock.mock.restore();
+      }
+
+      assert.equal(errors.length, 2);
+      const logs = JSON.stringify(errors);
+      assert.match(logs, /reason/);
+      assert.doesNotMatch(logs, /test-api-key-not-real|ana@example\.com|network failed/);
     });
-    try {
-      await assert.doesNotReject(notifyNewVolunteer(volunteer));
-    } finally {
-      fetchMock.mock.restore();
-      errorMock.mock.restore();
-    }
-    assert.equal(errors.length, 2);
-    const logs = JSON.stringify(errors);
-    assert.match(logs, /reason/);
-    assert.doesNotMatch(logs, /test-api-key-not-real|ana@example\.com|network failed/);
-  });
-});
+  },
+);
