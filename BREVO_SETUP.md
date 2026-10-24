@@ -1,6 +1,6 @@
 # Integración de correo transaccional con Brevo
 
-Esta integración vive en la rama `feat/brevo-volunteer-emails`. No se debe activar en Production hasta revisar y aceptar el pull request.
+La integración está incorporada en `main` mediante el pull request #14. El código por sí solo no activa los envíos: se requieren las variables del servidor, un remitente autenticado y autorización operativa para cada entorno. No habilites envíos reales en Production hasta completar la prueba de aceptación y obtener aprobación del responsable.
 
 ## Qué hace
 
@@ -29,7 +29,7 @@ La aplicación usa PGlite en Preview cuando `DATABASE_URL` no está configurada.
 
 Preview puede desactivar o no disponer de algunas integraciones externas. No es necesario habilitar todas las funciones de producción en Preview para validar la lógica de la aplicación. Las pruebas automatizadas de Brevo deben simular la API y nunca enviar mensajes reales.
 
-Cuando se quiera realizar una prueba de aceptación con envío real, usar exclusivamente un entorno controlado autorizado para ello, con una base de datos aislada, destinatarios de prueba que el equipo controle y las variables configuradas en el servidor. No apuntar una prueba a datos de producción ni habilitar envíos reales solo para superar una comprobación de Preview.
+Para la prueba de aceptación con envío real, utiliza exclusivamente un entorno de integración autorizado, con base de datos aislada, destinatarios controlados y variables configuradas en el servidor. No apuntes la prueba a datos de producción ni habilites envíos reales solo para superar una comprobación de Preview. Si se aprueba una activación en Production, realiza una verificación controlada por separado y documenta quién la autorizó.
 
 Variables requeridas por el módulo de correo:
 
@@ -71,4 +71,4 @@ Estas pruebas no demuestran que Brevo haya entregado un correo real; validan el 
 5. Verificar el comportamiento ante un fallo de Brevo: la solicitud guardada debe seguir siendo válida.
 6. Revisar logs sin registrar API keys, direcciones ni datos personales.
 
-No añadas estas variables a Production ni habilites envíos reales allí hasta que la rama y sus pruebas hayan sido revisadas y se autorice expresamente el cambio. Crear una rama o un pull request no modifica por sí solo `main` ni la configuración de producción.
+No añadas estas variables a Production ni habilites envíos reales hasta que las pruebas automatizadas y la aceptación con envío real en un entorno aislado hayan sido revisadas y el responsable autorice expresamente el cambio. Tener el código en `main` no configura por sí solo Brevo ni garantiza que los correos se entreguen.
