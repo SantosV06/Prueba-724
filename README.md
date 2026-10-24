@@ -14,7 +14,7 @@ Sitio institucional de Fundación Venezuela Nueva Esperanza y aplicación privad
 - Herramientas del propietario: cobertura de 2FA, visor de auditoría y editor del título e introducción de portada en los tres idiomas. No es un CMS completo.
 - Diagnóstico genérico `/api/health`, comprobación horaria desde GitHub Actions y utilidades privadas de verificación de la base y retención.
 
-**Correos transaccionales con Brevo.** La integración está incorporada en `main`: cuando se crea una solicitud nueva y están configuradas las variables de Brevo, intenta enviar una confirmación al voluntario y un aviso interno. Si falta configuración o el proveedor falla, la solicitud guardada sigue siendo válida. Antes de activar envíos en Production, configura y verifica el remitente, autoriza el entorno y completa la prueba de aceptación descrita en [BREVO_SETUP.md](BREVO_SETUP.md). Estos correos no son recuperación de contraseña ni cambian el estado de la solicitud. Zelle sigue siendo una página de instrucciones: el sitio no procesa, confirma ni concilia pagos.
+**Formulario y correos transaccionales.** El formulario requiere Cloudflare Turnstile (`VITE_TURNSTILE_SITE_KEY` pública y `TURNSTILE_SECRET_KEY` privada). La integración Brevo está incorporada en `main`: cuando se crea una solicitud nueva y están configuradas las variables de Brevo, intenta enviar una confirmación al voluntario y un aviso interno. Si falta configuración o el proveedor falla, la solicitud guardada sigue siendo válida. Sigue [GUIA_INSTALACION_COMPLETA.md](GUIA_INSTALACION_COMPLETA.md) para desplegar desde cero y [BREVO_SETUP.md](BREVO_SETUP.md) para configurar las variables, autenticar el remitente y probar el envío real. El responsable informó que recibió al menos un correo en una prueba de Production; esto no demuestra que ambos mensajes o la idempotencia estén verificados. Estos correos no son recuperación de contraseña ni cambian el estado de la solicitud. Zelle sigue siendo una página de instrucciones: el sitio no procesa, confirma ni concilia pagos.
 
 ## Empezar
 
@@ -41,7 +41,7 @@ Para formulario y panel local, proporciona `ADMIN_PASSWORD` y `ADMIN_SESSION_SEC
 
 ## Guías vigentes
 
-- [Instalación completa desde cero](GUIA_INSTALACION_COMPLETA.md): clonación, Vercel, Neon y autenticación.
+- [Instalación completa desde cero](GUIA_INSTALACION_COMPLETA.md): GitHub, Vercel, Neon, Turnstile, Brevo y prueba del formulario.
 - [Entrega a otra empresa](HANDOVER.md): instalación independiente, transferencia y criterios de aceptación.
 - [Configuración y despliegue](SETUP_DATABASE.md): variables, Neon, Vercel y primer acceso.
 - [Operación y recuperación](OPERATIONS.md): panel, alertas, respaldos, restauración y conservación.
