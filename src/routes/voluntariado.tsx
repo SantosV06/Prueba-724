@@ -226,7 +226,7 @@ function Voluntariado() {
                   <Turnstile
                     key={turnstileKey}
                     siteKey={import.meta.env.VITE_TURNSTILE_SITE_KEY}
-                    onSuccess={(token) => {
+                    onSuccess={(token: string) => {
                       setTurnstileToken(token);
                       setError("");
                     }}
