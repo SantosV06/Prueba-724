@@ -1,10 +1,10 @@
 # Configuración · Vercel y Neon
 
-Esta es la guía del despliegue actual. No utilices el esquema D1 de `foundation-vne/` en Neon. No se configuran tablas a mano: `migrations/*.sql` es la fuente del esquema.
+Esta es la guía del despliegue actual. No reutilices esquemas D1 históricos en Neon. No se configuran tablas a mano: `migrations/*.sql` es la fuente del esquema.
 
 ## 1. Vercel
 
-Importa `SantosV06/Prueba-724`, rama `main`, Root Directory en la raíz. Usa Node **24.x**. `vercel.json` instala también las herramientas de validación con `npm ci --include=dev --no-audit --no-fund`. El comando de compilación es `npm run build`; Nitro genera `.vercel/output` con el preset de Vercel. No selecciones `foundation-vne` ni fuerces una salida estática `dist`.
+Importa `SantosV06/Prueba-724`, rama `main`, Root Directory en la raíz. Usa Node **24.x**. `vercel.json` instala también las herramientas de validación con `npm ci --include=dev --no-audit --no-fund`. El comando de compilación es `npm run build`; Nitro genera `.vercel/output` con el preset de Vercel. No selecciones una raíz histórica ni fuerces una salida estática `dist`.
 
 ## 2. Variables de Production
 
