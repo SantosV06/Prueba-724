@@ -26,7 +26,7 @@ mock.module("@tanstack/react-start/server", {
         headers: { "sec-fetch-site": site, "x-forwarded-for": address },
       }),
   },
-} as unknown as Parameters<typeof mock.module>[1]);
+});
 mock.module("./db.ts", {
   exports: {
     dbSource: "neon",
@@ -40,7 +40,7 @@ mock.module("./db.ts", {
       },
     }),
   },
-} as unknown as Parameters<typeof mock.module>[1]);
+});
 const service = await import("./volunteer-service.server.ts");
 
 test("volunteer and admin workflow: durable data, limits, revocation, pagination, export and recovery", async (t) => {
