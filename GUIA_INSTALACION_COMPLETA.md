@@ -1,6 +1,6 @@
 # Instalación completa desde cero: GitHub, Neon, Turnstile, Brevo y Vercel
 
-Esta guía permite preparar una instalación nueva de Prueba-724. Describe la aplicación activa en la raíz del repositorio; **no despliegues `foundation-vne/`**, que es la versión histórica. Para detalles operativos consulta [OPERATIONS.md](OPERATIONS.md), [SECURITY.md](SECURITY.md) y [BREVO_SETUP.md](BREVO_SETUP.md).
+Esta guía permite preparar una instalación nueva de Prueba-724. Describe la aplicación activa en la raíz del repositorio; la versión histórica de Cloudflare no forma parte del despliegue. Para detalles operativos consulta [OPERATIONS.md](OPERATIONS.md), [SECURITY.md](SECURITY.md) y [BREVO_SETUP.md](BREVO_SETUP.md).
 
 ## 1. Qué necesitas antes de empezar
 
@@ -30,7 +30,7 @@ No necesitas editar el esquema a mano ni pegar SQL histórico. Las migraciones a
 3. En **Connect**, copia la cadena de conexión **pooled** para esa base; el host suele incluir `-pooler` y terminar en `.neon.tech`.
 4. Comprueba que la cadena utiliza SSL (`sslmode=require` o una verificación más estricta).
 5. Guarda la cadena como secreto; contiene usuario/contraseña.
-6. No ejecutes manualmente `foundation-vne/schema.sql` ni crees las tablas una por una.
+6. No ejecutes manualmente esquemas SQL históricos ni crees las tablas una por una.
 
 Las migraciones del proyecto se aplican durante `npm run build`. Si la instalación ya contiene datos, no la apuntes a esa base hasta tener autorización y respaldo.
 
