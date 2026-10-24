@@ -73,3 +73,17 @@ En desarrollo, sin conexión externa, se usa PGLite en memoria. En una compilaci
 - Sigue [OPERATIONS.md](OPERATIONS.md) para alertas, restauración, recuperación y retención.
 
 El correo transaccional está implementado mediante Brevo, pero solo intenta enviar mensajes en entornos con la configuración necesaria. No es parte de la configuración obligatoria de la base de datos. Antes de habilitarlo, sigue [BREVO_SETUP.md](BREVO_SETUP.md), configura los secretos del servidor y completa una prueba de aceptación con destinatarios controlados. No copies API keys a `VITE_` ni al repositorio.
+
+## 7. Validar el formulario y los correos en Production
+
+El formulario requiere las dos claves de Cloudflare Turnstile: `VITE_TURNSTILE_SITE_KEY` (pública, disponible durante el build) y `TURNSTILE_SECRET_KEY` (secreta, solo servidor). Para correo transaccional también se necesitan `BREVO_API_KEY`, `BREVO_SENDER_EMAIL` y `VOLUNTEER_NOTIFICATION_EMAIL`; `BREVO_SENDER_NAME` es opcional. Sigue [BREVO_SETUP.md](BREVO_SETUP.md) para obtener y validar estas claves.
+
+Después de configurar variables en **Settings → Environment Variables**, selecciona el ámbito **Production** y ejecuta un nuevo despliegue. Prueba con datos ficticios y un correo que controles:
+
+1. Confirma que Turnstile carga y permite enviar el formulario.
+2. Envía una solicitud una sola vez y verifica que se guarda en `/solicitudes`.
+3. Comprueba por separado la confirmación al correo del formulario y el aviso al buzón interno.
+4. Revisa logs de Vercel sin exponer datos personales o secretos.
+5. Elimina la solicitud de prueba de forma controlada cuando termine la comprobación.
+
+El responsable del proyecto informó de una prueba real en Production en la que recibió al menos un correo. Eso no acredita por sí solo que ambos destinatarios, los reintentos o los errores del proveedor hayan sido probados. Para una guía completa de instalación desde cero, consulta [GUIA_INSTALACION_COMPLETA.md](GUIA_INSTALACION_COMPLETA.md).
