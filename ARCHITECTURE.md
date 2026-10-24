@@ -18,17 +18,13 @@ TanStack Start combina renderizado de servidor, React y funciones del servidor. 
 | `src/data/`                           | Contenido institucional fijo y catálogo multimedia.                        |
 | `src/lib/db.ts`                       | Pool PostgreSQL/PGLite y normalización de resultados.                      |
 | `migrations/*.sql`                    | Esquema versionado de la aplicación activa.                                |
-| `server/middleware/`                  | Nonce CSP y recursos de instalación/marca del generador.                   |
+| `server/middleware/`                  | Nonce CSP y cabeceras de seguridad de la aplicación.                        |
 | `scripts/`                            | Migraciones, validación, navegador y utilidades de operación.              |
 | `.github/workflows/`                  | CI y monitor de disponibilidad.                                            |
 
-## Componentes heredados y autenticación activa
+## Autenticación activa
 
-La autenticación del panel es propia: `volunteer-functions.ts` → `volunteer-service.server.ts`, cuentas `admin_users`, cookie `vne-admin-session` y módulos `admin-totp*`. No depende de activar `VITE_AUTH_ENABLED` ni de proveedores OAuth.
-
-El sistema alternativo bajo `src/lib/auth/`, `app-data/` y `multiplayer/`, junto con referencias de `.project-tools/` y `migrations/auth/`, procede del generador. No es el contrato de instalación del panel. `AuthProvider` es actualmente un contenedor sin lógica de sesión. No copiar el esquema alternativo a la raíz para intentar reparar el login de `/solicitudes`.
-
-El puente de preview y los plugins/middleware de instalación y marca sí están integrados en la compilación. Cualquier simplificación futura requiere revisar consumidores y pruebas; no borrar carpetas enteras por su nombre. `foundation-vne/` sigue siendo únicamente el sitio histórico. Para entregar el proyecto, usar [HANDOVER.md](HANDOVER.md).
+La autenticación del panel es propia: `volunteer-functions.ts` → `volunteer-service.server.ts`, cuentas `admin_users`, cookie `vne-admin-session` y módulos `admin-totp*`. Better Auth no es el sistema de autenticación del panel y no debe confundirse con este flujo. Las carpetas históricas del generador y la antigua aplicación Cloudflare no forman parte del despliegue desde la raíz. Para entregar el proyecto, usar [HANDOVER.md](HANDOVER.md).
 
 ## Flujos
 
@@ -42,7 +38,7 @@ Editor de portada → autorización de propietario → validación de tres idiom
 
 `lang` admite `es`, `en` y `pt` en la query. Las canónicas y alternativas de cada idioma usan `?lang=es`, `?lang=en` y `?lang=pt`, para mantener una dirección inequívoca aunque cambie el idioma inicial. `x-default` apunta a la URL sin query. Sin query ni cookie se consulta el idioma inicial en `site_language` (editable por el propietario); si no es español se redirige a su URL explícita antes de renderizar. Ante fallo de lectura se usa español. El idioma explícito tiene prioridad sobre la preferencia guardada en una cookie de idioma y se conserva al navegar. El servidor renderiza el contenido y los metadatos del idioma solicitado. El selector actualiza la URL y una cookie de idioma (sin datos personales); la misma preferencia se lee en servidor y navegador para evitar diferencias de hidratación. Si se bloquean cookies, el enlace explícito sigue funcionando. No se traducen datos de usuarios.
 
-El sitemap incluye las tres variantes y alternativas `hreflang`; necesita un origen de producción configurado. No se generan alternativas del panel privado. Las tarjetas sociales siguen bajo el inyector de marca heredado; no se promete una tarjeta traducida por idioma.
+El sitemap incluye las tres variantes y alternativas `hreflang`; necesita un origen de producción configurado. No se generan alternativas del panel privado. Las tarjetas sociales dependen de los metadatos y recursos públicos configurados en la aplicación.
 
 ## Datos
 

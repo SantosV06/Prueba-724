@@ -15,8 +15,6 @@ import {
 import { Analytics } from "@vercel/analytics/react";
 import { SpeedInsights } from "@vercel/speed-insights/react";
 import { LanguageProvider } from "@/lib/i18n";
-import { AuthProvider } from "@/lib/auth/provider";
-import { PreviewHostBridge } from "@/components/preview-host-bridge";
 import appCss from "../styles.css?url";
 
 const themeBoot = `(function(){try{if(localStorage.getItem("vne-theme")==="dark")document.documentElement.classList.add("dark");}catch(e){}})();`;
@@ -28,7 +26,6 @@ export const Route = createRootRoute({
   beforeLoad: async ({ location, search }) => {
     if (isLanguage(search.lang)) return;
     const language = await getDefaultLanguage();
-    // An explicit URL makes SSR, hydration and shared links agree.
     if (language !== "es")
       throw redirect({
         to: location.pathname,
@@ -81,8 +78,6 @@ export const Route = createRootRoute({
               }))
             : []),
           { rel: "stylesheet", href: appCss },
-          { rel: "manifest", href: "/pwa/manifest.webmanifest" },
-          { rel: "apple-touch-icon", href: "/pwa/icon-180.png" },
         ],
       },
       matches.at(-1)?.search ?? {},
@@ -98,12 +93,9 @@ function RootDocument() {
         <script nonce={requestNonce()} dangerouslySetInnerHTML={{ __html: themeBoot }} />
       </head>
       <body>
-        <PreviewHostBridge />
-        <AuthProvider>
-          <LanguageProvider>
-            <Outlet />
-          </LanguageProvider>
-        </AuthProvider>
+        <LanguageProvider>
+          <Outlet />
+        </LanguageProvider>
         <Analytics beforeSend={(event) => (event.url.includes("/solicitudes") ? null : event)} />
         <SpeedInsights />
         <Scripts />

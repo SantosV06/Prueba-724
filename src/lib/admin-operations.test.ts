@@ -7,7 +7,7 @@ import { homeContentSchema } from "./admin-operations.ts";
 const db = testDatabase();
 const cookies = new Map<string, string>();
 mock.module("@tanstack/react-start/server", {
-  namedExports: {
+  exports: {
     getCookie: (name: string) => cookies.get(name),
     setCookie: (name: string, value: string) => cookies.set(name, value),
     deleteCookie: (name: string) => cookies.delete(name),
@@ -17,15 +17,15 @@ mock.module("@tanstack/react-start/server", {
         headers: { "sec-fetch-site": "same-origin", "x-forwarded-for": "192.0.2.155" },
       }),
   },
-});
+} as unknown as Parameters<typeof mock.module>[1]);
 mock.module("./db.ts", {
-  namedExports: {
+  exports: {
     dbSource: "neon",
     getSql: async () => ({
       query: async (text: string, params: unknown[] = []) => (await db.query(text, params)).rows,
     }),
   },
-});
+} as unknown as Parameters<typeof mock.module>[1]);
 const service = await import("./volunteer-service.server.ts");
 const operations = await import("./admin-operations.server.ts");
 const mfa = await import("./admin-totp.server.ts");

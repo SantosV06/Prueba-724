@@ -1,4 +1,5 @@
-// Original Foundation-VNE filenames; upload them unchanged to public/assets/img/.
+// Catalog of source filenames used to build optimized /media assets. Some originals
+// were intentionally removed after their verified derivatives were committed.
 export const mediaFiles = {
   logo: "LogoFundaciónVNE1.png",
   genesisLogo: "LogoProyGén1.png",
