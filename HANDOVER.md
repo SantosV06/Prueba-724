@@ -9,7 +9,7 @@ Este procedimiento permite a un equipo técnico desplegar una copia autorizada o
 | Instalación independiente | Base Neon vacía, nuevo propietario y nuevas inscripciones 2FA. No incluye solicitudes ni usuarios existentes. | Proyecto Vercel y secretos nuevos; seguir la guía integral.                                             |
 | Continuidad del servicio  | Se conservan solicitudes, cuentas, hashes, factores cifrados, auditoría, portada y preferencias de la base.   | Transferir accesos autorizados o restaurar una copia completa; conservar la clave TOTP correspondiente. |
 
-Copiar Git no copia Neon ni los secretos de Vercel. `ADMIN_PASSWORD` solo crea el propietario cuando no hay cuentas; cambiarla no restablece usuarios existentes. El panel usa autenticación propia en `volunteer-service.server.ts`, no utiliza Better Auth ni requiere copiar `migrations/auth/` a la raíz.
+Copiar Git no copia Neon ni los secretos de Vercel. `ADMIN_PASSWORD` solo crea el propietario cuando no hay cuentas; cambiarla no restablece usuarios existentes. El panel usa autenticación propia en `volunteer-service.server.ts`; no depende de Better Auth ni de esquemas alternativos del generador.
 
 ## 2. Instalación independiente
 
