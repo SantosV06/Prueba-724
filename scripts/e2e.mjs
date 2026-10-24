@@ -63,7 +63,7 @@ try {
   // External maps/chrome are outside the local application boundary. Avoid
   // network-dependent failures; no application API or DB call is intercepted.
   await context.route(
-    /^https:\/\/(?:www\.google\.com|grok\.com|va\.vercel-scripts\.com)\//,
+    /^https:\/\/(?:www\.google\.com|va\.vercel-scripts\.com)\//,
     async (route) => {
       excludedExternalHosts.add(new URL(route.request().url()).host);
       const script = route.request().resourceType() === "script";
@@ -267,7 +267,7 @@ try {
   // A blocked preference store must not break language switching or hydration.
   const blocked = await browser.newContext();
   await blocked.route(
-    /^https:\/\/(?:www\.google\.com|grok\.com|va\.vercel-scripts\.com)\//,
+    /^https:\/\/(?:www\.google\.com|va\.vercel-scripts\.com)\//,
     (route) => route.fulfill({ status: 200, contentType: "application/javascript", body: "" }),
   );
   await blocked.addInitScript(() => {
