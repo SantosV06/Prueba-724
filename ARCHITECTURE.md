@@ -31,7 +31,7 @@ El puente de preview y los plugins/middleware de instalación y marca sí están
 
 ## Flujos
 
-Formulario → validación del servidor → control de origen/límites → inserción con clave de reintento → confirmación en pantalla. No hay correo en este flujo.
+Formulario → validación del servidor → control de origen/límites → inserción idempotente → si la solicitud se creó por primera vez, intento de confirmación al voluntario y aviso interno mediante Brevo → confirmación en pantalla. Un reintento con la misma clave no vuelve a enviar correos. Si Brevo no está configurado o falla, se conserva la solicitud y el formulario no se rechaza; el fallo solo se registra sin datos personales.
 
 Login → límites → contraseña → segundo factor si está inscrito → sesión revocable → verificación de rol/política en cada operación. Los rechazos de credenciales/pruebas admitidos por los límites registran `login:failure` sin datos del intento. Si se exige 2FA y la cuenta no está inscrita, solo se permite gestionar la inscripción y cerrar sesión.
 
