@@ -72,4 +72,4 @@ En desarrollo, sin conexión externa, se usa PGLite en memoria. En una compilaci
 - Verifica formulario y administración con datos de prueba identificados y elimina esos datos de forma controlada al terminar.
 - Sigue [OPERATIONS.md](OPERATIONS.md) para alertas, restauración, recuperación y retención.
 
-Los correos quedan pendientes de las instrucciones del propietario. No añadas SMTP, claves de un proveedor o automatismos de envío hasta definir el servicio y el flujo.
+El correo transaccional está implementado mediante Brevo, pero solo intenta enviar mensajes en entornos con la configuración necesaria. No es parte de la configuración obligatoria de la base de datos. Antes de habilitarlo, sigue [BREVO_SETUP.md](BREVO_SETUP.md), configura los secretos del servidor y completa una prueba de aceptación con destinatarios controlados. No copies API keys a `VITE_` ni al repositorio.
