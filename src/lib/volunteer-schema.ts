@@ -16,7 +16,7 @@ export const volunteerSchema = z.object({
     .transform(normalizePhone),
   mensaje: z.string().trim().max(2000, "El mensaje admite hasta 2000 caracteres."),
   requestKey: z.string().uuid(),
-  turnstileToken: z.string().min(1, "Completa la verificación de seguridad.").max(2048)
+  turnstileToken: z.string().min(1, "Completa la verificación de seguridad.").max(2048),
   website: z.string().max(200).optional(),
 });
 export const requestStatusSchema = z.enum(["pendiente", "contactada", "aceptada", "descartada"]);
