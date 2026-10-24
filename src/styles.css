@@ -115,3 +115,54 @@
     }
   }
 }
+
+
+/* La portada usa una navegación superpuesta; las páginas interiores conservan su cabecera normal. */
+.min-h-screen:has(.vne-hero) > header {
+  position: fixed;
+  inset: 0 0 auto;
+  border-color: transparent;
+  background: linear-gradient(180deg, rgb(12 20 40 / 82%), rgb(12 20 40 / 28%));
+  color: var(--color-cream);
+  backdrop-filter: blur(10px);
+}
+
+.min-h-screen:has(.vne-hero) > header a,
+.min-h-screen:has(.vne-hero) > header button {
+  color: var(--color-cream);
+}
+
+.min-h-screen:has(.vne-hero) > header a:hover,
+.min-h-screen:has(.vne-hero) > header button:hover {
+  color: var(--color-gold);
+}
+
+.min-h-screen:has(.vne-hero) > header nav a[data-status="active"],
+.min-h-screen:has(.vne-hero) > header nav a[aria-current="page"] {
+  background: rgb(255 255 255 / 10%);
+  color: var(--color-cream);
+}
+
+.min-h-screen:has(.vne-hero) > header nav#menu-movil {
+  border-color: rgb(255 255 255 / 12%);
+  background: var(--color-navy-deep);
+}
+
+.min-h-screen:has(.vne-hero) > header nav#menu-movil a {
+  color: var(--color-cream);
+}
+
+.min-h-screen:has(.vne-hero) > header nav#menu-movil a[aria-current="page"] {
+  background: var(--color-gold);
+  color: var(--color-navy-deep);
+}
+
+.min-h-screen:has(.vne-hero) > main .vne-hero {
+  min-height: 100svh;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .min-h-screen:has(.vne-hero) > header {
+    backdrop-filter: none;
+  }
+}
