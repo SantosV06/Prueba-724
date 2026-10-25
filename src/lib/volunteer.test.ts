@@ -2,6 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { volunteerSchema, requestFiltersSchema } from "./volunteer-schema.ts";
 import { volunteersToCsv } from "./volunteers.ts";
+import { assertTurnstileVerification } from "./turnstile.server.ts";
 import {
   credentialVersion,
   constantEquals,
@@ -58,4 +59,24 @@ test("session tokens are random, hashed in storage, and credentials rotate their
   assert.ok(constantEquals("secret", "secret"));
   assert.ok(!constantEquals("secret", "different"));
   assert.notEqual(credentialVersion("first", "secret"), credentialVersion("second", "secret"));
+});
+
+test("Turnstile verification requires success and an exact configured hostname", () => {
+  assert.doesNotThrow(() =>
+    assertTurnstileVerification(
+      { success: true, hostname: "VNE.EXAMPLE.COM." },
+      "vne.example.com",
+    ),
+  );
+  for (const [verification, expectedHostname] of [
+    [{ success: false, hostname: "vne.example.com" }, "vne.example.com"],
+    [{ success: true, hostname: "attacker.example" }, "vne.example.com"],
+    [{ success: true }, "vne.example.com"],
+    [{ success: true, hostname: "vne.example.com" }, ""],
+  ] as const) {
+    assert.throws(
+      () => assertTurnstileVerification(verification, expectedHostname),
+      /La verificación de seguridad ha fallado/,
+    );
+  }
 });
