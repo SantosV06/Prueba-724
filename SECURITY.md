@@ -41,3 +41,14 @@ El módulo de Brevo usa `BREVO_API_KEY` únicamente en el servidor. No expongas 
 ## Comunicación de incidencias
 
 Contacta privadamente al propietario del repositorio por un canal acordado. No publiques secretos ni datos de voluntarios en Issues o PRs. Incluye ruta, comportamiento, impacto y pasos mínimos con datos ficticios. Si se expone una credencial, revócala o rótala, revisa accesos y sigue el procedimiento de recuperación apropiado; borrar el texto del último commit no elimina su historial.
+
+
+## Automatización de dependencias y secretos
+
+La rama de endurecimiento incorpora Dependabot semanal, una auditoría de npm con umbral alto/crítico y revisión de dependencias nuevas en PR. Estos controles complementan, pero no sustituyen, revisión de código, pruebas ni respuesta a incidentes.
+
+El propietario debe comprobar si el repositorio dispone de **Secret Scanning** y **Push Protection** y activarlos en la configuración de seguridad de GitHub cuando estén disponibles. La presencia de este documento o de un workflow no demuestra que esas funciones de cuenta estén habilitadas.
+
+Los informes de vulnerabilidad deben incluir el paquete, versión afectada, impacto y una ruta de reproducción segura. Nunca incluyas claves reales, contraseñas, códigos TOTP, mensajes de voluntarios ni URLs de conexión con credenciales en issues, PR, logs o artefactos públicos.
+
+Consulta también [THREAT_MODEL.md](THREAT_MODEL.md), [OPERATIONS_SECURITY_RUNBOOKS.md](OPERATIONS_SECURITY_RUNBOOKS.md) y [OPERATIONS.md](OPERATIONS.md) para riesgos y procedimientos de recuperación.
