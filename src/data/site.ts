@@ -8,9 +8,9 @@ export const org = {
   executiveTel: "+13478199521",
   zelle: "+1 (347) 819 5521",
   bank: "Bank of America",
-  infoWa: "https://wa.me/50767968800",
-  webWa: "https://wa.me/50769799261",
-  instagram: "https://www.instagram.com/foundation.vne",
+  infoWa: "https://wa.me/13479577821",
+  webWa: "https://wa.me/50762305711",
+  instagram: "https://www.instagram.com/fundacionv.n.e",
   addressNy: "433 Sackett St, Brooklyn, NY 11231",
   addressCcs:
     "Av. Andrés Bello, tercera transversal de Guaicaipuro, Quinta Raquel, Caracas 1050",
@@ -39,67 +39,88 @@ export const legalPages: Record<
   privacidad: {
     title: "Política de privacidad",
     description:
-      "Política de privacidad de Fundación Venezuela Nueva Esperanza LLC (VNE).",
+      "Política de privacidad de Fundación Venezuela Nueva Esperanza LLC (Fundación V.N.E.). Información sobre datos personales, cookies y tecnologías del sitio.",
     blocks: [
       {
         paragraphs: [
-          "Fundación Venezuela Nueva Esperanza LLC (“la Organización”, “nosotros” o “nos”) protege la privacidad y la información personal de quienes visitan este sitio o se comunican por canales digitales o físicos.",
+          "Fundación Venezuela Nueva Esperanza LLC, que opera públicamente como Fundación V.N.E. (en adelante, “la Organización”), explica en esta política qué información puede tratar cuando usted visita el sitio, envía una solicitud o se comunica con nosotros. Esta política describe las prácticas del sitio web y no sustituye los avisos de los proveedores externos.",
         ],
       },
       {
-        heading: "1. Información que recopilamos",
-        paragraphs: ["Podemos recopilar información personal que incluye, entre otros datos:"],
+        heading: "1. Información que podemos recopilar",
+        paragraphs: ["Según las funciones que utilice, podemos tratar las siguientes categorías de información:"],
         list: [
-          "Nombre",
-          "Dirección de correo electrónico",
-          "Número de teléfono",
-          "Dirección postal",
-          "Información de pago o facturación, cuando aplica",
-          "Información que usted envía en formularios, consultas o comunicaciones",
+          "Datos de contacto que usted facilita, como nombre, correo electrónico y teléfono.",
+          "Contenido que usted envía en formularios, solicitudes de voluntariado, consultas u otras comunicaciones.",
+          "Datos operativos y de seguridad generados al usar el sitio, como dirección IP, fecha y hora de la solicitud, información del navegador y registros técnicos necesarios para detectar abusos, mantener la disponibilidad y proteger las cuentas.",
+          "Datos de cuenta y autenticación del personal autorizado que accede al área administrativa, incluidos identificadores de sesión y registros de seguridad.",
+          "Preferencias de idioma y tema que el navegador guarda localmente para recordar sus elecciones.",
         ],
       },
       {
-        paragraphs: [
-          "También podemos recopilar información no personal, como el tipo de navegador, la dirección IP y datos de uso del sitio, con fines analíticos y operativos.",
-        ],
-      },
-      {
-        heading: "2. Uso de la información",
-        paragraphs: ["La información recopilada se utiliza exclusivamente para:"],
+        heading: "2. Finalidades y base operativa",
+        paragraphs: ["Utilizamos la información para:"],
         list: [
-          "Responder consultas",
-          "Proporcionar información sobre programas y servicios",
-          "Procesar donaciones o facturas cuando corresponda",
-          "Mejorar la operación y la comunicación de la organización",
-          "Cumplir obligaciones legales y regulatorias",
+          "Responder mensajes, tramitar solicitudes y administrar programas o servicios solicitados.",
+          "Operar, mantener y proteger el sitio, su base de datos y el acceso administrativo.",
+          "Prevenir fraude, spam, abuso y accesos no autorizados, incluso mediante controles de seguridad de terceros cuando estén habilitados.",
+          "Recordar preferencias básicas, como idioma y tema visual.",
+          "Medir el rendimiento y uso general del sitio mediante Vercel Analytics y Vercel Speed Insights, integrados en la aplicación; estos servicios pueden procesar datos técnicos de navegación conforme a sus propias condiciones.",
+          "Cumplir obligaciones legales, atender solicitudes válidas y proteger los derechos de la Organización y de otras personas.",
         ],
       },
       {
-        paragraphs: ["No vendemos, alquilamos ni compartimos información personal con terceros con fines comerciales."],
-      },
-      {
-        heading: "3. Protección de datos",
+        heading: "3. Formularios, base de datos y conservación",
         paragraphs: [
-          "Aplicamos medidas administrativas y técnicas razonables para proteger la información personal contra acceso no autorizado, divulgación o uso indebido.",
+          "La información enviada mediante formularios puede almacenarse en la base de datos de la aplicación para gestionar y dar seguimiento a la solicitud. El acceso administrativo está restringido a usuarios autorizados. No envíe por los formularios contraseñas, números completos de tarjetas, información bancaria sensible ni datos que no sean necesarios para su solicitud.",
+          "Conservamos los datos durante el tiempo razonablemente necesario para atender la finalidad de la solicitud, mantener la seguridad, cumplir obligaciones legales y resolver disputas. El plazo concreto puede variar según el tipo de registro. Los registros técnicos y de seguridad pueden conservarse durante periodos más breves o conforme a necesidades operativas. Cuando los datos ya no sean necesarios, se eliminan o se anonimizan cuando resulte viable, sujeto a obligaciones legales y copias de seguridad.",
         ],
       },
       {
-        heading: "4. Servicios de terceros",
+        heading: "4. Cookies y almacenamiento local",
         paragraphs: [
-          "El sitio o las comunicaciones pueden usar plataformas de terceros, como Zelle, WhatsApp o el servicio de alojamiento. No somos responsables de las prácticas de privacidad de esos servicios.",
+          "El sitio no declara utilizar cookies publicitarias ni de seguimiento de marketing. La aplicación puede utilizar cookies estrictamente necesarias para mantener sesiones autenticadas del área administrativa y proteger funciones de seguridad. Estas cookies no se utilizan para personalizar anuncios.",
+          "La preferencia de tema se guarda en localStorage con la clave “vne-theme”, y la preferencia de idioma puede guardarse mediante el mecanismo local de preferencias del navegador. localStorage no es una cookie, pero almacena información en su dispositivo. Puede borrar estos datos desde la configuración del navegador; al hacerlo, quizá deba volver a elegir sus preferencias.",
+          "El sitio integra Vercel Analytics y Vercel Speed Insights para medición de tráfico y rendimiento, y puede utilizar Cloudflare Turnstile para mitigar tráfico automatizado en formularios protegidos. Estos proveedores pueden procesar datos técnicos y utilizar tecnologías propias según su configuración y sus políticas. No afirmamos que el sitio esté libre de toda tecnología de medición o seguridad. Si en el futuro se incorporan herramientas opcionales de publicidad o seguimiento que requieran consentimiento, la Organización deberá revisar esta política y los controles correspondientes antes de activarlas.",
         ],
       },
       {
-        heading: "5. Derechos de la persona",
+        heading: "5. Proveedores y enlaces externos",
         paragraphs: [
-          "Puede solicitar acceso, corrección o eliminación de su información personal escribiendo a info@foundationvne.com.",
+          "El sitio depende de proveedores técnicos para alojamiento, entrega de la aplicación, base de datos, analítica y seguridad. Cuando se habilitan, estos pueden incluir Vercel, Neon y Cloudflare. Los enlaces a WhatsApp, Instagram, servicios de mapas o Zelle llevan a plataformas externas que operan bajo sus propios avisos y condiciones; al abrirlos, la información que usted proporcione queda sujeta a las prácticas de ese proveedor.",
+          "La Organización no vende datos personales. Puede compartir información con proveedores que la necesiten para prestar servicios técnicos a la aplicación, bajo las condiciones aplicables, o cuando sea necesario para cumplir la ley, proteger la seguridad o responder a un requerimiento válido.",
         ],
       },
       {
-        heading: "6. Actualizaciones",
+        heading: "6. Seguridad",
         paragraphs: [
-          "Esta política puede actualizarse. El uso continuo del sitio implica la aceptación de los cambios publicados aquí.",
-          "Última actualización: 2026.",
+          "Aplicamos medidas técnicas y organizativas razonables, como controles de acceso, sesiones protegidas y mecanismos de prevención de abuso. Ningún sistema de transmisión o almacenamiento puede garantizar seguridad absoluta. Si sospecha que una comunicación o cuenta está comprometida, contacte a la Organización por los medios oficiales.",
+        ],
+      },
+      {
+        heading: "7. Sus solicitudes y derechos",
+        paragraphs: [
+          "Puede solicitar acceso, corrección o eliminación de información personal que nos haya proporcionado, así como plantear preguntas sobre su tratamiento, escribiendo a info@foundationvne.com. Para proteger a las personas, podremos pedir información razonable para verificar la identidad y aclarar la solicitud. La atención estará sujeta a la ley aplicable y a los registros que debamos conservar por razones legales o de seguridad.",
+        ],
+      },
+      {
+        heading: "8. Menores de edad",
+        paragraphs: [
+          "El sitio no está diseñado para recopilar deliberadamente información personal de menores sin la participación o autorización que pueda exigir la legislación aplicable. Si considera que un menor nos ha enviado información personal de forma inadecuada, comuníquese con nosotros para que podamos revisar el caso.",
+        ],
+      },
+      {
+        heading: "9. Transferencias y servicios internacionales",
+        paragraphs: [
+          "La Organización está registrada en Nueva York y puede trabajar con proveedores que procesan información en Estados Unidos u otros países. Las leyes de protección de datos pueden variar según la ubicación. Los datos se tratarán conforme a esta política y a los requisitos legales aplicables.",
+        ],
+      },
+      {
+        heading: "10. Cambios y contacto",
+        paragraphs: [
+          "Podemos actualizar esta política para reflejar cambios operativos, técnicos o legales. Publicaremos la versión vigente en esta página e indicaremos la fecha de actualización. Esta política no pretende renunciar a derechos que no puedan excluirse por ley.",
+          "Última actualización: 25 de octubre de 2026.",
+          "Contacto de privacidad: info@foundationvne.com.",
         ],
       },
     ],
