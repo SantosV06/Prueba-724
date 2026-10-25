@@ -122,7 +122,7 @@
   position: fixed;
   inset: 0 0 auto;
   border-color: transparent;
-  background: linear-gradient(180deg, rgb(12 20 40 / 82%), rgb(12 20 40 / 28%));
+  background: rgb(12 20 40 / 92%);
   color: var(--color-cream);
   backdrop-filter: blur(10px);
 }
@@ -130,6 +130,20 @@
 .min-h-screen:has(.vne-hero) > header a,
 .min-h-screen:has(.vne-hero) > header button {
   color: var(--color-cream);
+}
+
+.min-h-screen:has(.vne-hero) > header a span,
+.min-h-screen:has(.vne-hero) > header label {
+  color: var(--color-cream);
+}
+
+.min-h-screen:has(.vne-hero) > header label {
+  border-color: rgb(255 255 255 / 25%);
+}
+
+.min-h-screen:has(.vne-hero) > header a span.text-mist,
+.min-h-screen:has(.vne-hero) > header a .text-mist {
+  color: rgb(246 241 230 / 70%);
 }
 
 .min-h-screen:has(.vne-hero) > header a:hover,
@@ -212,7 +226,7 @@
 
 .min-h-screen:has(.vne-hero) > main > #sobre-vne {
   position: relative;
-  align-items: center;
+  align-items: start;
   background:
     radial-gradient(ellipse at 5% 18%, rgb(196 163 106 / 10%), transparent 34rem),
     linear-gradient(180deg, var(--color-card), var(--color-paper));
