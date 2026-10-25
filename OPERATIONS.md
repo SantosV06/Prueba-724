@@ -92,3 +92,21 @@ Las opciones internas de herramientas se cierran al tocar de nuevo el botón abi
 ## Entrega y mantenimiento del repositorio
 
 Consulta [HANDOVER.md](HANDOVER.md) para instalación independiente, transferencia, protección de `main`, ensayo de restauración y aceptación. Los registros de rechazos no incluyen datos del intento y no generan alertas externas por sí mismos.
+
+
+## Endurecimiento de seguridad y revisión de dependencias
+
+- Las cabeceras base se definen en `vercel.json`: nosniff, política de referente, permisos mínimos, HSTS, COOP, CORP y CSP. HSTS usa un año sin `includeSubDomains`; antes de ampliar el alcance, verifica todos los subdominios y dominios personalizados.
+- El middleware de Nitro genera un nonce por respuesta HTML para scripts. La política de estilos todavía contiene `unsafe-inline`; no lo elimines hasta identificar estilos inline/Radix y verificar el renderizado, la hidratación y los flujos E2E.
+- `.github/dependabot.yml` solicita actualizaciones semanales de npm y GitHub Actions. Los workflows de auditoría y revisión de dependencias rechazan hallazgos altos o críticos según el catálogo y la información que GitHub/npm tengan disponibles. Una ejecución correcta no demuestra que el código esté libre de vulnerabilidades.
+- `npm audit` requiere acceso al registro de npm. Si falla por una vulnerabilidad real, evalúa el paquete afectado, el camino de ejecución y la actualización compatible; no ocultes el fallo con `continue-on-error`.
+- `THREAT_MODEL.md`, `docs/adr/` y `OPERATIONS_SECURITY_RUNBOOKS.md` documentan riesgos, decisiones y procedimientos de incidente. Revisa estos documentos cuando cambie autenticación, cifrado, proveedores, almacenamiento o despliegue.
+- GitHub Secret Scanning y Push Protection son controles del lado de la cuenta/repositorio y no se activan con un commit normal. El propietario debe comprobar su disponibilidad y activarlos desde **Settings → Security → Code security and analysis**; si el plan no los incluye, configurar un escáner alternativo y documentarlo.
+
+## Comprobaciones pendientes antes de declarar la fase completa
+
+1. Verificar en Preview que HSTS, COOP, CORP, CSP y caché se entregan correctamente y no rompen recursos, navegación ni Turnstile.
+2. Revisar el resultado de `npm audit --audit-level=high` y del Dependency Review en GitHub Actions.
+3. Ejecutar cobertura de tests y establecer umbrales tras obtener una línea base medible; no fijar un 85 % sin medir módulos y ramas reales.
+4. Activar y verificar Secret Scanning/Push Protection, según disponibilidad del repositorio.
+5. Configurar y probar alertas externas, observabilidad y aislamiento de base de datos para Preview si el presupuesto y la infraestructura lo permiten.
