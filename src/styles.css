@@ -323,20 +323,20 @@
   }
 }
 
-.min-h-screen:has(.vne-hero) > main > section.grid.lg\\:grid-cols-2 > article {
+.min-h-screen:has(.vne-hero) > main > section.grid.lg\:grid-cols-2 > article {
   position: relative;
   overflow: hidden;
   border-radius: 1.4rem;
   box-shadow: 0 12px 35px rgb(19 30 61 / 6%);
 }
 
-.min-h-screen:has(.vne-hero) > main > section.grid.lg\\:grid-cols-2 > article:first-child {
+.min-h-screen:has(.vne-hero) > main > section.grid.lg\:grid-cols-2 > article:first-child {
   background:
     radial-gradient(ellipse at 100% 0%, rgb(196 163 106 / 13%), transparent 22rem),
     var(--color-navy);
 }
 
-.min-h-screen:has(.vne-hero) > main > section.grid.lg\\:grid-cols-2 > article:last-child img {
+.min-h-screen:has(.vne-hero) > main > section.grid.lg\:grid-cols-2 > article:last-child img {
   aspect-ratio: 16 / 9;
   border-radius: 1rem;
   background: var(--color-paper);
