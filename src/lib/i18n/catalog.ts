@@ -1009,4 +1009,8 @@ export const catalog: Record<string, readonly [string, string]> = {
     "8. Minors",
     "8. Menores de idade",
   ],
+  "Ámbito": [
+    "Scope",
+    "Âmbito",
+  ],
 };
