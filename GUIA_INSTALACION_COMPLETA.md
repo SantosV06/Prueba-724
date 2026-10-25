@@ -52,6 +52,7 @@ Crea una contraseña inicial para `ADMIN_PASSWORD` de 14 a 256 caracteres. Esta 
 2. Añade el hostname exacto de Production (y, si corresponde, uno separado para Preview).
 3. Copia la **Site Key** y la **Secret Key** correspondientes.
 4. Guarda la Site Key como `VITE_TURNSTILE_SITE_KEY` y la Secret Key como `TURNSTILE_SECRET_KEY` en Vercel.
+5. Configura `SITE_URL` con la URL canónica HTTPS del sitio, o `TURNSTILE_EXPECTED_HOSTNAME` con el hostname exacto (por ejemplo, `www.ejemplo.org`, sin protocolo ni ruta). Si defines ambas, `TURNSTILE_EXPECTED_HOSTNAME` tiene prioridad.
 5. La Site Key es pública y se incorpora al cliente durante el build; la Secret Key es privada y solo debe estar disponible en el servidor.
 6. No uses las claves oficiales de prueba que aparecen en CI para el sitio público de producción.
 
@@ -82,6 +83,7 @@ En el proyecto de Vercel, abre **Settings → Environment Variables**. Añade ca
 | `SITE_URL` | Recomendada | URL HTTPS canónica, sin ruta ni parámetros. | Pública |
 | `VITE_TURNSTILE_SITE_KEY` | Sí para el formulario | Site Key pública del widget para el hostname correcto. | Pública |
 | `TURNSTILE_SECRET_KEY` | Sí para el formulario | Secret Key del mismo widget. | Secreto |
+| `TURNSTILE_EXPECTED_HOSTNAME` | Recomendada | Hostname exacto autorizado por Turnstile; si se omite, se obtiene de `SITE_URL`. | Servidor |
 | `BREVO_API_KEY` | Sí para correo | API key de Brevo. | Secreto |
 | `BREVO_SENDER_EMAIL` | Sí para correo | Dirección autenticada en Brevo. | Configuración |
 | `BREVO_SENDER_NAME` | Opcional | Nombre visible del remitente. | Pública |
