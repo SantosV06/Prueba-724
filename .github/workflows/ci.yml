@@ -47,6 +47,8 @@ jobs:
         env:
           TEST_DATABASE_URL: postgres://postgres:disposable-ci-only@127.0.0.1:5432/vne_test
       - run: npm run build
+      - name: Report test coverage baseline
+        run: npm run test:coverage
       - name: Configure browser
         timeout-minutes: 3
         run: |
