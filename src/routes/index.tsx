@@ -192,7 +192,7 @@ function Home() {
           </p>
           <Link
             to="/liderazgo"
-            className="mt-8 inline-flex items-center gap-2 text-sm font-bold text-gold"
+            className="mt-auto inline-flex items-center gap-2 pt-8 text-sm font-bold text-gold"
           >
             <T>Estructura y equipo </T>
             <ArrowUpRight className="size-4" />
