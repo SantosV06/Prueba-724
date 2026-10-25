@@ -33,6 +33,8 @@ jobs:
       # Official Cloudflare Turnstile test keys; never use these in production.
       VITE_TURNSTILE_SITE_KEY: "1x00000000000000000000AA"
       TURNSTILE_SECRET_KEY: "1x0000000000000000000000000000000AA"
+      # Cloudflare test secret returns hostname=localhost; keep the check enabled in E2E.
+      TURNSTILE_EXPECTED_HOSTNAME: "localhost"
     steps:
       - uses: actions/checkout@v7
         with:
