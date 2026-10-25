@@ -53,33 +53,39 @@ function Liderazgo() {
         )}
       />
 
-      <section className="editorial-justify mx-auto max-w-3xl space-y-5 px-5 py-14 text-lg leading-relaxed text-mist sm:px-6 dark:text-cream/80">
-        <img
-          src={media.ceo}
-          alt={t("Wilmer Solórzano, CEO y fundador")}
-          className="mx-auto max-h-96 max-w-full rounded-card object-contain"
-        />
-        <p>
-          <T>
-            Desde temprano mostró sensibilidad social y un sentido fuerte de responsabilidad
-            familiar y comunitaria. Esos valores se volvieron una filosofía de cambio, perseverancia
-            y acción, y hoy dan forma a Fundación VNE.
-          </T>
-        </p>
-        <p>
-          <T>
-            Su liderazgo se apoya en principios éticos, una visión humanista del desarrollo y la
-            convicción de que el progreso llega cuando las personas tienen oportunidades,
-            herramientas y estructuras para avanzar por sí mismas.
-          </T>
-        </p>
-        <p>
-          <T>
-            Concibe la fundación no como un proyecto aislado, sino como un modelo institucional de
-            largo alcance, diseñado para generar impacto estructural y contribuir a la
-            transformación social y económica de comunidades y países.
-          </T>
-        </p>
+      <section className="mx-auto max-w-6xl px-5 py-14 sm:px-6 lg:py-20">
+        <div className="grid items-start gap-10 lg:grid-cols-12 lg:gap-14">
+          <div className="flex justify-center lg:col-span-5 lg:justify-start">
+            <img
+              src={media.ceo}
+              alt={t("Wilmer Solórzano, CEO y fundador")}
+              className="max-h-96 w-full max-w-sm rounded-card object-contain object-top lg:max-h-none lg:max-w-full"
+            />
+          </div>
+          <div className="editorial-justify space-y-5 text-lg leading-relaxed text-mist lg:col-span-7 dark:text-cream/80">
+            <p>
+              <T>
+                Desde temprano mostró sensibilidad social y un sentido fuerte de responsabilidad
+                familiar y comunitaria. Esos valores se volvieron una filosofía de cambio, perseverancia
+                y acción, y hoy dan forma a Fundación VNE.
+              </T>
+            </p>
+            <p>
+              <T>
+                Su liderazgo se apoya en principios éticos, una visión humanista del desarrollo y la
+                convicción de que el progreso llega cuando las personas tienen oportunidades,
+                herramientas y estructuras para avanzar por sí mismas.
+              </T>
+            </p>
+            <p>
+              <T>
+                Concibe la fundación no como un proyecto aislado, sino como un modelo institucional de
+                largo alcance, diseñado para generar impacto estructural y contribuir a la
+                transformación social y económica de comunidades y países.
+              </T>
+            </p>
+          </div>
+        </div>
       </section>
 
       <section className="bg-card dark:bg-navy">
