@@ -2,6 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { usernameSchema, createAccountSchema, accountPasswordSchema } from "./admin-accounts";
 import { volunteerSchema, requestFiltersSchema, requestStatusSchema } from "./volunteer-schema";
+import { assertTurnstileVerification } from "./turnstile.server.ts";
 
 
 export const submitVolunteer = createServerFn({ method: "POST" })
@@ -16,6 +17,19 @@ export const submitVolunteer = createServerFn({ method: "POST" })
     const secret = process.env.TURNSTILE_SECRET_KEY;
     if (!secret) {
       console.error("Falta configurar TURNSTILE_SECRET_KEY en el servidor.");
+      throw new Error("El servicio de verificación no está disponible.");
+    }
+    const expectedHostname =
+      process.env.TURNSTILE_EXPECTED_HOSTNAME?.trim() ||
+      (() => {
+        try {
+          return new URL(process.env.SITE_URL ?? "").hostname;
+        } catch {
+          return "";
+        }
+      })();
+    if (!expectedHostname) {
+      console.error("Falta configurar TURNSTILE_EXPECTED_HOSTNAME o SITE_URL en el servidor.");
       throw new Error("El servicio de verificación no está disponible.");
     }
     let verification: { success: boolean; hostname?: string };
@@ -44,11 +58,7 @@ export const submitVolunteer = createServerFn({ method: "POST" })
         "No se pudo verificar la seguridad. Inténtalo nuevamente.",
       );
     }
-    if (!verification.success) {
-      throw new Error(
-        "La verificación de seguridad ha fallado. Inténtalo nuevamente.",
-      );
-    }
+    assertTurnstileVerification(verification, expectedHostname);
     // No guardar el token de seguridad en la base de datos.
     const { turnstileToken: _turnstileToken, ...volunteerData } = data;
     const { saveVolunteerRequest } = await import("./volunteer-service.server");
