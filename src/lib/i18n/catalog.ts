@@ -21,6 +21,10 @@ export const catalog: Record<string, readonly [string, string]> = {
   Liderazgo: ["Leadership", "Liderança"],
   Soporte: ["Support", "Suporte"],
   "Política de privacidad": ["Privacy policy", "Política de privacidade"],
+  "Política de privacidad de Fundación Venezuela Nueva Esperanza LLC (Fundación V.N.E.). Información sobre datos personales, cookies y tecnologías del sitio.": [
+    "Privacy policy of Fundación Venezuela Nueva Esperanza LLC (Fundación V.N.E.). Information about personal data, cookies and website technologies.",
+    "Política de privacidade da Fundación Venezuela Nueva Esperanza LLC (Fundación V.N.E.). Informações sobre dados pessoais, cookies e tecnologias do site.",
+  ],
   "Política de privacidad de Fundación Venezuela Nueva Esperanza LLC (VNE).": [
     "Privacy policy of Fundación Venezuela Nueva Esperanza LLC (VNE).",
     "Política de privacidade da Fundación Venezuela Nueva Esperanza LLC (VNE).",
