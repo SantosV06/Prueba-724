@@ -55,70 +55,67 @@ function Home() {
   const content = Route.useLoaderData();
   return (
     <Shell>
-      <section className="bg-navy text-cream">
-        <div className="mx-auto grid max-w-6xl gap-12 px-5 py-16 sm:px-6 sm:py-24 lg:grid-cols-12 lg:items-end">
-          <div className="lg:col-span-7">
-            <p className="text-xs font-bold tracking-[0.22em] text-gold uppercase">
+      <section className="vne-hero relative isolate min-h-[calc(100svh-4rem)] overflow-hidden bg-navy text-cream">
+        <img
+          src={media.impact}
+          alt=""
+          aria-hidden="true"
+          fetchPriority="high"
+          className="absolute inset-0 -z-20 h-full w-full object-cover object-center"
+        />
+        <div className="absolute inset-0 -z-10 bg-gradient-to-r from-navy-deep/95 via-navy/85 to-navy/45" />
+        <div className="absolute inset-0 -z-10 bg-gradient-to-t from-navy-deep/75 via-transparent to-navy-deep/25" />
+        <div className="mx-auto grid min-h-[calc(100svh-4rem)] max-w-7xl items-center gap-12 px-5 py-16 sm:px-6 sm:py-20 lg:grid-cols-12 lg:px-8 lg:py-24">
+          <div className="lg:col-span-8">
+            <p className="inline-flex items-center gap-3 text-[11px] font-bold tracking-[0.28em] text-gold uppercase">
+              <span className="h-px w-8 bg-gold" />
               <T>Nueva York · Caracas · desde 2022</T>
             </p>
-            <h1 className="mt-4 font-display text-[2.6rem] leading-[1.08] font-semibold text-balance sm:text-6xl">
+            <h1 className="mt-6 max-w-4xl font-display text-[clamp(2.8rem,7vw,6.8rem)] leading-[0.98] font-medium tracking-[-0.045em] text-balance">
               {content.title[language]}
             </h1>
-            <p className="editorial-justify mt-6 max-w-xl text-lg leading-relaxed text-cream/85">
+            <p className="mt-7 max-w-2xl text-base leading-relaxed text-cream/85 sm:text-lg sm:leading-8">
               {content.description[language]}
             </p>
-            <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+            <div className="mt-9 flex flex-col gap-3 sm:flex-row">
               <Link
                 to="/donaciones"
-                className="inline-flex h-12 items-center justify-center rounded-full bg-gold px-6 text-sm font-bold text-navy"
+                className="inline-flex min-h-12 items-center justify-center gap-2 rounded-full bg-gold px-7 py-3 text-sm font-bold text-navy transition-transform duration-200 hover:-translate-y-0.5 hover:bg-[#d4b77f]"
               >
                 <T>Apoyar los proyectos</T>
+                <ArrowUpRight className="size-4" aria-hidden="true" />
               </Link>
               <Link
                 to="/casas"
-                className="inline-flex h-12 items-center justify-center rounded-full border border-cream/30 px-6 text-sm font-bold text-cream"
+                className="inline-flex min-h-12 items-center justify-center rounded-full border border-cream/40 bg-cream/5 px-7 py-3 text-sm font-semibold text-cream backdrop-blur-sm transition-colors hover:bg-cream/10"
               >
                 <T>Conocer Casas VNE</T>
               </Link>
             </div>
+            <div className="mt-12 flex flex-wrap gap-x-8 gap-y-4 border-t border-white/20 pt-6 text-sm text-cream/75">
+              <span><strong className="font-display text-xl text-gold">01</strong><span className="ml-3"><T>Autonomía</T></span></span>
+              <span><strong className="font-display text-xl text-gold">02</strong><span className="ml-3"><T>Emprendimiento</T></span></span>
+              <span><strong className="font-display text-xl text-gold">03</strong><span className="ml-3"><T>Impacto sostenible</T></span></span>
+            </div>
           </div>
-          <aside className="border-t border-white/15 pt-8 lg:col-span-5 lg:border-t-0 lg:border-l lg:pt-0 lg:pl-10">
-            <MediaVideo src={media.homeVideo} title={t("Presentación de Fundación VNE")} />
-            <dl className="mt-8 grid gap-6">
-              <div>
-                <dt className="text-xs tracking-[0.18em] text-gold uppercase">
-                  <T>Figura</T>
-                </dt>
-                <dd className="mt-1 font-display text-2xl">
-                  <T>LLC con propósito social</T>
-                </dd>
+          <aside className="hidden lg:col-span-4 lg:block">
+            <div className="ml-auto max-w-xs rounded-2xl border border-white/20 bg-navy-deep/55 p-6 shadow-2xl shadow-black/20 backdrop-blur-md">
+              <p className="text-[10px] font-bold tracking-[0.24em] text-gold uppercase"><T>Una visión a largo plazo</T></p>
+              <p className="mt-4 font-display text-3xl leading-tight text-cream"><T>Construir oportunidades. Crear futuro.</T></p>
+              <div className="mt-6 border-t border-white/15 pt-5">
+                <p className="text-xs uppercase tracking-[0.18em] text-cream/60"><T>Figura institucional</T></p>
+                <p className="mt-2 text-sm font-semibold"><T>LLC con propósito social</T></p>
+                <p className="mt-1 text-sm text-cream/70"><T>Registrada en Nueva York,</T><T>{org.founded}</T></p>
               </div>
-              <div>
-                <dt className="text-xs tracking-[0.18em] text-gold uppercase">
-                  <T>Registro</T>
-                </dt>
-                <dd className="mt-1 text-base leading-relaxed text-cream/85">
-                  <T>Estado de Nueva York, </T>
-                  <T>{org.founded}</T>
-                  <br />
-                  <T>EIN </T>
-                  <T>{org.ein}</T>
-                </dd>
-              </div>
-              <div>
-                <dt className="text-xs tracking-[0.18em] text-gold uppercase">
-                  <T>Sede</T>
-                </dt>
-                <dd className="mt-1 text-base text-cream/85">
-                  <T>{org.addressNy}</T>
-                </dd>
-              </div>
-            </dl>
+            </div>
           </aside>
         </div>
+        <a href="#sobre-vne" aria-label={t("Descubrir Fundación VNE")} className="absolute bottom-5 left-1/2 hidden -translate-x-1/2 items-center gap-3 text-[10px] font-semibold tracking-[0.2em] text-cream/65 uppercase lg:flex">
+          <span className="h-px w-8 bg-gold/70" /><T>Descubrir</T><span className="h-px w-8 bg-gold/70" />
+        </a>
       </section>
 
-      <section className="mx-auto grid max-w-6xl gap-10 px-5 py-16 sm:px-6 lg:grid-cols-12 lg:py-24">
+      <section id="sobre-vne" className="mx-auto grid max-w-7xl gap-10 px-5 py-20 sm:px-6 lg:grid-cols-12 lg:py-28">
         <div className="lg:col-span-4">
           <p className="text-xs font-bold tracking-[0.2em] text-gold-deep uppercase">
             <T>Quiénes somos</T>
@@ -145,7 +142,7 @@ function Home() {
         </div>
       </section>
 
-      <section className="border-y border-line bg-card dark:border-white/10 dark:bg-navy">
+      <section className="border-y border-line bg-card py-2 dark:border-white/10 dark:bg-navy">
         <div className="mx-auto max-w-6xl px-5 py-16 sm:px-6">
           <h2 className="font-display text-3xl text-navy dark:text-cream">
             <T>Misión</T>
@@ -195,7 +192,7 @@ function Home() {
           </p>
           <Link
             to="/liderazgo"
-            className="mt-8 inline-flex items-center gap-2 text-sm font-bold text-gold"
+            className="mt-auto inline-flex items-center gap-2 pt-8 text-sm font-bold text-gold"
           >
             <T>Estructura y equipo </T>
             <ArrowUpRight className="size-4" />

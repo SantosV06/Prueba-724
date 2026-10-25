@@ -59,27 +59,28 @@ function Liderazgo() {
           alt={t("Wilmer Solórzano, CEO y fundador")}
           className="mx-auto max-h-96 max-w-full rounded-card object-contain"
         />
-        <p>
-          <T>
-            Desde temprano mostró sensibilidad social y un sentido fuerte de responsabilidad
-            familiar y comunitaria. Esos valores se volvieron una filosofía de cambio, perseverancia
-            y acción, y hoy dan forma a Fundación VNE.
-          </T>
-        </p>
-        <p>
-          <T>
-            Su liderazgo se apoya en principios éticos, una visión humanista del desarrollo y la
-            convicción de que el progreso llega cuando las personas tienen oportunidades,
-            herramientas y estructuras para avanzar por sí mismas.
-          </T>
-        </p>
-        <p>
-          <T>
-            Concibe la fundación no como un proyecto aislado, sino como un modelo institucional de
-            largo alcance, diseñado para generar impacto estructural y contribuir a la
-            transformación social y económica de comunidades y países.
-          </T>
-        </p>
+
+            <p>
+              <T>
+                Desde temprano mostró sensibilidad social y un sentido fuerte de responsabilidad
+                familiar y comunitaria. Esos valores se volvieron una filosofía de cambio, perseverancia
+                y acción, y hoy dan forma a Fundación VNE.
+              </T>
+            </p>
+            <p>
+              <T>
+                Su liderazgo se apoya en principios éticos, una visión humanista del desarrollo y la
+                convicción de que el progreso llega cuando las personas tienen oportunidades,
+                herramientas y estructuras para avanzar por sí mismas.
+              </T>
+            </p>
+            <p>
+              <T>
+                Concibe la fundación no como un proyecto aislado, sino como un modelo institucional de
+                largo alcance, diseñado para generar impacto estructural y contribuir a la
+                transformación social y económica de comunidades y países.
+              </T>
+            </p>
       </section>
 
       <section className="bg-card dark:bg-navy">

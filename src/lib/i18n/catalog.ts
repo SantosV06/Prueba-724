@@ -20,6 +20,30 @@ export const catalog: Record<string, readonly [string, string]> = {
   Génesis: ["Génesis", "Génesis"],
   Liderazgo: ["Leadership", "Liderança"],
   Soporte: ["Support", "Suporte"],
+  "Una visión a largo plazo": [
+    "A long-term vision",
+    "Uma visão de longo prazo",
+  ],
+  "Construir oportunidades. Crear futuro.": [
+    "Build opportunities. Create the future.",
+    "Construir oportunidades. Criar o futuro.",
+  ],
+  "Figura institucional": [
+    "Institutional form",
+    "Figura institucional",
+  ],
+  "Registrada en Nueva York,": [
+    "Registered in New York,",
+    "Registrada em Nova York,",
+  ],
+  Autonomía: ["Autonomy", "Autonomia"],
+  Emprendimiento: ["Entrepreneurship", "Empreendedorismo"],
+  "Impacto sostenible": ["Sustainable impact", "Impacto sustentável"],
+  Descubrir: ["Discover", "Descobrir"],
+  "Descubrir Fundación VNE": [
+    "Discover Fundación VNE",
+    "Descobrir Fundación VNE",
+  ],
   "Política de privacidad": ["Privacy policy", "Política de privacidade"],
   "Política de privacidad de Fundación Venezuela Nueva Esperanza LLC (Fundación V.N.E.). Información sobre datos personales, cookies y tecnologías del sitio.": [
     "Privacy policy of Fundación Venezuela Nueva Esperanza LLC (Fundación V.N.E.). Information about personal data, cookies and website technologies.",
