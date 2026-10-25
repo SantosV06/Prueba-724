@@ -1001,4 +1001,12 @@ export const catalog: Record<string, readonly [string, string]> = {
     "Privacy contact: info@foundationvne.com.",
     "Contato de privacidade: info@foundationvne.com.",
   ],
+  "6. Seguridad": [
+    "6. Security",
+    "6. Segurança",
+  ],
+  "8. Menores de edad": [
+    "8. Minors",
+    "8. Menores de idade",
+  ],
 };
