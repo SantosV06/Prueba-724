@@ -40,7 +40,7 @@ try {
         status: 200,
         contentType: "application/javascript",
         body: `(() => {
-          const token = "e2e-turnstile-test-token";
+          const token = "XXXX.DUMMY.TOKEN.XXXX";
           window.turnstile = {
             render(container, options = {}) {
               const id = "e2e-turnstile-widget";
