@@ -105,7 +105,7 @@ function Home() {
               <div className="mt-6 border-t border-white/15 pt-5">
                 <p className="text-xs uppercase tracking-[0.18em] text-cream/60"><T>Figura institucional</T></p>
                 <p className="mt-2 text-sm font-semibold"><T>LLC con propósito social</T></p>
-                <p className="mt-1 text-sm text-cream/70"><T>Registrada en Nueva York, </T><T>{org.founded}</T></p>
+                <p className="mt-1 text-sm text-cream/70"><T>Registrada en Nueva York,</T><T>{org.founded}</T></p>
               </div>
             </div>
           </aside>
