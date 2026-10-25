@@ -857,4 +857,148 @@ export const catalog: Record<string, readonly [string, string]> = {
       "The form and administration panel are unavailable in this preview until a separate test database is configured.",
       "O formulário e o painel estão desativados nesta prévia até que uma base de dados de testes independente seja configurada.",
     ],
+  "Fundación Venezuela Nueva Esperanza LLC, que opera públicamente como Fundación V.N.E. (en adelante, “la Organización”), explica en esta política qué información puede tratar cuando usted visita el sitio, envía una solicitud o se comunica con nosotros. Esta política describe las prácticas del sitio web y no sustituye los avisos de los proveedores externos.": [
+    "Fundación Venezuela Nueva Esperanza LLC, operating publicly as Fundación V.N.E. (the “Organization”), explains in this policy what information it may process when you visit the website, submit an application, or contact us. This policy describes the website’s practices and does not replace notices from external providers.",
+    "A Fundación Venezuela Nueva Esperanza LLC, que atua publicamente como Fundación V.N.E. (a “Organização”), explica nesta política quais informações pode tratar quando você visita o site, envia uma solicitação ou entra em contato conosco. Esta política descreve as práticas do site e não substitui os avisos de fornecedores externos.",
+  ],
+  "1. Información que podemos recopilar": [
+    "1. Information we may collect",
+    "1. Informações que podemos coletar",
+  ],
+  "Según las funciones que utilice, podemos tratar las siguientes categorías de información:": [
+    "Depending on the features you use, we may process the following categories of information:",
+    "Dependendo dos recursos que você utiliza, podemos tratar as seguintes categorias de informações:",
+  ],
+  "Datos de contacto que usted facilita, como nombre, correo electrónico y teléfono.": [
+    "Contact details you provide, such as your name, email address, and phone number.",
+    "Dados de contato que você fornece, como nome, endereço de e-mail e telefone.",
+  ],
+  "Contenido que usted envía en formularios, solicitudes de voluntariado, consultas u otras comunicaciones.": [
+    "Content you submit through forms, volunteer applications, inquiries, or other communications.",
+    "Conteúdo que você envia por formulários, inscrições de voluntariado, consultas ou outras comunicações.",
+  ],
+  "Datos operativos y de seguridad generados al usar el sitio, como dirección IP, fecha y hora de la solicitud, información del navegador y registros técnicos necesarios para detectar abusos, mantener la disponibilidad y proteger las cuentas.": [
+    "Operational and security data generated when you use the website, such as IP address, request date and time, browser information, and technical logs needed to detect abuse, maintain availability, and protect accounts.",
+    "Dados operacionais e de segurança gerados durante o uso do site, como endereço IP, data e hora da solicitação, informações do navegador e registros técnicos necessários para detectar abusos, manter a disponibilidade e proteger contas.",
+  ],
+  "Datos de cuenta y autenticación del personal autorizado que accede al área administrativa, incluidos identificadores de sesión y registros de seguridad.": [
+    "Account and authentication data for authorized personnel accessing the administration area, including session identifiers and security logs.",
+    "Dados de conta e autenticação do pessoal autorizado que acessa a área administrativa, incluindo identificadores de sessão e registros de segurança.",
+  ],
+  "Preferencias de idioma y tema que el navegador guarda localmente para recordar sus elecciones.": [
+    "Language and theme preferences stored locally by the browser to remember your choices.",
+    "Preferências de idioma e tema armazenadas localmente pelo navegador para lembrar suas escolhas.",
+  ],
+  "2. Finalidades y base operativa": [
+    "2. Purposes and operational basis",
+    "2. Finalidades e base operacional",
+  ],
+  "Utilizamos la información para:": [
+    "We use information to:",
+    "Utilizamos as informações para:",
+  ],
+  "Responder mensajes, tramitar solicitudes y administrar programas o servicios solicitados.": [
+    "Respond to messages, process applications, and administer requested programs or services.",
+    "Responder a mensagens, processar solicitações e administrar programas ou serviços solicitados.",
+  ],
+  "Operar, mantener y proteger el sitio, su base de datos y el acceso administrativo.": [
+    "Operate, maintain, and protect the website, its database, and administrative access.",
+    "Operar, manter e proteger o site, seu banco de dados e o acesso administrativo.",
+  ],
+  "Prevenir fraude, spam, abuso y accesos no autorizados, incluso mediante controles de seguridad de terceros cuando estén habilitados.": [
+    "Prevent fraud, spam, abuse, and unauthorized access, including through third-party security controls when enabled.",
+    "Prevenir fraudes, spam, abusos e acessos não autorizados, inclusive por meio de controles de segurança de terceiros quando habilitados.",
+  ],
+  "Recordar preferencias básicas, como idioma y tema visual.": [
+    "Remember basic preferences, such as language and visual theme.",
+    "Lembrar preferências básicas, como idioma e tema visual.",
+  ],
+  "Medir el rendimiento y uso general del sitio mediante Vercel Analytics y Vercel Speed Insights, integrados en la aplicación; estos servicios pueden procesar datos técnicos de navegación conforme a sus propias condiciones.": [
+    "Measure the website’s overall usage and performance through Vercel Analytics and Vercel Speed Insights, which are integrated into the application; these services may process technical browsing data under their own terms.",
+    "Medir o uso geral e o desempenho do site por meio do Vercel Analytics e do Vercel Speed Insights, integrados à aplicação; esses serviços podem processar dados técnicos de navegação conforme seus próprios termos.",
+  ],
+  "Cumplir obligaciones legales, atender solicitudes válidas y proteger los derechos de la Organización y de otras personas.": [
+    "Comply with legal obligations, respond to valid requests, and protect the rights of the Organization and others.",
+    "Cumprir obrigações legais, atender a solicitações válidas e proteger os direitos da Organização e de outras pessoas.",
+  ],
+  "3. Formularios, base de datos y conservación": [
+    "3. Forms, database, and retention",
+    "3. Formulários, banco de dados e retenção",
+  ],
+  "La información enviada mediante formularios puede almacenarse en la base de datos de la aplicación para gestionar y dar seguimiento a la solicitud. El acceso administrativo está restringido a usuarios autorizados. No envíe por los formularios contraseñas, números completos de tarjetas, información bancaria sensible ni datos que no sean necesarios para su solicitud.": [
+    "Information submitted through forms may be stored in the application database to manage and follow up on the request. Administrative access is restricted to authorized users. Do not submit passwords, full card numbers, sensitive banking information, or data that is unnecessary for your request through the forms.",
+    "As informações enviadas por formulários podem ser armazenadas no banco de dados da aplicação para gerenciar e acompanhar a solicitação. O acesso administrativo é restrito a usuários autorizados. Não envie pelos formulários senhas, números completos de cartões, informações bancárias confidenciais nem dados desnecessários para sua solicitação.",
+  ],
+  "Conservamos los datos durante el tiempo razonablemente necesario para atender la finalidad de la solicitud, mantener la seguridad, cumplir obligaciones legales y resolver disputas. El plazo concreto puede variar según el tipo de registro. Los registros técnicos y de seguridad pueden conservarse durante periodos más breves o conforme a necesidades operativas. Cuando los datos ya no sean necesarios, se eliminan o se anonimizan cuando resulte viable, sujeto a obligaciones legales y copias de seguridad.": [
+    "We retain data for as long as reasonably necessary to fulfill the request’s purpose, maintain security, comply with legal obligations, and resolve disputes. The specific period may vary by record type. Technical and security logs may be kept for shorter periods or as operational needs require. When data is no longer necessary, it is deleted or anonymized where feasible, subject to legal obligations and backups.",
+    "Mantemos os dados pelo tempo razoavelmente necessário para atender à finalidade da solicitação, manter a segurança, cumprir obrigações legais e resolver disputas. O prazo específico pode variar conforme o tipo de registro. Registros técnicos e de segurança podem ser mantidos por períodos menores ou conforme as necessidades operacionais. Quando os dados deixam de ser necessários, são excluídos ou anonimizados quando viável, respeitadas as obrigações legais e as cópias de segurança.",
+  ],
+  "4. Cookies y almacenamiento local": [
+    "4. Cookies and local storage",
+    "4. Cookies e armazenamento local",
+  ],
+  "El sitio no declara utilizar cookies publicitarias ni de seguimiento de marketing. La aplicación puede utilizar cookies estrictamente necesarias para mantener sesiones autenticadas del área administrativa y proteger funciones de seguridad. Estas cookies no se utilizan para personalizar anuncios.": [
+    "The website does not state that it uses advertising or marketing-tracking cookies. The application may use strictly necessary cookies to maintain authenticated sessions in the administration area and protect security functions. These cookies are not used to personalize ads.",
+    "O site não declara utilizar cookies publicitários nem de rastreamento de marketing. A aplicação pode utilizar cookies estritamente necessários para manter sessões autenticadas na área administrativa e proteger funções de segurança. Esses cookies não são usados para personalizar anúncios.",
+  ],
+  "La preferencia de tema se guarda en localStorage con la clave “vne-theme”, y la preferencia de idioma puede guardarse mediante el mecanismo local de preferencias del navegador. localStorage no es una cookie, pero almacena información en su dispositivo. Puede borrar estos datos desde la configuración del navegador; al hacerlo, quizá deba volver a elegir sus preferencias.": [
+    "The theme preference is stored in localStorage under the key “vne-theme”, and the language preference may be stored through the browser’s local preference mechanism. localStorage is not a cookie, but it stores information on your device. You can clear this data in your browser settings; if you do, you may need to choose your preferences again.",
+    "A preferência de tema é armazenada no localStorage com a chave “vne-theme”, e a preferência de idioma pode ser salva pelo mecanismo local de preferências do navegador. O localStorage não é um cookie, mas armazena informações no seu dispositivo. Você pode apagar esses dados nas configurações do navegador; nesse caso, talvez precise escolher suas preferências novamente.",
+  ],
+  "El sitio integra Vercel Analytics y Vercel Speed Insights para medición de tráfico y rendimiento, y puede utilizar Cloudflare Turnstile para mitigar tráfico automatizado en formularios protegidos. Estos proveedores pueden procesar datos técnicos y utilizar tecnologías propias según su configuración y sus políticas. No afirmamos que el sitio esté libre de toda tecnología de medición o seguridad. Si en el futuro se incorporan herramientas opcionales de publicidad o seguimiento que requieran consentimiento, la Organización deberá revisar esta política y los controles correspondientes antes de activarlas.": [
+    "The website integrates Vercel Analytics and Vercel Speed Insights to measure traffic and performance, and may use Cloudflare Turnstile to mitigate automated traffic on protected forms. These providers may process technical data and use their own technologies according to their configurations and policies. We do not claim that the website is free of all measurement or security technologies. If optional advertising or tracking tools that require consent are added in the future, the Organization must review this policy and the relevant controls before enabling them.",
+    "O site integra o Vercel Analytics e o Vercel Speed Insights para medir tráfego e desempenho e pode utilizar o Cloudflare Turnstile para reduzir tráfego automatizado em formulários protegidos. Esses fornecedores podem processar dados técnicos e utilizar tecnologias próprias conforme suas configurações e políticas. Não afirmamos que o site esteja livre de todas as tecnologias de medição ou segurança. Se futuramente forem adicionadas ferramentas opcionais de publicidade ou rastreamento que exijam consentimento, a Organização deverá revisar esta política e os controles correspondentes antes de ativá-las.",
+  ],
+  "5. Proveedores y enlaces externos": [
+    "5. Providers and external links",
+    "5. Fornecedores e links externos",
+  ],
+  "El sitio depende de proveedores técnicos para alojamiento, entrega de la aplicación, base de datos, analítica y seguridad. Cuando se habilitan, estos pueden incluir Vercel, Neon y Cloudflare. Los enlaces a WhatsApp, Instagram, servicios de mapas o Zelle llevan a plataformas externas que operan bajo sus propios avisos y condiciones; al abrirlos, la información que usted proporcione queda sujeta a las prácticas de ese proveedor.": [
+    "The website relies on technical providers for hosting, application delivery, database services, analytics, and security. When enabled, these may include Vercel, Neon, and Cloudflare. Links to WhatsApp, Instagram, mapping services, or Zelle lead to external platforms governed by their own notices and terms; once opened, information you provide is subject to that provider’s practices.",
+    "O site depende de fornecedores técnicos de hospedagem, entrega da aplicação, banco de dados, análise e segurança. Quando habilitados, eles podem incluir Vercel, Neon e Cloudflare. Links para WhatsApp, Instagram, serviços de mapas ou Zelle levam a plataformas externas regidas por seus próprios avisos e termos; ao acessá-las, as informações fornecidas ficam sujeitas às práticas desse fornecedor.",
+  ],
+  "La Organización no vende datos personales. Puede compartir información con proveedores que la necesiten para prestar servicios técnicos a la aplicación, bajo las condiciones aplicables, o cuando sea necesario para cumplir la ley, proteger la seguridad o responder a un requerimiento válido.": [
+    "The Organization does not sell personal data. It may share information with providers that need it to deliver technical services to the application, under applicable terms, or when necessary to comply with the law, protect security, or respond to a valid request.",
+    "A Organização não vende dados pessoais. Ela pode compartilhar informações com fornecedores que precisem delas para prestar serviços técnicos à aplicação, sob as condições aplicáveis, ou quando necessário para cumprir a lei, proteger a segurança ou responder a uma solicitação válida.",
+  ],
+  "Aplicamos medidas técnicas y organizativas razonables, como controles de acceso, sesiones protegidas y mecanismos de prevención de abuso. Ningún sistema de transmisión o almacenamiento puede garantizar seguridad absoluta. Si sospecha que una comunicación o cuenta está comprometida, contacte a la Organización por los medios oficiales.": [
+    "We apply reasonable technical and organizational measures, such as access controls, protected sessions, and abuse-prevention mechanisms. No transmission or storage system can guarantee absolute security. If you suspect that a communication or account has been compromised, contact the Organization through its official channels.",
+    "Aplicamos medidas técnicas e organizacionais razoáveis, como controles de acesso, sessões protegidas e mecanismos de prevenção de abusos. Nenhum sistema de transmissão ou armazenamento pode garantir segurança absoluta. Se suspeitar que uma comunicação ou conta foi comprometida, entre em contato com a Organização pelos canais oficiais.",
+  ],
+  "7. Sus solicitudes y derechos": [
+    "7. Your requests and rights",
+    "7. Suas solicitações e direitos",
+  ],
+  "Puede solicitar acceso, corrección o eliminación de información personal que nos haya proporcionado, así como plantear preguntas sobre su tratamiento, escribiendo a info@foundationvne.com. Para proteger a las personas, podremos pedir información razonable para verificar la identidad y aclarar la solicitud. La atención estará sujeta a la ley aplicable y a los registros que debamos conservar por razones legales o de seguridad.": [
+    "You may request access to, correction of, or deletion of personal information you have provided to us, or ask questions about its processing by writing to info@foundationvne.com. To protect individuals, we may request reasonable information to verify identity and clarify the request. Requests are handled subject to applicable law and records we must retain for legal or security reasons.",
+    "Você pode solicitar acesso, correção ou exclusão de informações pessoais que nos forneceu, bem como fazer perguntas sobre seu tratamento, escrevendo para info@foundationvne.com. Para proteger as pessoas, poderemos solicitar informações razoáveis para verificar a identidade e esclarecer a solicitação. O atendimento estará sujeito à legislação aplicável e aos registros que precisarmos manter por motivos legais ou de segurança.",
+  ],
+  "El sitio no está diseñado para recopilar deliberadamente información personal de menores sin la participación o autorización que pueda exigir la legislación aplicable. Si considera que un menor nos ha enviado información personal de forma inadecuada, comuníquese con nosotros para que podamos revisar el caso.": [
+    "The website is not designed to deliberately collect personal information from minors without the involvement or authorization that applicable law may require. If you believe a minor has improperly sent us personal information, contact us so we can review the situation.",
+    "O site não foi projetado para coletar deliberadamente informações pessoais de menores sem a participação ou autorização exigida pela legislação aplicável. Se acreditar que um menor nos enviou informações pessoais de forma inadequada, entre em contato para que possamos analisar o caso.",
+  ],
+  "9. Transferencias y servicios internacionales": [
+    "9. International transfers and services",
+    "9. Transferências e serviços internacionais",
+  ],
+  "La Organización está registrada en Nueva York y puede trabajar con proveedores que procesan información en Estados Unidos u otros países. Las leyes de protección de datos pueden variar según la ubicación. Los datos se tratarán conforme a esta política y a los requisitos legales aplicables.": [
+    "The Organization is registered in New York and may work with providers that process information in the United States or other countries. Data protection laws may vary by location. Data will be processed in accordance with this policy and applicable legal requirements.",
+    "A Organização está registrada em Nova York e pode trabalhar com fornecedores que processam informações nos Estados Unidos ou em outros países. As leis de proteção de dados podem variar conforme a localização. Os dados serão tratados de acordo com esta política e os requisitos legais aplicáveis.",
+  ],
+  "10. Cambios y contacto": [
+    "10. Changes and contact",
+    "10. Alterações e contato",
+  ],
+  "Podemos actualizar esta política para reflejar cambios operativos, técnicos o legales. Publicaremos la versión vigente en esta página e indicaremos la fecha de actualización. Esta política no pretende renunciar a derechos que no puedan excluirse por ley.": [
+    "We may update this policy to reflect operational, technical, or legal changes. We will publish the current version on this page and indicate the update date. This policy does not waive rights that cannot be excluded by law.",
+    "Podemos atualizar esta política para refletir mudanças operacionais, técnicas ou legais. Publicaremos a versão vigente nesta página e indicaremos a data de atualização. Esta política não pretende renunciar a direitos que não possam ser excluídos por lei.",
+  ],
+  "Última actualización: 25 de octubre de 2026.": [
+    "Last updated: October 25, 2026.",
+    "Última atualização: 25 de outubro de 2026.",
+  ],
+  "Contacto de privacidad: info@foundationvne.com.": [
+    "Privacy contact: info@foundationvne.com.",
+    "Contato de privacidade: info@foundationvne.com.",
+  ],
 };
