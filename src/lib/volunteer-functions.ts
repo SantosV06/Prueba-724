@@ -44,7 +44,7 @@ export const submitVolunteer = createServerFn({ method: "POST" })
       verification = { success: true, hostname: expectedHostname };
     } else {
       try {
-        const response = await fetch(`https://challenges.cloudflare.com/turnstile/v0/siteverify`,
+        const response = await fetch(
         "https://challenges.cloudflare.com/turnstile/v0/siteverify",
         {
           method: "POST",
