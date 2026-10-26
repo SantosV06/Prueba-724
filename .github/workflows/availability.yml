@@ -32,8 +32,17 @@ jobs:
 
             if (response.status >= 300 && response.status < 400) {
               const location = response.headers.get('location');
+              let safeDestination = '(missing)';
+              if (location) {
+                try {
+                  const destination = new URL(location, url);
+                  safeDestination = `${destination.origin}${destination.pathname}`;
+                } catch {
+                  safeDestination = '(invalid Location header)';
+                }
+              }
               console.error(
-                `Unexpected redirect for ${path}: HTTP ${response.status}; Location: ${location ?? '(missing)'}`
+                `Unexpected redirect for ${path}: HTTP ${response.status}; destination: ${safeDestination}`
               );
               throw Error(`Availability check redirected: ${path}`);
             }
