@@ -19,12 +19,43 @@ jobs:
         run: |
           node --input-type=module <<'JS'
           const site = new URL(process.env.SITE);
-          if (site.protocol !== 'https:' || site.username || site.password) throw Error('Configure an HTTPS monitoring origin');
+          if (site.protocol !== 'https:' || site.username || site.password) {
+            throw Error('Configure an HTTPS monitoring origin');
+          }
+
           for (const path of ['/', '/api/health']) {
-            const response = await fetch(new URL(path, site), { signal: AbortSignal.timeout(25000), redirect: 'error' });
-            if (!response.ok) throw Error(`Availability check failed: ${path} HTTP ${response.status}`);
-            if (path === '/api/health' && (await response.json()).status !== 'ok') throw Error('Database health check failed');
-            if (path === '/' && !(await response.text()).includes('Fundación VNE')) throw Error('Homepage content missing');
+            const url = new URL(path, site);
+            const response = await fetch(url, {
+              signal: AbortSignal.timeout(25000),
+              redirect: 'manual',
+            });
+
+            if (response.status >= 300 && response.status < 400) {
+              const location = response.headers.get('location');
+              let safeDestination = '(missing)';
+              if (location) {
+                try {
+                  const destination = new URL(location, url);
+                  safeDestination = `${destination.origin}${destination.pathname}`;
+                } catch {
+                  safeDestination = '(invalid Location header)';
+                }
+              }
+              console.error(
+                `Unexpected redirect for ${path}: HTTP ${response.status}; destination: ${safeDestination}`
+              );
+              throw Error(`Availability check redirected: ${path}`);
+            }
+
+            if (!response.ok) {
+              throw Error(`Availability check failed: ${path} HTTP ${response.status}`);
+            }
+            if (path === '/api/health' && (await response.json()).status !== 'ok') {
+              throw Error('Database health check failed');
+            }
+            if (path === '/' && !(await response.text()).includes('Fundación VNE')) {
+              throw Error('Homepage content missing');
+            }
             console.log(`${path}: OK`);
           }
           JS

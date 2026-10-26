@@ -83,6 +83,7 @@ function Voluntariado() {
     data.telefono = normalizePhone(data.telefono);
     submitting.current = true;
     requestKey.current ??= crypto.randomUUID();
+    setError("");
     setSending(true);
     try {
       await submitVolunteer({

@@ -40,7 +40,7 @@ try {
         status: 200,
         contentType: "application/javascript",
         body: `(() => {
-          const token = "e2e-turnstile-test-token";
+          const token = "XXXX.DUMMY.TOKEN.XXXX";
           window.turnstile = {
             render(container, options = {}) {
               const id = "e2e-turnstile-widget";
@@ -304,7 +304,17 @@ try {
       .getByLabel("Cómo puedes aportar")
       .fill("Solicitud local desechable para comprobar el flujo completo.");
     await page.getByRole("button", { name: "Registrar solicitud" }).click();
-    await page.getByRole("heading", { name: "Solicitud registrada" }).waitFor();
+    // If the server rejects the submission, report the visible form error instead
+    // of hiding the actionable cause behind a generic 30-second heading timeout.
+    const successHeading = page.getByRole("heading", { name: "Solicitud registrada" });
+    const formAlert = page.getByRole("alert");
+    const submissionResult = await Promise.race([
+      successHeading.waitFor({ state: "visible", timeout: 30_000 }).then(() => "success"),
+      formAlert.waitFor({ state: "visible", timeout: 30_000 }).then(() => "error"),
+    ]);
+    if (submissionResult === "error") {
+      throw new Error(`Volunteer submission rejected: ${(await formAlert.innerText()).trim()}`);
+    }
     await page.goto(`${base}/solicitudes`, { waitUntil: "domcontentloaded" });
     await chooseLanguage("English");
     await page.getByRole("heading", { name: "Volunteer applications", exact: true }).waitFor();
