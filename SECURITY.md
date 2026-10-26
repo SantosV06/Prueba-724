@@ -22,7 +22,11 @@ Los rechazos de login se guardan sin usuario introducido, IP, contraseña, códi
 
 2FA se activa individualmente. La política obligatoria comienza desactivada para permitir un despliegue sin bloquear cuentas existentes. Las cuentas sin factor solo quedan restringidas después de que el propietario habilite esa política.
 
-El formulario de voluntariado utiliza Cloudflare Turnstile para reducir las solicitudes automatizadas. El cliente obtiene un token mediante el widget y el servidor verifica su validez con la API oficial de Turnstile antes de procesar la solicitud. La integración requiere configurar `VITE_TURNSTILE_SITE_KEY` como variable disponible durante la compilación del cliente y `TURNSTILE_SECRET_KEY` como secreto exclusivamente del servidor en cada entorno donde se despliegue. La clave secreta nunca debe exponerse al navegador ni incluirse en el repositorio. La política CSP debe permitir los recursos de Turnstile de Cloudflare. En CI/E2E se utilizan claves de prueba y mocks controlados; no se deben reutilizar esas claves como configuración de producción.\n\nTurnstile complementa los límites de solicitudes y el campo honeypot, pero no garantiza por sí solo la ausencia de abuso automatizado ni sustituye la supervisión operativa. Los límites por IP/correo tampoco detienen todo abuso distribuido ni sustituyen un WAF o un desafío adaptativo. El scrypt consume memoria deliberadamente; la capacidad y los límites de plataforma deben medirse con carga real.\n\n*Nota del desarrollador: Turnstile resultó bastante más difícil de integrar de lo que sugería el clásico «solo hay que añadir un captcha» 😅. Precisamente por eso la integración cuenta con pruebas y configuración documentada.*
+El formulario de voluntariado utiliza Cloudflare Turnstile para reducir las solicitudes automatizadas. El cliente obtiene un token mediante el widget y el servidor verifica su validez con la API oficial de Turnstile antes de procesar la solicitud. La integración requiere configurar `VITE_TURNSTILE_SITE_KEY` como variable disponible durante la compilación del cliente y `TURNSTILE_SECRET_KEY` como secreto exclusivamente del servidor en cada entorno donde se despliegue. La clave secreta nunca debe exponerse al navegador ni incluirse en el repositorio. La política CSP debe permitir los recursos de Turnstile de Cloudflare. En CI/E2E se utilizan claves de prueba y mocks controlados; no se deben reutilizar esas claves como configuración de producción.
+
+Turnstile complementa los límites de solicitudes y el campo honeypot, pero no garantiza por sí solo la ausencia de abuso automatizado ni sustituye la supervisión operativa. Los límites por IP/correo tampoco detienen todo abuso distribuido ni sustituyen un WAF o un desafío adaptativo. El scrypt consume memoria deliberadamente; la capacidad y los límites de plataforma deben medirse con carga real.
+
+*Nota del desarrollador: Turnstile resultó bastante más difícil de integrar de lo que sugería el clásico «solo hay que añadir un captcha» 😅. Precisamente por eso la integración cuenta con pruebas y configuración documentada.*
 
 El monitoreo horario detecta inicio/salud, no todos los errores de interfaz ni la entrega de correos. Los logs no deben incluir contraseñas, claves, códigos, mensajes, CSV o URLs de conexión. No hay certificación de seguridad, prueba de penetración exhaustiva ni garantía de ausencia de fallos.
 
@@ -41,7 +45,6 @@ El módulo de Brevo usa `BREVO_API_KEY` únicamente en el servidor. No expongas 
 ## Comunicación de incidencias
 
 Contacta privadamente al propietario del repositorio por un canal acordado. No publiques secretos ni datos de voluntarios en Issues o PRs. Incluye ruta, comportamiento, impacto y pasos mínimos con datos ficticios. Si se expone una credencial, revócala o rótala, revisa accesos y sigue el procedimiento de recuperación apropiado; borrar el texto del último commit no elimina su historial.
-
 
 ## Automatización de dependencias y secretos
 

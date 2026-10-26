@@ -53,6 +53,7 @@ Para formulario y panel local, proporciona `ADMIN_PASSWORD` y `ADMIN_SESSION_SEC
 - [Seguridad](SECURITY.md): controles, límites y comunicación privada de incidencias.
 - [Configuración de Brevo](BREVO_SETUP.md): variables privadas, autenticación del dominio y pruebas en Preview.
 - [Arquitectura](ARCHITECTURE.md): rutas, servicios, datos y pruebas.
+- [Informe de auditoría del repositorio (26-10-2026)](docs/REPOSITORY_AUDIT_2026-10-26.md): errores documentales confirmados, riesgos operativos y verificaciones pendientes. La revisión es estática y no sustituye CI ni pruebas dinámicas.
 - [Multimedia](MULTIMEDIA.md): originales, derivados y reproducción.
 
 La versión activa se despliega desde la raíz en Vercel. Los archivos históricos o de herramientas del generador no forman parte del contrato de despliegue.
