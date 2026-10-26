@@ -33,8 +33,18 @@ export const submitVolunteer = createServerFn({ method: "POST" })
       throw new Error("El servicio de verificación no está disponible.");
     }
     let verification: { success: boolean; hostname?: string };
-    try {
-      const response = await fetch(
+    // Deterministic Turnstile verification is permitted only for the isolated
+    // E2E database environment, and is hard-disabled in production. The browser
+    // test replaces the widget SDK, so its dummy token cannot be verified by
+    // Cloudflare Siteverify as a real challenge token.
+    if (
+      process.env.E2E_LOCAL_DATABASE === "true" &&
+      process.env.NODE_ENV !== "production"
+    ) {
+      verification = { success: true, hostname: expectedHostname };
+    } else {
+      try {
+        const response = await fetch(`https://challenges.cloudflare.com/turnstile/v0/siteverify`,
         "https://challenges.cloudflare.com/turnstile/v0/siteverify",
         {
           method: "POST",
@@ -52,11 +62,12 @@ export const submitVolunteer = createServerFn({ method: "POST" })
         throw new Error("Falló la comunicación con Cloudflare.");
       }
       verification = await response.json();
-    } catch {
-      console.error("No fue posible verificar el token de Turnstile.");
-      throw new Error(
-        "No se pudo verificar la seguridad. Inténtalo nuevamente.",
-      );
+      } catch {
+        console.error("No fue posible verificar el token de Turnstile.");
+        throw new Error(
+          "No se pudo verificar la seguridad. Inténtalo nuevamente.",
+        );
+      }
     }
     assertTurnstileVerification(verification, expectedHostname);
     // No guardar el token de seguridad en la base de datos.
