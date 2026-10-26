@@ -33,35 +33,35 @@ export const submitVolunteer = createServerFn({ method: "POST" })
       throw new Error("El servicio de verificación no está disponible.");
     }
     let verification: { success: boolean; hostname?: string };
-    // Deterministic Turnstile verification is permitted only for the isolated
-    // E2E database environment, and is hard-disabled in production. The browser
-    // test replaces the widget SDK, so its dummy token cannot be verified by
-    // Cloudflare Siteverify as a real challenge token.
+    // The browser E2E suite uses a dummy token because it mocks the external
+    // Turnstile SDK. Bypass Siteverify only inside GitHub Actions with explicit
+    // disposable-test flags; deployed Preview/Production must verify with Cloudflare.
     if (
+      process.env.CI === "true" &&
       process.env.E2E_LOCAL_DATABASE === "true" &&
-      process.env.NODE_ENV !== "production"
+      process.env.TURNSTILE_TEST_MODE === "true"
     ) {
       verification = { success: true, hostname: expectedHostname };
     } else {
       try {
         const response = await fetch(
-        "https://challenges.cloudflare.com/turnstile/v0/siteverify",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
+          "https://challenges.cloudflare.com/turnstile/v0/siteverify",
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              secret,
+              response: token,
+            }),
+            signal: AbortSignal.timeout(10_000),
           },
-          body: JSON.stringify({
-            secret,
-            response: token,
-          }),
-          signal: AbortSignal.timeout(10_000),
-        },
-      );
-      if (!response.ok) {
-        throw new Error("Falló la comunicación con Cloudflare.");
-      }
-      verification = await response.json();
+        );
+        if (!response.ok) {
+          throw new Error("Falló la comunicación con Cloudflare.");
+        }
+        verification = await response.json();
       } catch {
         console.error("No fue posible verificar el token de Turnstile.");
         throw new Error(
