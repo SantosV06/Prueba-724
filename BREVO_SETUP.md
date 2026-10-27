@@ -1,6 +1,6 @@
 # Correo transaccional con Brevo: configuración y prueba de producción
 
-El módulo `src/lib/brevo-email.server.ts` ya forma parte de `main`. Después de guardar por primera vez una solicitud nueva, la aplicación intenta enviar una confirmación a la persona solicitante y un aviso al buzón interno. La integración no envía mensajes cuando una solicitud se repite con la misma clave idempotente, no manda el mensaje personal en el aviso interno y no envía correos al cambiar estados ni para recuperar contraseñas.
+El módulo `src/lib/brevo-email.server.ts` ya forma parte de `main`. Después de guardar por primera vez una solicitud nueva, la aplicación intenta enviar una confirmación a la persona solicitante y un aviso al buzón interno. La integración no envía mensajes cuando una solicitud se repite con la misma clave idempotente ni incluye el mensaje personal en el aviso interno. Cuando el administrador cambia el estado a `aceptada` o `descartada`, la aplicación intenta enviar una notificación al voluntario. No se envían correos para el estado `contactada`, ni cuando se vuelve a guardar el mismo estado. Estas notificaciones usan `BREVO_API_KEY` y `BREVO_SENDER_EMAIL`; no requieren `VOLUNTEER_NOTIFICATION_EMAIL`.
 
 ## Estado de la prueba real
 
