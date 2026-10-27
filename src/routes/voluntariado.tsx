@@ -38,7 +38,8 @@ const empty: Fields = { nombre: "", apellido: "", correo: "", telefono: "", mens
 function Voluntariado() {
   const { t } = useLanguage();
   const [fields, setFields] = useState<Fields>(empty);
-  const [phoneCountryCode, setPhoneCountryCode] = useState("US");\n  const phoneCountry = PHONE_COUNTRIES.find((country) => country.code === phoneCountryCode) ?? PHONE_COUNTRIES[0]!;
+  const [phoneCountryCode, setPhoneCountryCode] = useState("US");
+  const phoneCountry = PHONE_COUNTRIES.find((country) => country.code === phoneCountryCode) ?? PHONE_COUNTRIES[0]!;
   const [error, setError] = useState("");
   const [sent, setSent] = useState<Fields | null>(null);
   const [sending, setSending] = useState(false);
