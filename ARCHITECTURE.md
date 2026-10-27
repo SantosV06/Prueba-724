@@ -24,7 +24,7 @@ TanStack Start combina renderizado de servidor, React y funciones del servidor. 
 
 ## Autenticación activa
 
-La autenticación del panel es propia: `volunteer-functions.ts` → `volunteer-service.server.ts`, cuentas `admin_users`, cookie `vne-admin-session` y módulos `admin-totp*`. Better Auth no es el sistema de autenticación del panel y no debe confundirse con este flujo. Las carpetas históricas del generador y la antigua aplicación Cloudflare no forman parte del despliegue desde la raíz. Para entregar el proyecto, usar [HANDOVER.md](HANDOVER.md).
+La autenticación del panel es propia: `volunteer-functions.ts` → `volunteer-service.server.ts`, cuentas `admin_users`, cookie `vne-admin-session` y módulos `admin-totp*`. Better Auth no es el sistema de autenticación del panel y no debe confundirse con este flujo. El despliegue activo se configura desde la raíz del repositorio; esta descripción no certifica si existieron o existen carpetas históricas fuera de ese ámbito. Para entregar el proyecto, usar [HANDOVER.md](HANDOVER.md).
 
 ## Flujos
 

@@ -4,7 +4,7 @@ Sitio institucional de Fundación Venezuela Nueva Esperanza y aplicación privad
 
 ## Estado del repositorio y código activo
 
-La aplicación desplegable está en la raíz (`src/`, `server/`, `migrations/` y la configuración de Vercel). La versión histórica de Cloudflare queda fuera del despliegue actual. La autenticación del panel utiliza el servicio propio `volunteer-service.server.ts` y los módulos `admin-*`; no depende de Better Auth ni de conectores de sandbox o P2P.
+La aplicación desplegable está configurada desde la raíz del repositorio (`src/`, `server/`, `migrations/` y configuración de Vercel). Esta descripción define el ámbito de despliegue; por sí sola no afirma que una carpeta histórica siga existiendo en el árbol actual. La autenticación del panel utiliza el servicio propio `volunteer-service.server.ts` y los módulos `admin-*`; no depende de Better Auth ni de conectores de sandbox o P2P.
 
 ## Funciones actuales
 
@@ -56,7 +56,7 @@ Para formulario y panel local, proporciona `ADMIN_PASSWORD` y `ADMIN_SESSION_SEC
 - [Informe de auditoría del repositorio (26-10-2026)](docs/REPOSITORY_AUDIT_2026-10-26.md): errores documentales confirmados, riesgos operativos y verificaciones pendientes. La revisión es estática y no sustituye CI ni pruebas dinámicas.
 - [Multimedia](MULTIMEDIA.md): originales, derivados y reproducción.
 
-La versión activa se despliega desde la raíz en Vercel. Los archivos históricos o de herramientas del generador no forman parte del contrato de despliegue.
+La versión activa se despliega desde la raíz en Vercel. La configuración de despliegue y el árbol actual de Git son las fuentes para determinar qué archivos existen y qué se publica; no se debe inferir la presencia de directorios históricos a partir de menciones en documentación.
 
 ## Validación y límites
 

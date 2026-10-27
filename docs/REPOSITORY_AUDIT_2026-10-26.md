@@ -1,73 +1,61 @@
-# Auditoría del repositorio Prueba-724 — 26 de octubre de 2026
+# Revisión documental de Prueba-724 — 26 de octubre de 2026
 
-## Alcance y método
+## Alcance y límites
 
-Revisión documental y estática de la rama `main` de `SantosV06/Prueba-724`, con lectura de `README.md`, `ARCHITECTURE.md`, `OPERATIONS.md`, `SECURITY.md`, `package.json` y `.github/workflows/ci.yml`, y búsqueda de referencias a la validación del hostname de Cloudflare Turnstile. Esta revisión no ejecuta el proyecto ni sustituye pruebas de runtime, una auditoría dinámica o una prueba de penetración. Los hallazgos se clasifican como errores documentales, riesgos/configuración pendiente y verificaciones no demostradas.
+Revisión estática de documentación y configuración accesible en la rama `main`: `README.md`, `README.en.md`, `ARCHITECTURE.md`, `OPERATIONS.md`, `SECURITY.md`, `package.json`, `GUIA_INSTALACION_COMPLETA.md`, `BREVO_SETUP.md`, `.gitignore` y `.github/workflows/ci.yml`. También se hicieron búsquedas puntuales de referencias de archivos y de tareas pendientes.
 
-## Resumen ejecutivo
+No se descargó ni ejecutó el repositorio completo y no se inspeccionó cada archivo de código. Este informe no equivale a una auditoría integral, un análisis dinámico, una prueba de penetración ni una validación del despliegue. No se afirma que CI esté verde ni que producción esté correctamente configurada.
 
-La documentación describe una aplicación institucional desplegada desde la raíz, con TanStack Start/React/TypeScript, Neon PostgreSQL, un panel administrativo, TOTP, auditoría, Cloudflare Turnstile y notificaciones transaccionales de Brevo. El `package.json` declara Node `24.x`, npm `11.9.0` y define `check`, `build`, pruebas E2E, pruebas PostgreSQL y cobertura.
+## Hallazgos confirmados
 
-No se ha ejecutado CI ni el código durante esta revisión. Por tanto, este documento no afirma que el commit actual esté verde, que producción esté correctamente configurada o que no existan vulnerabilidades.
+### DOC-01 — Numeración duplicada en la guía de instalación
 
-## Hallazgos
+**Severidad: baja · Documentación**
 
-### D-01 — Error de formato en SECURITY.md
+En la versión de `main` revisada, la lista de Turnstile tenía numeración duplicada. La rama de mantenimiento renumera los pasos consecutivamente; confirmar que esta corrección se mantiene en el diff antes de integrar.
 
-**Severidad: baja · Confirmado**
+### DOC-02 — Error tipográfico en BREVO_SETUP.md
 
-En «Límites y decisiones de operación», varios párrafos contienen los caracteres literales `\n\n` en lugar de saltos de línea Markdown. Esto hace que el documento muestre los separadores como texto y que la nota del desarrollador quede pegada al párrafo anterior.
+**Severidad: baja · Documentación**
 
-**Corrección aplicada en esta rama:** sustituir los separadores literales por saltos de línea reales y separar la nota del desarrollador en su propio párrafo.
+En la versión de `main` revisada, la mención de `ADMIN_TOTP_ENCRYPTION_KEY` tenía un paréntesis sobrante. La rama de mantenimiento corrige el texto; confirmar el diff antes de integrar.
 
-### D-02 — Comentario de entorno ambiguo en CI
+### DOC-03 — README en inglés es solo un índice breve
 
-**Severidad: baja · Confirmado**
+**Severidad: baja · Consistencia documental**
 
-En `.github/workflows/ci.yml`, el comentario de las variables globales dice «Disposable local PGLite only», pero el mismo workflow inicia PostgreSQL 17 y ejecuta `npm run test:postgres` con `TEST_DATABASE_URL` apuntando al servicio local desechable. El comportamiento puede ser correcto, pero el comentario es demasiado amplio y confunde el backend usado por E2E con el de las pruebas PostgreSQL.
+`README.en.md` enlaza las guías inglesas y ofrece un resumen, mientras que el README español documenta más comandos, validaciones y límites. No es un fallo de ejecución, pero conviene mantener ambos índices sincronizados cuando cambien funciones, comandos o requisitos de seguridad.
 
-**Recomendación:** aclarar que las credenciales globales son exclusivas de CI y que las pruebas E2E usan el entorno local configurado, mientras que el job de integración PostgreSQL usa el servicio PostgreSQL desechable. No cambiar la lógica del workflow como parte de una corrección documental.
+## Riesgos y verificaciones pendientes (no son vulnerabilidades confirmadas)
 
-### O-01 — Turnstile depende de una configuración de hostname/origen válida
+1. **Turnstile:** verificar en Vercel que el hostname esperado coincide con el hostname real de cada entorno. El valor `localhost` del CI es exclusivo de las pruebas y no debe copiarse a Production.
+2. **Brevo:** los tests automatizados simulan el proveedor. La entrega real de confirmación y aviso interno debe verificarse por separado con destinatarios controlados; un CI verde no demuestra la entrega.
+3. **Base de Preview:** comprobar manualmente que la base de datos de Preview está aislada de Production antes de habilitar cualquier flujo de escritura.
+4. **Cabeceras:** revisar las cabeceras HTTP efectivas de los dominios desplegados. Leer la configuración fuente no demuestra qué cabeceras sirven todos los despliegues.
+5. **Protección del repositorio:** verificar en GitHub el estado real de Secret Scanning, Push Protection, reglas de rama y permisos. La documentación no prueba que esos controles estén activados.
+6. **Recuperación:** ensayar restauración de Neon en un entorno separado y documentar el resultado. Tener procedimientos escritos no demuestra que una copia sea restaurable.
+7. **Dependencias y pruebas:** revisar los resultados de CI y `npm audit` del SHA exacto que se pretende fusionar. Este informe no ejecuta esos comandos.
 
-**Severidad: alta para disponibilidad del formulario si falta · Requisito operativo confirmado por el código/documentación**
+## Limpieza y eliminación de archivos
 
-`src/lib/volunteer-functions.ts` busca `TURNSTILE_EXPECTED_HOSTNAME` o una configuración derivada de `SITE_URL`, y falla de forma cerrada si no puede determinar el hostname esperado. `.env.example` y `GUIA_INSTALACION_COMPLETA.md` documentan ambas opciones. El workflow CI define `TURNSTILE_EXPECTED_HOSTNAME=localhost` para la clave de prueba.
+No se recomienda borrar código, dependencias, migraciones, workflows ni directorios históricos solo porque parezcan antiguos. Para declarar algo innecesario hay que verificar referencias, imports dinámicos, rutas, scripts, configuración de build, workflows, migraciones y necesidades de recuperación. La búsqueda textual por sí sola no demuestra que un archivo esté sin uso.
 
-**Acción fuera del código:** comprobar por separado en Vercel Production y Preview que el hostname configurado coincide exactamente con el hostname que Turnstile devuelve para cada entorno; no copiar el valor de `localhost` de CI a producción. La revisión del repositorio no permite verificar los valores secretos/configurados en Vercel.
-
-### V-01 — La documentación de Brevo distingue correctamente tests simulados de entrega real
-
-**Estado: límite documentado**
-
-El README y la arquitectura explican que los tests simulan la API de Brevo y no prueban entrega real. También se indica que un fallo del proveedor no invalida una solicitud ya guardada. Para aceptar la funcionalidad deben conservarse evidencias separadas de los tests automatizados y de una prueba autorizada en el entorno real; un CI verde no demuestra que ambos correos lleguen.
-
-### V-02 — Cobertura de seguridad y operación no demostrada solo por documentación
-
-**Estado: requiere verificación externa**
-
-La documentación identifica controles y límites relevantes: CSP mantiene `unsafe-inline` para estilos; 2FA obligatorio está desactivado por defecto; el monitor horario no comprueba todas las funciones ni entrega de correo; y la restauración de Neon, las cabeceras de despliegue y Secret Scanning/Push Protection necesitan verificación operativa. No se presentan como vulnerabilidades confirmadas sin pruebas adicionales.
-
-## Validaciones recomendadas
-
-1. Revisar los resultados de GitHub Actions del SHA exacto que se pretende fusionar: `npm ci`, `npm run test:postgres`, `npm run build`, `npm run test:coverage`, E2E contra desarrollo y E2E contra la compilación.
-2. Probar el formulario en Preview con una base aislada, claves Turnstile específicas de Preview y destinatarios de correo controlados.
-3. Verificar hostname/origen Turnstile en Preview y Production sin exponer claves.
-4. Comprobar las cabeceras HTTP reales en los dominios publicados, especialmente CSP, HSTS, COOP, CORP y caché.
-5. Confirmar el estado de `npm audit`, revisión de dependencias, protección de ramas, Secret Scanning y Push Protection.
-6. Ensayar una restauración de respaldo de Neon en un entorno separado.
-7. Mantener cualquier corrección funcional o de seguridad en una rama de código y someterla a CI; esta rama se limita a documentación.
+La documentación de `main` menciona una versión histórica de Cloudflare y herramientas del generador, pero esas menciones no prueban que dichos directorios existan actualmente. No se obtuvo un listado exhaustivo del árbol Git en esta revisión, así que no se afirma que existan ni que estén ausentes. Antes de borrar o archivar algo, verificar el árbol real, las referencias, scripts, imports, configuración de build y reglas de despliegue. No se elimina ningún archivo en esta revisión.
 
 ## Archivos revisados
 
-- `README.md`
-- `ARCHITECTURE.md`
-- `OPERATIONS.md`
-- `SECURITY.md`
-- `package.json`
-- `.github/workflows/ci.yml`
-- Referencias encontradas en `src/lib/volunteer-functions.ts`, `.env.example` y `GUIA_INSTALACION_COMPLETA.md`
+- `README.md`, `README.en.md`
+- `ARCHITECTURE.md`, `OPERATIONS.md`, `SECURITY.md`
+- `GUIA_INSTALACION_COMPLETA.md`, `BREVO_SETUP.md`
+- `package.json`, `.gitignore`, `.github/workflows/ci.yml`
 
-## Estado de esta entrega
+## Correcciones propuestas en la rama
 
-Cambios documentales propuestos en una rama separada: informe de auditoría y corrección del formato de `SECURITY.md`. No se ha fusionado la rama, no se ha desplegado nada y no se ha modificado `main`.
+- Corregir la numeración de la sección Turnstile en `GUIA_INSTALACION_COMPLETA.md`.
+- Corregir el paréntesis sobrante en `BREVO_SETUP.md`.
+- Aclarar en `README.md` y `ARCHITECTURE.md` que el alcance del despliegue no demuestra la presencia física de carpetas históricas.
+- Mejorar los enlaces del índice en inglés.
+
+## Estado y límites
+
+Los cambios están en una rama de mantenimiento separada y no modifican `main`, no fusionan cambios ni despliegan. No se ejecutaron CI, build, pruebas ni un escaneo exhaustivo del árbol en esta sesión. La auditoría sigue siendo documental y parcial; las correcciones deben revisarse y pasar CI antes de integrarse.
