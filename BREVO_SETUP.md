@@ -49,7 +49,7 @@ Genera los secretos de la aplicación desde una terminal privada con Node.js 24:
 node -e "console.log(require('node:crypto').randomBytes(32).toString('base64'))"
 ```
 
-Ejecuta el comando por separado para `ADMIN_SESSION_SECRET` y `ADMIN_TOTP_ENCRYPTION_KEY); guarda valores diferentes. No uses la contraseña como secreto de sesión. La clave TOTP debe conservarse: perderla puede impedir descifrar los autenticadores existentes. No generes estos valores en una terminal compartida ni los añadas al repositorio.
+Ejecuta el comando por separado para `ADMIN_SESSION_SECRET` y `ADMIN_TOTP_ENCRYPTION_KEY`; guarda valores diferentes. No uses la contraseña como secreto de sesión. La clave TOTP debe conservarse: perderla puede impedir descifrar los autenticadores existentes. No generes estos valores en una terminal compartida ni los añadas al repositorio.
 
 ## 3. Configurar las variables en Vercel
 
