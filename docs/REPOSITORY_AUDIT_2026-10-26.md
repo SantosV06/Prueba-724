@@ -12,13 +12,13 @@ No se descargó ni ejecutó el repositorio completo y no se inspeccionó cada ar
 
 **Severidad: baja · Documentación**
 
-En la sección 5 de `GUIA_INSTALACION_COMPLETA.md`, los pasos de configuración de Turnstile repiten el número 5. Debe renumerarse la lista para que los pasos sean inequívocos.
+En la versión de `main` revisada, la lista de Turnstile tenía numeración duplicada. La rama de mantenimiento renumera los pasos consecutivamente; confirmar que esta corrección se mantiene en el diff antes de integrar.
 
 ### DOC-02 — Error tipográfico en BREVO_SETUP.md
 
 **Severidad: baja · Documentación**
 
-En la sección de generación de secretos, el texto contiene `ADMIN_TOTP_ENCRYPTION_KEY);` con un paréntesis de cierre que no corresponde. Debe corregirse a `ADMIN_TOTP_ENCRYPTION_KEY`.
+En la versión de `main` revisada, la mención de `ADMIN_TOTP_ENCRYPTION_KEY` tenía un paréntesis sobrante. La rama de mantenimiento corrige el texto; confirmar el diff antes de integrar.
 
 ### DOC-03 — README en inglés es solo un índice breve
 
@@ -40,7 +40,7 @@ En la sección de generación de secretos, el texto contiene `ADMIN_TOTP_ENCRYPT
 
 No se recomienda borrar código, dependencias, migraciones, workflows ni directorios históricos solo porque parezcan antiguos. Para declarar algo innecesario hay que verificar referencias, imports dinámicos, rutas, scripts, configuración de build, workflows, migraciones y necesidades de recuperación. La búsqueda textual por sí sola no demuestra que un archivo esté sin uso.
 
-La versión histórica y los directorios de herramientas deben mantenerse fuera del despliegue activo según la configuración real de Vercel; moverlos o eliminarlos requiere comprobar primero que no los consume ningún proceso. No se elimina ningún archivo en esta revisión.
+La documentación de `main` menciona una versión histórica de Cloudflare y herramientas del generador, pero esas menciones no prueban que dichos directorios existan actualmente. No se obtuvo un listado exhaustivo del árbol Git en esta revisión, así que no se afirma que existan ni que estén ausentes. Antes de borrar o archivar algo, verificar el árbol real, las referencias, scripts, imports, configuración de build y reglas de despliegue. No se elimina ningún archivo en esta revisión.
 
 ## Archivos revisados
 
@@ -49,6 +49,13 @@ La versión histórica y los directorios de herramientas deben mantenerse fuera 
 - `GUIA_INSTALACION_COMPLETA.md`, `BREVO_SETUP.md`
 - `package.json`, `.gitignore`, `.github/workflows/ci.yml`
 
-## Estado
+## Correcciones propuestas en la rama
 
-Esta revisión se guarda en una rama de mantenimiento separada. No modifica `main`, no fusiona cambios y no despliega. Las correcciones documentales deben pasar revisión y CI antes de integrarse.
+- Corregir la numeración de la sección Turnstile en `GUIA_INSTALACION_COMPLETA.md`.
+- Corregir el paréntesis sobrante en `BREVO_SETUP.md`.
+- Aclarar en `README.md` y `ARCHITECTURE.md` que el alcance del despliegue no demuestra la presencia física de carpetas históricas.
+- Mejorar los enlaces del índice en inglés.
+
+## Estado y límites
+
+Los cambios están en una rama de mantenimiento separada y no modifican `main`, no fusionan cambios ni despliegan. No se ejecutaron CI, build, pruebas ni un escaneo exhaustivo del árbol en esta sesión. La auditoría sigue siendo documental y parcial; las correcciones deben revisarse y pasar CI antes de integrarse.
