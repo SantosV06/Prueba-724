@@ -247,7 +247,7 @@ function Voluntariado() {
                     >
                       {PHONE_COUNTRIES.map((country) => (
                         <option key={country.code} value={country.code}>
-                          {country.flag} {countryNames.of(country.code) ?? country.name}
+                          {country.flag} +{country.dialCode}
                         </option>
                       ))}
                     </select>
