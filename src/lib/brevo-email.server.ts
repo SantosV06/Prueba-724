@@ -179,7 +179,7 @@ export async function notifyVolunteerStatus(input: {
     to: [{ email: input.correo, name: fullName }],
     subject: message.subject,
     htmlContent: `<!doctype html><html lang="es"><body><main><h1>Hola, ${safeName}</h1><p>${safeParagraph}</p><p>Si tienes preguntas, puedes responder a este correo si el remitente admite respuestas o contactar a la Fundación por sus canales oficiales.</p><p>Fundación V.N.E.</p></main></body></html>`,
-    textContent: `Hola, ${fullName}\\n\\n${message.paragraph}\\n\\nFundación V.N.E.`,
+    textContent: `Hola, ${fullName}\n\n${message.paragraph}\n\nFundación V.N.E.`,
   };
   await sendBrevoMessage(apiKey, body, "volunteer-status-update");
 }
