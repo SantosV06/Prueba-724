@@ -1,7 +1,7 @@
 import test, { mock } from "node:test";
 import assert from "node:assert/strict";
 import type { StoredVolunteerInput } from "./volunteer-schema.ts";
-import { notifyNewVolunteer } from "./brevo-email.server.ts";
+import { notifyNewVolunteer, notifyVolunteerStatus } from "./brevo-email.server.ts";
 
 const envKeys = [
   "BREVO_API_KEY",
@@ -192,3 +192,54 @@ test(
     });
   },
 );
+
+
+test("sends a safe applicant-facing email for each status and does not require the internal mailbox", async () => {
+  await withBrevoEnv({ VOLUNTEER_NOTIFICATION_EMAIL: "" }, async () => {
+    const requests: Array<{ body: { to: Array<{ email: string }>; subject: string; htmlContent: string; textContent: string } }> = [];
+    const fetchMock = mock.method(globalThis, "fetch", async (_input: string | URL | Request, init?: RequestInit) => {
+      requests.push({ body: JSON.parse(String(init?.body)) });
+      return new Response(JSON.stringify({ messageId: "mock-status-message" }), { status: 201 });
+    });
+    try {
+      await notifyVolunteerStatus({
+        correo: volunteer.correo,
+        nombre: volunteer.nombre,
+        apellido: volunteer.apellido,
+        status: "aceptada",
+      });
+    } finally {
+      fetchMock.mock.restore();
+    }
+
+    assert.equal(requests.length, 1);
+    assert.equal(requests[0].body.to[0].email, volunteer.correo);
+    assert.equal(requests[0].body.subject, "Tu solicitud de voluntariado ha sido aceptada");
+    assert.match(requests[0].body.htmlContent, /&lt;script&gt;/);
+    assert.match(requests[0].body.textContent, /ha sido aceptada/);
+  });
+});
+
+test("status email failures are handled without exposing applicant data or provider details", async () => {
+  await withBrevoEnv({}, async () => {
+    const errors: unknown[][] = [];
+    const errorMock = mock.method(console, "error", (...args: unknown[]) => errors.push(args));
+    const fetchMock = mock.method(globalThis, "fetch", async () => {
+      throw new Error("private failure for ana@example.com");
+    });
+    try {
+      await assert.doesNotReject(notifyVolunteerStatus({
+        correo: volunteer.correo,
+        nombre: volunteer.nombre,
+        apellido: volunteer.apellido,
+        status: "contactada",
+      }));
+    } finally {
+      fetchMock.mock.restore();
+      errorMock.mock.restore();
+    }
+    assert.equal(errors.length, 1);
+    assert.doesNotMatch(JSON.stringify(errors), /ana@example.com|private failure/);
+    assert.match(JSON.stringify(errors), /volunteer-status-update/);
+  });
+});
