@@ -37,7 +37,7 @@ function emailConfig() {
 async function sendBrevoMessage(
   apiKey: string,
   message: BrevoMessage,
-  event: "volunteer-confirmation" | "volunteer-admin-notification",
+  event: "volunteer-confirmation" | "volunteer-admin-notification" | "volunteer-status-update",
 ): Promise<void> {
   try {
     const response = await fetch(API_URL, {
@@ -127,4 +127,51 @@ export async function notifyNewVolunteer(input: StoredVolunteerInput): Promise<v
     sendBrevoMessage(config.apiKey, confirmation, "volunteer-confirmation"),
     sendBrevoMessage(config.apiKey, adminNotification, "volunteer-admin-notification"),
   ]);
+}
+
+
+export type VolunteerStatusNotification = "aceptada" | "descartada";
+
+/**
+ * Notifies an applicant only when their request is accepted or rejected.
+ * This email is independent of the internal new-request mailbox setting.
+ */
+export async function notifyVolunteerStatus(input: {
+  correo: string;
+  nombre: string;
+  apellido: string;
+  status: VolunteerStatusNotification;
+}): Promise<void> {
+  const apiKey = process.env.BREVO_API_KEY?.trim();
+  const senderEmail = process.env.BREVO_SENDER_EMAIL?.trim();
+  const senderName =
+    process.env.BREVO_SENDER_NAME?.trim() || "Fundación V.N.E.";
+
+  if (!apiKey || !senderEmail) {
+    console.warn(JSON.stringify({ event: "email:status-skipped", reason: "brevo-not-configured" }));
+    return;
+  }
+
+  const messages: Record<VolunteerStatusNotification, { subject: string; paragraph: string }> = {
+    aceptada: {
+      subject: "Tu solicitud de voluntariado ha sido aceptada",
+      paragraph: "¡Nos alegra informarte que tu solicitud de voluntariado ha sido aceptada! La Fundación se pondrá en contacto contigo para informarte sobre los próximos pasos.",
+    },
+    descartada: {
+      subject: "Actualización sobre tu solicitud de voluntariado",
+      paragraph: "Gracias por tu interés y por ofrecer tu tiempo a la Fundación. En esta ocasión, tu solicitud no ha sido seleccionada. Agradecemos sinceramente tu disposición para colaborar.",
+    },
+  };
+  const message = messages[input.status];
+  const fullName = `${input.nombre} ${input.apellido}`;
+  const safeName = escapeHtml(fullName);
+  const safeParagraph = escapeHtml(message.paragraph);
+  const body: BrevoMessage = {
+    sender: { name: senderName, email: senderEmail },
+    to: [{ email: input.correo, name: fullName }],
+    subject: message.subject,
+    htmlContent: `<!doctype html><html lang="es"><body><main><h1>Hola, ${safeName}</h1><p>${safeParagraph}</p><p>Fundación V.N.E.</p></main></body></html>`,
+    textContent: `Hola, ${fullName}\\n\\n${message.paragraph}\\n\\nFundación V.N.E.`,
+  };
+  await sendBrevoMessage(apiKey, body, "volunteer-status-update");
 }
