@@ -1009,4 +1009,16 @@ export const catalog: Record<string, readonly [string, string]> = {
     "8. Minors",
     "8. Menores de idade",
   ],
+  "País y código telefónico": [
+    "Country and calling code",
+    "País e código de telefone",
+  ],
+  "Número de teléfono": [
+    "Phone number",
+    "Número de telefone",
+  ],
+  "Elige tu país; el código internacional y el formato se ajustan automáticamente.": [
+    "Choose your country; the international calling code and number format adjust automatically.",
+    "Escolha seu país; o código internacional e o formato do número são ajustados automaticamente.",
+  ],
 };
