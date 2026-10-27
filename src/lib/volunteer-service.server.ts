@@ -469,18 +469,26 @@ export async function changeVolunteerRequest(
     ],
   );
 
+  const notification = changed[0];
   if (
     action === "status" &&
-    changed[0] &&
-    changed[0].old_status !== changed[0].status &&
-    (changed[0].status === "aceptada" || changed[0].status === "descartada")
+    notification &&
+    notification.old_status !== notification.status
   ) {
-    try {
-      const { notifyVolunteerStatus } = await import("./brevo-email.server.ts");
-      await notifyVolunteerStatus(changed[0]);
-    } catch {
-      // The status and audit are already committed; email must not undo them.
-      console.error(JSON.stringify({ event: "email:status-notification-unavailable" }));
+    const status = notification.status;
+    if (status === "aceptada" || status === "descartada") {
+      try {
+        const { notifyVolunteerStatus } = await import("./brevo-email.server.ts");
+        await notifyVolunteerStatus({
+          correo: notification.correo,
+          nombre: notification.nombre,
+          apellido: notification.apellido,
+          status,
+        });
+      } catch {
+        // The status and audit are already committed; email must not undo them.
+        console.error(JSON.stringify({ event: "email:status-notification-unavailable" }));
+      }
     }
   }
   return { ok: true };
