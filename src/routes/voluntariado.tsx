@@ -41,12 +41,11 @@ type Fields = {
 const empty: Fields = { nombre: "", apellido: "", correo: "", telefono: "", mensaje: "" };
 
 function Voluntariado() {
-  const { t, language } = useLanguage();
+  const { t } = useLanguage();
   const [fields, setFields] = useState<Fields>(empty);
   const [phoneCountryCode, setPhoneCountryCode] = useState("US");
   const phoneCountry =
     PHONE_COUNTRIES.find((country) => country.code === phoneCountryCode) ?? PHONE_COUNTRIES[0]!;
-  const countryNames = new Intl.DisplayNames([language], { type: "region" });
   const [error, setError] = useState("");
   const [sent, setSent] = useState<Fields | null>(null);
   const [sending, setSending] = useState(false);
@@ -247,7 +246,7 @@ function Voluntariado() {
                     >
                       {PHONE_COUNTRIES.map((country) => (
                         <option key={country.code} value={country.code}>
-                          {country.flag} {countryNames.of(country.code) ?? country.name}
+                          {country.flag} +{country.dialCode}
                         </option>
                       ))}
                     </select>

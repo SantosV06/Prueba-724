@@ -23,6 +23,10 @@ function escapeHtml(value: string): string {
   });
 }
 
+function brandedEmail(title: string, content: string, preheader: string): string {
+  return `<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head><body style="margin:0;padding:0;background:#f4f0e7;font-family:Arial,Helvetica,sans-serif;color:#243746;"><div style="display:none;max-height:0;overflow:hidden;opacity:0;">${escapeHtml(preheader)}</div><table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background:#f4f0e7;padding:28px 12px;"><tr><td align="center"><table role="presentation" width="600" cellspacing="0" cellpadding="0" style="width:100%;max-width:600px;background:#fffdf8;border:1px solid #e5dccb;border-radius:16px;overflow:hidden;"><tr><td style="background:#174b3b;padding:26px 32px;border-bottom:4px solid #c7a45b;"><p style="margin:0;color:#f7f0df;font-size:12px;letter-spacing:2px;text-transform:uppercase;font-weight:bold;">Fundación V.N.E.</p><h1 style="margin:10px 0 0;color:#fff;font-size:24px;line-height:1.3;">${escapeHtml(title)}</h1></td></tr><tr><td style="padding:30px 32px;font-size:15px;line-height:1.75;color:#243746;">${content}<div style="height:1px;background:#e8dfd0;margin:28px 0 18px;"></div><p style="margin:0;color:#66756f;font-size:12px;">Fundación V.N.E. · Esperanza que se construye con oportunidades.</p></td></tr></table><p style="margin:16px 0 0;color:#7b817b;font-size:11px;text-align:center;">Mensaje automático de Fundación V.N.E.</p></td></tr></table></body></html>`;
+}
+
 function emailConfig() {
   const apiKey = process.env.BREVO_API_KEY?.trim();
   const senderEmail = process.env.BREVO_SENDER_EMAIL?.trim();
@@ -91,20 +95,15 @@ export async function notifyNewVolunteer(input: StoredVolunteerInput): Promise<v
     ...common,
     to: [{ email: input.correo, name: fullName }],
     subject: "Hemos recibido tu solicitud de voluntariado",
-    htmlContent: `<!doctype html><html lang="es"><body><main><h1>Gracias por tu interés, ${safeName}</h1><p>La Fundación Venezuela Nueva Esperanza ha recibido tu solicitud de voluntariado.</p><p>Revisaremos la información y nos pondremos en contacto contigo si necesitamos continuar el proceso.</p><p>Este mensaje confirma la recepción; no significa que la solicitud haya sido aceptada.</p><p>Fundación Venezuela Nueva Esperanza</p></main></body></html>`,
+    htmlContent: brandedEmail("Solicitud recibida", `<p style="font-size:18px;font-weight:bold;color:#174b3b;">Gracias por tu interés, ${safeName}.</p><p>Hemos recibido tu solicitud de voluntariado. Nuestro equipo revisará la información y se pondrá en contacto contigo si corresponde avanzar al siguiente paso.</p><div style="margin:22px 0;padding:16px 18px;background:#f4f0e7;border-left:4px solid #c7a45b;border-radius:6px;"><p style="margin:0;font-weight:bold;color:#174b3b;">Importante</p><p style="margin:6px 0 0;">Este correo confirma la recepción; no significa que la solicitud haya sido aceptada.</p></div>`, "Confirmación de recepción de tu solicitud de voluntariado."),
     textContent: `Hola ${fullName},\n\nLa Fundación Venezuela Nueva Esperanza ha recibido tu solicitud de voluntariado. Revisaremos la información y nos pondremos en contacto contigo si necesitamos continuar el proceso.\n\nEste mensaje confirma la recepción; no significa que la solicitud haya sido aceptada.\n\nFundación Venezuela Nueva Esperanza`,
   };
 
-  const adminHtml = [
-    "<!doctype html><html lang=\"es\"><body><main>",
-    "<h1>Nueva solicitud de voluntariado</h1>",
-    `<p><strong>Nombre:</strong> ${safeName}</p>`,
-    `<p><strong>Correo:</strong> ${safeEmail}</p>`,
-    `<p><strong>Teléfono:</strong> ${safePhone}</p>`,
-    panelUrl ? `<p><a href="${escapeHtml(panelUrl)}">Abrir el panel de solicitudes</a></p>` : "",
-    "<p>Por privacidad, el mensaje personal no se incluye en esta notificación. Accede al panel para revisar la solicitud.</p>",
-    "</main></body></html>",
-  ].join("");
+  const adminHtml = brandedEmail(
+    "Nueva solicitud de voluntariado",
+    `<p>Se ha registrado una nueva solicitud. Estos son los datos de contacto:</p><table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="border-collapse:collapse;background:#f4f0e7;border-radius:10px;"><tr><td style="padding:12px;border-bottom:1px solid #e5dccb;color:#66756f;">Nombre</td><td style="padding:12px;border-bottom:1px solid #e5dccb;font-weight:bold;">${safeName}</td></tr><tr><td style="padding:12px;border-bottom:1px solid #e5dccb;color:#66756f;">Correo</td><td style="padding:12px;border-bottom:1px solid #e5dccb;">${safeEmail}</td></tr><tr><td style="padding:12px;color:#66756f;">Teléfono</td><td style="padding:12px;">${safePhone}</td></tr></table>${panelUrl ? `<p style="margin:24px 0;"><a href="${escapeHtml(panelUrl)}" style="display:inline-block;background:#174b3b;color:#fff;text-decoration:none;padding:12px 20px;border-radius:24px;font-weight:bold;">Abrir panel de solicitudes</a></p>` : ""}<p style="color:#66756f;font-size:13px;">Por privacidad, el mensaje personal no se incluye en este correo. Accede al panel para consultar la solicitud completa.</p>`,
+    "Nueva solicitud registrada en el formulario de voluntariado.",
+  );
 
   const adminNotification: BrevoMessage = {
     ...common,
@@ -170,7 +169,7 @@ export async function notifyVolunteerStatus(input: {
     sender: { name: senderName, email: senderEmail },
     to: [{ email: input.correo, name: fullName }],
     subject: message.subject,
-    htmlContent: `<!doctype html><html lang="es"><body><main><h1>Hola, ${safeName}</h1><p>${safeParagraph}</p><p>Fundación V.N.E.</p></main></body></html>`,
+    htmlContent: brandedEmail(input.status === "aceptada" ? "¡Tu solicitud fue aceptada!" : "Actualización de tu solicitud", `<p style="font-size:18px;font-weight:bold;color:#174b3b;">Hola, ${safeName}.</p><p>${safeParagraph}</p><div style="margin:22px 0;padding:16px 18px;background:#f4f0e7;border-left:4px solid #c7a45b;border-radius:6px;"><p style="margin:0;color:#174b3b;font-weight:bold;">Fundación V.N.E.</p><p style="margin:6px 0 0;">Gracias por considerar aportar tu tiempo y talento a nuestra labor.</p></div>`, message.subject),
     textContent: `Hola, ${fullName}\\n\\n${message.paragraph}\\n\\nFundación V.N.E.`,
   };
   await sendBrevoMessage(apiKey, body, "volunteer-status-update");
