@@ -3,7 +3,12 @@ import { T, useLanguage } from "@/lib/i18n";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import { PageIntro, Shell } from "@/components/shell";
-import { formatNationalPhone, isInternationalPhone, normalizePhone, PHONE_COUNTRIES } from "@/lib/phone";
+import {
+  formatNationalPhone,
+  isInternationalPhone,
+  normalizePhone,
+  PHONE_COUNTRIES,
+} from "@/lib/phone";
 import { submitVolunteer } from "@/lib/volunteer-functions";
 import { Turnstile } from "@marsidev/react-turnstile";
 
@@ -39,7 +44,8 @@ function Voluntariado() {
   const { t } = useLanguage();
   const [fields, setFields] = useState<Fields>(empty);
   const [phoneCountryCode, setPhoneCountryCode] = useState("US");
-  const phoneCountry = PHONE_COUNTRIES.find((country) => country.code === phoneCountryCode) ?? PHONE_COUNTRIES[0]!;
+  const phoneCountry =
+    PHONE_COUNTRIES.find((country) => country.code === phoneCountryCode) ?? PHONE_COUNTRIES[0]!;
   const [error, setError] = useState("");
   const [sent, setSent] = useState<Fields | null>(null);
   const [sending, setSending] = useState(false);
@@ -65,7 +71,8 @@ function Voluntariado() {
       const matches = PHONE_COUNTRIES
         .filter((candidate) => internationalDigits.startsWith(candidate.dialCode))
         .sort((a, b) => b.dialCode.length - a.dialCode.length);
-      const match = matches.find((candidate) => candidate.dialCode === phoneCountry.dialCode) ?? matches[0];
+      const match =
+        matches.find((candidate) => candidate.code === phoneCountry.code) ?? matches[0];
       if (match) {
         country = match;
         setPhoneCountryCode(match.code);
@@ -85,7 +92,7 @@ function Voluntariado() {
       correo: fields.correo.trim(),
       telefono: `+${phoneCountry.dialCode}${fields.telefono.replace(/\D/g, "")}`,
       mensaje: fields.mensaje.trim(),
-    }
+    };
     if (!data.nombre || !data.apellido || !data.correo || !data.telefono) {
       setError("Completa nombre, apellido, correo y teléfono.");
       return;
@@ -243,7 +250,10 @@ function Voluntariado() {
                         </option>
                       ))}
                     </select>
-                    <span aria-hidden="true" className="flex shrink-0 items-center pl-2 text-sm font-normal text-mist">
+                    <span
+                      aria-hidden="true"
+                      className="flex shrink-0 items-center pl-2 text-sm font-normal text-mist"
+                    >
                       +{phoneCountry.dialCode}
                     </span>
                     <input
