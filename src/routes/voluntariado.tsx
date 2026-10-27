@@ -242,17 +242,17 @@ function Voluntariado() {
                           telefono: formatNationalPhone(current.telefono, nextCountry),
                         }));
                       }}
-                      className="w-[42%] min-w-0 shrink-0 truncate border-r border-line bg-transparent px-3 text-sm font-medium text-ink outline-none dark:border-white/15 dark:text-cream"
+                      className="w-[3.75rem] min-w-0 shrink-0 border-r border-line bg-transparent px-2 text-sm font-medium text-ink outline-none dark:border-white/15 dark:text-cream"
                     >
                       {PHONE_COUNTRIES.map((country) => (
-                        <option key={country.code} value={country.code}>
-                          {country.flag} +{country.dialCode}
+                        <option key={country.code} value={country.code} className="bg-white text-navy dark:bg-navy dark:text-cream">
+                          {country.code}
                         </option>
                       ))}
                     </select>
                     <span
                       aria-hidden="true"
-                      className="flex shrink-0 items-center px-2.5 text-sm font-medium tabular-nums text-mist"
+                      className="flex shrink-0 items-center px-2 text-sm font-semibold tabular-nums text-navy dark:text-cream"
                     >
                       +{phoneCountry.dialCode}
                     </span>
