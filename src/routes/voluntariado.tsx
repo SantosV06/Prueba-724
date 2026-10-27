@@ -56,7 +56,7 @@ function Voluntariado() {
 
   function updatePhone(rawValue: string) {
     let country = phoneCountry;
-    let digits = rawValue.replace(/\\D/g, "");
+    let digits = rawValue.replace(/\D/g, "");
     const isInternational = rawValue.trim().startsWith("+") || rawValue.trim().startsWith("00");
     if (isInternational) {
       const internationalDigits = rawValue.trim().startsWith("00") ? digits.slice(2) : digits;
@@ -81,7 +81,7 @@ function Voluntariado() {
       nombre: fields.nombre.trim(),
       apellido: fields.apellido.trim(),
       correo: fields.correo.trim(),
-      telefono: `+${phoneCountry.dialCode}${fields.telefono.replace(/\\D/g, "")}`,
+      telefono: `+${phoneCountry.dialCode}${fields.telefono.replace(/\D/g, "")}`,
       mensaje: fields.mensaje.trim(),
     }
     if (!data.nombre || !data.apellido || !data.correo || !data.telefono) {
