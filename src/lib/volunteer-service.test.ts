@@ -274,7 +274,37 @@ test("volunteer and admin workflow: durable data, limits, revocation, pagination
     service.updateAdminAccount({ id: owner.id, password: "unauthorized-password" }),
     /propietario/,
   );
-  await service.changeVolunteerRequest(id, "status", "aceptada");
+  const previousBrevoEnv = {
+    BREVO_API_KEY: process.env.BREVO_API_KEY,
+    BREVO_SENDER_EMAIL: process.env.BREVO_SENDER_EMAIL,
+    BREVO_SENDER_NAME: process.env.BREVO_SENDER_NAME,
+    VOLUNTEER_NOTIFICATION_EMAIL: process.env.VOLUNTEER_NOTIFICATION_EMAIL,
+  };
+  process.env.BREVO_API_KEY = "test-api-key";
+  process.env.BREVO_SENDER_EMAIL = "verified@example.com";
+  delete process.env.VOLUNTEER_NOTIFICATION_EMAIL;
+  const statusMailRequests: RequestInit[] = [];
+  const statusFetch = mock.method(globalThis, "fetch", async (_input: string | URL | Request, init?: RequestInit) => {
+    statusMailRequests.push(init ?? {});
+    return new Response(JSON.stringify({ messageId: "mock-status-message" }), { status: 201 });
+  });
+  try {
+    await service.changeVolunteerRequest(id, "status", "aceptada");
+    await service.changeVolunteerRequest(id, "status", "aceptada");
+    assert.equal(statusMailRequests.length, 1, "only the actual accepted transition sends an email");
+    const message = JSON.parse(String(statusMailRequests[0].body)) as {
+      subject: string;
+      textContent: string;
+    };
+    assert.match(message.subject, /ha sido aceptada/);
+    assert.match(message.textContent, /La Fundación se pondrá en contacto contigo/);
+  } finally {
+    statusFetch.mock.restore();
+    for (const [key, value] of Object.entries(previousBrevoEnv)) {
+      if (value === undefined) delete process.env[key];
+      else process.env[key] = value;
+    }
+  }
   const [audit] = (
     await pg.query<{
       actor_username: string;

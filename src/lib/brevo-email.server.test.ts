@@ -1,7 +1,7 @@
 import test, { mock } from "node:test";
 import assert from "node:assert/strict";
 import type { StoredVolunteerInput } from "./volunteer-schema.ts";
-import { notifyNewVolunteer } from "./brevo-email.server.ts";
+import { notifyNewVolunteer, notifyVolunteerStatus } from "./brevo-email.server.ts";
 
 const envKeys = [
   "BREVO_API_KEY",
@@ -192,3 +192,59 @@ test(
     });
   },
 );
+
+
+test("sends applicant emails for accepted and rejected statuses without requiring the internal mailbox", async () => {
+  await withBrevoEnv({ VOLUNTEER_NOTIFICATION_EMAIL: "" }, async () => {
+    type CapturedMessage = {
+      to: Array<{ email: string }>;
+      subject: string;
+      htmlContent: string;
+      textContent: string;
+    };
+    const requests: CapturedMessage[] = [];
+    const fetchMock = mock.method(
+      globalThis,
+      "fetch",
+      async (_input: string | URL | Request, init?: RequestInit) => {
+        requests.push(JSON.parse(String(init?.body)) as CapturedMessage);
+        return new Response(JSON.stringify({ messageId: "mock-status-message" }), { status: 201 });
+      },
+    );
+    try {
+      await notifyVolunteerStatus({ ...volunteer, status: "aceptada" });
+      await notifyVolunteerStatus({ ...volunteer, status: "descartada" });
+    } finally {
+      fetchMock.mock.restore();
+    }
+
+    assert.equal(requests.length, 2);
+    const accepted = requests.find((message) => /aceptada/.test(message.subject));
+    const rejected = requests.find((message) => /Actualización/.test(message.subject));
+    assert.ok(accepted);
+    assert.ok(rejected);
+    assert.equal(accepted.to[0].email, volunteer.correo);
+    assert.match(accepted.textContent, /La Fundación se pondrá en contacto contigo/);
+    assert.match(rejected.textContent, /tu solicitud no ha sido seleccionada/i);
+    assert.match(accepted.htmlContent, /&lt;script&gt;/);
+    assert.doesNotMatch(accepted.htmlContent, /<script>/);
+  });
+});
+
+test("does not send status notifications when Brevo sender configuration is missing", async () => {
+  await withBrevoEnv({ BREVO_SENDER_EMAIL: "" }, async () => {
+    let calls = 0;
+    const fetchMock = mock.method(globalThis, "fetch", async () => {
+      calls += 1;
+      return new Response(null, { status: 201 });
+    });
+    const warningMock = mock.method(console, "warn", () => {});
+    try {
+      await notifyVolunteerStatus({ ...volunteer, status: "aceptada" });
+    } finally {
+      fetchMock.mock.restore();
+      warningMock.mock.restore();
+    }
+    assert.equal(calls, 0);
+  });
+});

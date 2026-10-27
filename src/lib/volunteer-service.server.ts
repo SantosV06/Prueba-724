@@ -430,15 +430,35 @@ export async function changeVolunteerRequest(
         ? ", deleted_at = NULL"
         : "");
   const guard = action === "restore" ? "v.deleted_at IS NOT NULL" : "v.deleted_at IS NULL";
-  // Row lock ensures the audit contains the actual immediately preceding values.
-  await sql.query(
-    `WITH previous AS (SELECT id, status, deleted_at FROM volunteer_requests WHERE id = $1 FOR UPDATE),
-     changed AS (UPDATE volunteer_requests v SET ${set} FROM previous p
+  // Capture the previous state and applicant address under the same row lock.
+  // The audit event and update remain in one SQL statement.
+  const changed = await sql.query<{
+    correo: string;
+    nombre: string;
+    apellido: string;
+    old_status: RequestStatus;
+    status: RequestStatus;
+  }>(
+    `WITH previous AS (
+       SELECT id, status, deleted_at, correo, nombre, apellido
+       FROM volunteer_requests WHERE id = $1 FOR UPDATE
+     ),
+     changed AS (
+       UPDATE volunteer_requests v SET ${set} FROM previous p
        WHERE v.id = p.id AND ${guard}
-       RETURNING v.id, p.status AS old_status, p.deleted_at AS old_deleted, v.status, v.deleted_at)
-     INSERT INTO admin_events (id, action, request_id, actor_id, actor_username, before_value, after_value)
-     SELECT $2, $4, id, $5, $6, jsonb_build_object('status', old_status, 'deleted_at', old_deleted),
-       jsonb_build_object('status', status, 'deleted_at', deleted_at) FROM changed`,
+       RETURNING v.id, p.status AS old_status, p.deleted_at AS old_deleted,
+         p.correo, p.nombre, p.apellido, v.status, v.deleted_at
+     ),
+     audit AS (
+       INSERT INTO admin_events (id, action, request_id, actor_id, actor_username, before_value, after_value)
+       SELECT $2, $4, id, $5, $6,
+         jsonb_build_object('status', old_status, 'deleted_at', old_deleted),
+         jsonb_build_object('status', status, 'deleted_at', deleted_at)
+       FROM changed RETURNING request_id
+     )
+     SELECT changed.correo, changed.nombre, changed.apellido,
+       changed.old_status, changed.status
+     FROM changed JOIN audit ON audit.request_id = changed.id`,
     [
       id,
       randomUUID(),
@@ -448,5 +468,28 @@ export async function changeVolunteerRequest(
       actor.username,
     ],
   );
+
+  const notification = changed[0];
+  if (
+    action === "status" &&
+    notification &&
+    notification.old_status !== notification.status
+  ) {
+    const status = notification.status;
+    if (status === "aceptada" || status === "descartada") {
+      try {
+        const { notifyVolunteerStatus } = await import("./brevo-email.server.ts");
+        await notifyVolunteerStatus({
+          correo: notification.correo,
+          nombre: notification.nombre,
+          apellido: notification.apellido,
+          status,
+        });
+      } catch {
+        // The status and audit are already committed; email must not undo them.
+        console.error(JSON.stringify({ event: "email:status-notification-unavailable" }));
+      }
+    }
+  }
   return { ok: true };
 }

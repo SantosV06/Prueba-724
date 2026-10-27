@@ -1,6 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { volunteerSchema, requestFiltersSchema } from "./volunteer-schema.ts";
+import { formatNationalPhone, PHONE_COUNTRIES } from "./phone.ts";
 import { volunteersToCsv } from "./volunteers.ts";
 import { assertTurnstileVerification } from "./turnstile.server.ts";
 import {
@@ -36,6 +37,16 @@ test("server validation rejects malformed input, oversized fields and invalid re
   assert.equal(requestFiltersSchema.safeParse({ page: -1 }).success, false);
   assert.equal(requestFiltersSchema.safeParse({ status: "invalid" }).success, false);
 });
+test("phone country selection formats national numbers and preserves international storage format", () => {
+  const panama = PHONE_COUNTRIES.find((country) => country.code === "PA")!;
+  const venezuela = PHONE_COUNTRIES.find((country) => country.code === "VE")!;
+  const unitedStates = PHONE_COUNTRIES.find((country) => country.code === "US")!;
+  assert.equal(formatNationalPhone("60000000", panama), "6000 0000");
+  assert.equal(formatNationalPhone("4121234567", venezuela), "412 123 4567");
+  assert.equal(formatNationalPhone("3475550100", unitedStates), "347 555 0100");
+  assert.equal(formatNationalPhone("(347) 555-0100", unitedStates), "347 555 0100");
+});
+
 test("CSV keeps quotes/newlines and neutralizes formulas including whitespace-prefixed input", () => {
   for (const formula of ["=1+1", "+SUM(1;1)", "-1+1", "@SUM(1;1)", "  =1+1", "\r=1+1"]) {
     const csv = volunteersToCsv([

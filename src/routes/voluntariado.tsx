@@ -3,7 +3,12 @@ import { T, useLanguage } from "@/lib/i18n";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import { PageIntro, Shell } from "@/components/shell";
-import { isInternationalPhone, normalizePhone } from "@/lib/phone";
+import {
+  formatNationalPhone,
+  isInternationalPhone,
+  normalizePhone,
+  PHONE_COUNTRIES,
+} from "@/lib/phone";
 import { submitVolunteer } from "@/lib/volunteer-functions";
 import { Turnstile } from "@marsidev/react-turnstile";
 
@@ -36,8 +41,12 @@ type Fields = {
 const empty: Fields = { nombre: "", apellido: "", correo: "", telefono: "", mensaje: "" };
 
 function Voluntariado() {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const [fields, setFields] = useState<Fields>(empty);
+  const [phoneCountryCode, setPhoneCountryCode] = useState("US");
+  const phoneCountry =
+    PHONE_COUNTRIES.find((country) => country.code === phoneCountryCode) ?? PHONE_COUNTRIES[0]!;
+  const countryNames = new Intl.DisplayNames([language], { type: "region" });
   const [error, setError] = useState("");
   const [sent, setSent] = useState<Fields | null>(null);
   const [sending, setSending] = useState(false);
@@ -54,6 +63,27 @@ function Voluntariado() {
     setFields((current) => ({ ...current, [key]: value }));
   }
 
+  function updatePhone(rawValue: string) {
+    let country = phoneCountry;
+    let digits = rawValue.replace(/\D/g, "");
+    const isInternational = rawValue.trim().startsWith("+") || rawValue.trim().startsWith("00");
+    if (isInternational) {
+      const internationalDigits = rawValue.trim().startsWith("00") ? digits.slice(2) : digits;
+      const matches = PHONE_COUNTRIES
+        .filter((candidate) => internationalDigits.startsWith(candidate.dialCode))
+        .sort((a, b) => b.dialCode.length - a.dialCode.length);
+      const match =
+        matches.find((candidate) => candidate.code === phoneCountry.code) ?? matches[0];
+      if (match) {
+        country = match;
+        setPhoneCountryCode(match.code);
+        digits = internationalDigits.slice(match.dialCode.length);
+      }
+    }
+    requestKey.current = null;
+    setFields((current) => ({ ...current, telefono: formatNationalPhone(digits, country) }));
+  }
+
   async function onSubmit(event: React.FormEvent) {
     event.preventDefault();
     if (submitting.current) return;
@@ -61,9 +91,9 @@ function Voluntariado() {
       nombre: fields.nombre.trim(),
       apellido: fields.apellido.trim(),
       correo: fields.correo.trim(),
-      telefono: fields.telefono.trim(),
+      telefono: `+${phoneCountry.dialCode}${fields.telefono.replace(/\D/g, "")}`,
       mensaje: fields.mensaje.trim(),
-    }
+    };
     if (!data.nombre || !data.apellido || !data.correo || !data.telefono) {
       setError("Completa nombre, apellido, correo y teléfono.");
       return;
@@ -196,15 +226,55 @@ function Voluntariado() {
                   disabled={sending || !interactive}
                   autoComplete="email"
                 />
-                <Field
-                  label={t("Teléfono")}
-                  type="tel"
-                  value={fields.telefono}
-                  onChange={(value) => update("telefono", value)}
-                  disabled={sending || !interactive}
-                  autoComplete="tel"
-                  hint="+1 347 555 0100"
-                />
+                <label className="block text-sm font-semibold text-navy dark:text-cream">
+                  <T>Teléfono</T>
+                  <div className="mt-1.5 flex h-12 w-full overflow-hidden rounded-xl border border-line bg-paper focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-gold dark:border-white/15 dark:bg-navy-deep">
+                    <select
+                      aria-label={t("País y código telefónico")}
+                      value={phoneCountry.code}
+                      disabled={sending || !interactive}
+                      onChange={(event) => {
+                        const nextCountry = PHONE_COUNTRIES.find((country) => country.code === event.target.value);
+                        if (!nextCountry) return;
+                        setPhoneCountryCode(nextCountry.code);
+                        requestKey.current = null;
+                        setFields((current) => ({
+                          ...current,
+                          telefono: formatNationalPhone(current.telefono, nextCountry),
+                        }));
+                      }}
+                      className="max-w-[58%] border-r border-line bg-transparent px-2 text-sm font-normal text-ink outline-none dark:border-white/15 dark:text-cream"
+                    >
+                      {PHONE_COUNTRIES.map((country) => (
+                        <option key={country.code} value={country.code}>
+                          {country.flag} {countryNames.of(country.code) ?? country.name}
+                        </option>
+                      ))}
+                    </select>
+                    <span
+                      aria-hidden="true"
+                      className="flex shrink-0 items-center pl-2 text-sm font-normal text-mist"
+                    >
+                      +{phoneCountry.dialCode}
+                    </span>
+                    <input
+                      required
+                      type="tel"
+                      inputMode="tel"
+                      autoComplete="tel-national"
+                      maxLength={24}
+                      disabled={sending || !interactive}
+                      value={fields.telefono}
+                      onChange={(event) => updatePhone(event.target.value)}
+                      placeholder="555 123 4567"
+                      aria-label={t("Número de teléfono")}
+                      className="min-w-0 w-full bg-transparent px-2 text-base font-normal text-ink outline-none dark:text-cream"
+                    />
+                  </div>
+                  <span className="mt-1 block text-xs font-normal text-mist">
+                    <T>Elige tu país; el código internacional y el formato se ajustan automáticamente.</T>
+                  </span>
+                </label>
               </div>
               <label className="mt-4 block text-sm font-semibold text-navy dark:text-cream">
                 <T>Cómo puedes aportar</T>
