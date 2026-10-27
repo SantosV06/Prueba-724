@@ -67,7 +67,7 @@ Si no deseas correos automáticos, puedes omitir esta sección; la recepción y 
 4. Guarda estos valores para Vercel: `BREVO_API_KEY`, `BREVO_SENDER_EMAIL`, `VOLUNTEER_NOTIFICATION_EMAIL` y, opcionalmente, `BREVO_SENDER_NAME`.
 5. Usa un buzón interno que el equipo controle para `VOLUNTEER_NOTIFICATION_EMAIL`.
 
-La aplicación intenta enviar una confirmación a la persona voluntaria y un aviso interno después de guardar una solicitud nueva. Un fallo de correo no invalida una solicitud guardada. El aviso interno omite el mensaje personal. No se envía correo al cambiar estados ni para recuperar contraseñas. Sigue [BREVO_SETUP.md](BREVO_SETUP.md) para validar el flujo y solucionar problemas.
+La aplicación intenta enviar una confirmación a la persona voluntaria y un aviso interno después de guardar una solicitud nueva. Cuando un administrador cambia realmente el estado de una solicitud, también intenta enviar un correo al voluntario; guardar el mismo estado otra vez no genera otro correo. Un fallo de correo no invalida una solicitud guardada ni revierte el cambio de estado. El aviso interno omite el mensaje personal. Las notificaciones de estado usan `BREVO_API_KEY` y `BREVO_SENDER_EMAIL`; no necesitan `VOLUNTEER_NOTIFICATION_EMAIL`. Sigue [BREVO_SETUP.md](BREVO_SETUP.md) para validar el flujo y solucionar problemas.
 
 ## 7. Añadir variables de entorno en Vercel
 
