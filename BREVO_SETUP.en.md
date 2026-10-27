@@ -1,6 +1,6 @@
 # Brevo transactional email: setup and Production acceptance
 
-The server module `src/lib/brevo-email.server.ts` is part of the active application. After a new volunteer request is saved for the first time, the app attempts to send a confirmation to the applicant and an internal notification. Idempotent duplicate submissions must not resend either message. The internal notification excludes the applicant's personal message. Changing a request status does not send email, and this integration is not used for password recovery.
+The server module `src/lib/brevo-email.server.ts` is part of the active application. After a new volunteer request is saved for the first time, the app attempts to send a confirmation to the applicant and an internal notification. Idempotent duplicate submissions must not resend either message. The internal notification excludes the applicant's personal message. When an administrator changes a request to `aceptada` (accepted) or `descartada` (rejected), the app attempts to email the applicant. No email is sent for `contactada`, or when the same status is saved again. These status emails use `BREVO_API_KEY` and `BREVO_SENDER_EMAIL` and do not require `VOLUNTEER_NOTIFICATION_EMAIL`.
 
 ## Reported Production test
 
