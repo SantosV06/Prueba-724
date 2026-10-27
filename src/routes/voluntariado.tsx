@@ -243,7 +243,7 @@ function Voluntariado() {
                           telefono: formatNationalPhone(current.telefono, nextCountry),
                         }));
                       }}
-                      className="max-w-[58%] border-r border-line bg-transparent px-2 text-sm font-normal text-ink outline-none dark:border-white/15 dark:text-cream"
+                      className="w-[42%] min-w-0 shrink-0 truncate border-r border-line bg-transparent px-3 text-sm font-medium text-ink outline-none dark:border-white/15 dark:text-cream"
                     >
                       {PHONE_COUNTRIES.map((country) => (
                         <option key={country.code} value={country.code}>
@@ -253,7 +253,7 @@ function Voluntariado() {
                     </select>
                     <span
                       aria-hidden="true"
-                      className="flex shrink-0 items-center pl-2 text-sm font-normal text-mist"
+                      className="flex shrink-0 items-center px-2.5 text-sm font-medium tabular-nums text-mist"
                     >
                       +{phoneCountry.dialCode}
                     </span>
@@ -268,7 +268,7 @@ function Voluntariado() {
                       onChange={(event) => updatePhone(event.target.value)}
                       placeholder="555 123 4567"
                       aria-label={t("Número de teléfono")}
-                      className="min-w-0 w-full bg-transparent px-2 text-base font-normal text-ink outline-none dark:text-cream"
+                      className="min-w-0 flex-1 bg-transparent px-2.5 text-base font-normal text-ink outline-none placeholder:text-mist/70 dark:text-cream"
                     />
                   </div>
                   <span className="mt-1 block text-xs font-normal text-mist">
