@@ -53,8 +53,8 @@ Crea una contraseña inicial para `ADMIN_PASSWORD` de 14 a 256 caracteres. Esta 
 3. Copia la **Site Key** y la **Secret Key** correspondientes.
 4. Guarda la Site Key como `VITE_TURNSTILE_SITE_KEY` y la Secret Key como `TURNSTILE_SECRET_KEY` en Vercel.
 5. Configura `SITE_URL` con la URL canónica HTTPS del sitio, o `TURNSTILE_EXPECTED_HOSTNAME` con el hostname exacto (por ejemplo, `www.ejemplo.org`, sin protocolo ni ruta). Si defines ambas, `TURNSTILE_EXPECTED_HOSTNAME` tiene prioridad.
-5. La Site Key es pública y se incorpora al cliente durante el build; la Secret Key es privada y solo debe estar disponible en el servidor.
-6. No uses las claves oficiales de prueba que aparecen en CI para el sitio público de producción.
+6. La Site Key es pública y se incorpora al cliente durante el build; la Secret Key es privada y solo debe estar disponible en el servidor.
+7. No uses las claves oficiales de prueba que aparecen en CI para el sitio público de producción.
 
 Si la clave pública cambia, vuelve a compilar y desplegar. Si el formulario carga sin Turnstile o el servidor rechaza el token, revisa el hostname, que ambas claves pertenezcan al mismo widget y los logs de Vercel.
 
