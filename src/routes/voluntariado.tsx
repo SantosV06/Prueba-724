@@ -246,7 +246,7 @@ function Voluntariado() {
                     >
                       {PHONE_COUNTRIES.map((country) => (
                         <option key={country.code} value={country.code} className="bg-white text-navy dark:bg-navy dark:text-cream">
-                          {country.flag} +{country.dialCode}
+                          {country.code}
                         </option>
                       ))}
                     </select>
