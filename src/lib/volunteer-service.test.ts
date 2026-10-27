@@ -113,7 +113,31 @@ test("volunteer and admin workflow: durable data, limits, revocation, pagination
   const filters = { page: 1, search: "", status: "" as const, trash: false };
   const initial = await service.listVolunteerRequests(filters);
   const id = initial.rows[0].id;
-  await service.changeVolunteerRequest(id, "status", "contactada");
+  const previousMailEnv = {
+    BREVO_API_KEY: process.env.BREVO_API_KEY,
+    BREVO_SENDER_EMAIL: process.env.BREVO_SENDER_EMAIL,
+    BREVO_SENDER_NAME: process.env.BREVO_SENDER_NAME,
+    VOLUNTEER_NOTIFICATION_EMAIL: process.env.VOLUNTEER_NOTIFICATION_EMAIL,
+  };
+  process.env.BREVO_API_KEY = "test-api-key";
+  process.env.BREVO_SENDER_EMAIL = "verified@example.com";
+  delete process.env.VOLUNTEER_NOTIFICATION_EMAIL;
+  const statusMailRequests: RequestInit[] = [];
+  const statusFetch = mock.method(globalThis, "fetch", async (_input: string | URL | Request, init?: RequestInit) => {
+    statusMailRequests.push(init ?? {});
+    return new Response(JSON.stringify({ messageId: "mock-status-message" }), { status: 201 });
+  });
+  try {
+    await service.changeVolunteerRequest(id, "status", "contactada");
+    await service.changeVolunteerRequest(id, "status", "contactada");
+    assert.equal(statusMailRequests.length, 1, "only a real status change sends an email");
+  } finally {
+    statusFetch.mock.restore();
+    for (const [key, value] of Object.entries(previousMailEnv)) {
+      if (value === undefined) delete process.env[key];
+      else process.env[key] = value;
+    }
+  }
   assert.equal(
     (await service.listVolunteerRequests({ ...filters, status: "contactada" })).total,
     1,
