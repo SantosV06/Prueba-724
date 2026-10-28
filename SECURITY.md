@@ -22,9 +22,9 @@ Los rechazos de login se guardan sin usuario introducido, IP, contraseña, códi
 
 2FA se activa individualmente. La política obligatoria comienza desactivada para permitir un despliegue sin bloquear cuentas existentes. Las cuentas sin factor solo quedan restringidas después de que el propietario habilite esa política.
 
-El formulario de voluntariado utiliza Cloudflare Turnstile para reducir las solicitudes automatizadas. El cliente obtiene un token mediante el widget y el servidor verifica su validez con la API oficial de Turnstile antes de procesar la solicitud. La integración requiere configurar `VITE_TURNSTILE_SITE_KEY` como variable disponible durante la compilación del cliente y `TURNSTILE_SECRET_KEY` como secreto exclusivamente del servidor en cada entorno donde se despliegue. La clave secreta nunca debe exponerse al navegador ni incluirse en el repositorio. La política CSP debe permitir los recursos de Turnstile de Cloudflare. En CI/E2E se utilizan claves de prueba y mocks controlados; no se deben reutilizar esas claves como configuración de producción.
+El formulario de voluntariado utiliza Cloudflare Turnstile para reducir las solicitudes automatizadas. El cliente obtiene un token mediante el widget y, fuera del atajo de CI, el servidor lo verifica con `https://challenges.cloudflare.com/turnstile/v0/siteverify` antes de guardar la solicitud. La integración requiere `VITE_TURNSTILE_SITE_KEY` durante la compilación del cliente, `TURNSTILE_SECRET_KEY` solo en el servidor y un hostname esperado (`TURNSTILE_EXPECTED_HOSTNAME` o el de `SITE_URL`). La clave secreta nunca debe exponerse al navegador ni incluirse en el repositorio. La política CSP debe permitir los recursos de Turnstile de Cloudflare. El job `validate` define claves oficiales de prueba y, con `TURNSTILE_TEST_MODE`, no llama a esa API; no reutilices esas claves en producción.
 
-Turnstile complementa los límites de solicitudes y el campo honeypot, pero no garantiza por sí solo la ausencia de abuso automatizado ni sustituye la supervisión operativa. Los límites por IP/correo tampoco detienen todo abuso distribuido ni sustituyen un WAF o un desafío adaptativo. El scrypt consume memoria deliberadamente; la capacidad y los límites de plataforma deben medirse con carga real.
+Turnstile complementa los límites de solicitudes y el campo honeypot, pero no garantiza por sí solo la ausencia de abuso automatizado ni sustituye la supervisión operativa. El servidor rechaza el formulario si no puede resolver un hostname esperado (`TURNSTILE_EXPECTED_HOSTNAME` o el hostname de `SITE_URL`) o si `siteverify` no devuelve exactamente ese hostname. En el job `validate` de CI, `TURNSTILE_TEST_MODE` junto con `CI` y `E2E_LOCAL_DATABASE` omite `siteverify` y acepta un token de prueba; el SDK del navegador también se sustituye. Las claves oficiales de prueba que aparecen en el workflow no deben copiarse a producción, y ese job no demuestra la verificación real contra Cloudflare. Los límites por IP/correo tampoco detienen todo abuso distribuido ni sustituyen un WAF o un desafío adaptativo. El scrypt consume memoria deliberadamente (`N=131072`, `r=8`, `p=1`); la capacidad y los límites de plataforma deben medirse con carga real.
 
 *Nota del desarrollador: Turnstile resultó bastante más difícil de integrar de lo que sugería el clásico «solo hay que añadir un captcha» 😅. Precisamente por eso la integración cuenta con pruebas y configuración documentada.*
 
@@ -34,13 +34,13 @@ La recuperación y conservación de Neon, permisos de GitHub/Vercel, versiones a
 
 ## Dependencias y validación
 
-El lockfile fija las versiones instaladas. ESLint y su configuración se actualizan a la rama 10; se elimina Recharts, que no tenía consumidores en la aplicación. Las revisiones futuras deben ejecutar tipos, lint, pruebas, compilación y navegador. `npm audit` informa vulnerabilidades conocidas del catálogo consultado; no sustituye el análisis del código.
+El lockfile fija las versiones instaladas. ESLint 10 es el linter configurado. Recharts no forma parte de las dependencias. Las revisiones futuras deben ejecutar tipos, lint, pruebas, compilación y navegador. `npm audit` informa vulnerabilidades conocidas del catálogo consultado; no sustituye el análisis del código.
 
 CI usa bases desechables y credenciales ficticias. Las pruebas de servicios pueden ejecutarse contra PostgreSQL local con un esquema independiente por proceso; rechazan hosts remotos para evitar tocar Neon. No ejecutes E2E de escritura contra producción.
 
 ## Correo transaccional y privacidad
 
-El módulo de Brevo usa `BREVO_API_KEY` únicamente en el servidor. No expongas esa clave al cliente ni la guardes en el repositorio, logs o variables `VITE_`. Los mensajes incluyen datos de contacto necesarios para gestionar la solicitud; el aviso interno omite el mensaje personal del voluntario. Los valores dinámicos que se insertan en HTML se escapan. Los errores del proveedor se registran sin cuerpos de respuesta, direcciones, contenido personal ni claves. La integración no garantiza entrega, no cambia el estado de una solicitud y no debe utilizarse para enviar datos adicionales sin una revisión de privacidad. Las pruebas automatizadas simulan la API y no sustituyen una prueba de aceptación autorizada.
+El módulo de Brevo usa `BREVO_API_KEY` únicamente en el servidor. No expongas esa clave al cliente ni la guardes en el repositorio, logs o variables `VITE_`. El aviso interno de una solicitud nueva incluye nombre, correo y teléfono, y omite el mensaje personal. El aviso de estado (`aceptada` o `descartada`) se envía al voluntario después de que el cambio y su auditoría ya se guardaron; no incluye el mensaje personal y no exige `VOLUNTEER_NOTIFICATION_EMAIL`. Los valores dinámicos que se insertan en HTML se escapan. Los errores del proveedor se registran sin cuerpos de respuesta, direcciones, contenido personal ni claves. La integración no garantiza entrega, no cambia por sí misma el estado de una solicitud y no debe utilizarse para enviar datos adicionales sin una revisión de privacidad. Las pruebas automatizadas simulan la API y no sustituyen una prueba de aceptación autorizada.
 
 ## Comunicación de incidencias
 
@@ -48,7 +48,7 @@ Contacta privadamente al propietario del repositorio por un canal acordado. No p
 
 ## Automatización de dependencias y secretos
 
-La rama de endurecimiento incorpora Dependabot semanal, una auditoría de npm con umbral alto/crítico y revisión de dependencias nuevas en PR. Estos controles complementan, pero no sustituyen, revisión de código, pruebas ni respuesta a incidentes.
+En `main` están `.github/dependabot.yml` (npm y GitHub Actions, semanal), `.github/workflows/security-audit.yml` (`npm audit --audit-level=high`), `.github/workflows/dependency-review.yml` (solo pull requests, severidad alta) y `.github/workflows/codeql.yml` (Actions, JavaScript/TypeScript y Python). Estos controles complementan, pero no sustituyen, revisión de código, pruebas ni respuesta a incidentes.
 
 El propietario debe comprobar si el repositorio dispone de **Secret Scanning** y **Push Protection** y activarlos en la configuración de seguridad de GitHub cuando estén disponibles. La presencia de este documento o de un workflow no demuestra que esas funciones de cuenta estén habilitadas.
 

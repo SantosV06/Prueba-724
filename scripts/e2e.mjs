@@ -31,8 +31,8 @@ const errors = [];
 try {
   const context = await browser.newContext();
   // Turnstile is an external anti-bot service. In E2E only, replace its browser
-  // SDK with a deterministic test double; server-side verification still runs
-  // against the official test secret configured in CI.
+  // SDK with a deterministic test double. The validate job also sets
+  // TURNSTILE_TEST_MODE, so the server skips Cloudflare siteverify.
   await context.route(
     /^https:\/\/challenges\.cloudflare\.com\/turnstile\/v0\/api\.js(?:\?.*)?$/,
     async (route) => {

@@ -54,6 +54,7 @@ Realizar las mutaciones en una rama Neon desechable, nunca ejecutar E2E de escri
 | Configuración incorrecta | Production rechaza conexión o clave TOTP inválidas, sin imprimir valores privados.                                                                        |
 | Páginas e idiomas        | Navegación móvil/escritorio, imágenes, videos y ES/EN/PT funcionan; canónicas y sitemap apuntan al dominio nuevo.                                         |
 | Formulario               | Solicitud ficticia aparece una sola vez, incluso al reintentar con la misma clave.                                                                        |
+| Correo de estado         | En una base aislada, pasar esa solicitud a `aceptada` o `descartada` intenta un aviso al voluntario. `contactada` no lo envía. Un fallo de Brevo no revierte el estado. |
 | Acceso                   | Contraseña incorrecta rechazada y `login:failure` visible al propietario sin usuario/datos del intento. Solicitar el segundo factor no cuenta como fallo. |
 | Sesiones                 | Cerrar sesión o cambiar contraseña invalida la cookie anterior.                                                                                           |
 | Permisos                 | Administrador puede gestionar solicitudes; no administrar cuentas, política o borrado definitivo.                                                         |

@@ -32,9 +32,10 @@ In Vercel, open **Settings → Environment Variables** and configure the followi
 | `ADMIN_PASSWORD` | Initial owner only | Initial owner password, 14–256 characters. Does not reset an existing account. | Yes |
 | `ADMIN_SESSION_SECRET` | Yes | Independent random secret of at least 32 bytes. | Yes |
 | `ADMIN_TOTP_ENCRYPTION_KEY` | Yes | 32 random bytes encoded as Base64; preserve it securely. | Yes |
-| `SITE_URL` | Recommended | Canonical HTTPS origin, no path/query, e.g. `https://your-site.vercel.app`. | No |
+| `SITE_URL` | Required for canonical links and, unless `TURNSTILE_EXPECTED_HOSTNAME` is set, for the form | Canonical HTTPS origin, no path/query, e.g. `https://your-site.vercel.app`. | No |
 | `VITE_TURNSTILE_SITE_KEY` | Form required | Public Cloudflare Turnstile Site Key for the Production hostname. | Public |
 | `TURNSTILE_SECRET_KEY` | Form required | Private Secret Key belonging to the same widget. | Yes |
+| `TURNSTILE_EXPECTED_HOSTNAME` | Required for the form unless `SITE_URL` provides the hostname | Exact hostname, no scheme or path. Takes priority over `SITE_URL`. The Vercel production URL is not used for this check. | No |
 | `BREVO_API_KEY` | Email required | Brevo API key. | Yes |
 | `BREVO_SENDER_EMAIL` | Email required | Verified sender address. | No, operational config |
 | `BREVO_SENDER_NAME` | Optional | Display name, e.g. `Fundación Venezuela Nueva Esperanza`. | No |

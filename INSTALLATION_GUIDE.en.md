@@ -50,7 +50,8 @@ Set `ADMIN_PASSWORD` to a strong initial password of 14–256 characters. It ini
 2. Authorize the exact Production hostname (and a separate Preview hostname if needed).
 3. Add the public Site Key as `VITE_TURNSTILE_SITE_KEY` and the private Secret Key as `TURNSTILE_SECRET_KEY`.
 4. Ensure the keys belong to the same widget. Never expose the secret key with a `VITE_` prefix.
-5. Redeploy after changing the public key because it is included at build time.
+5. Set `TURNSTILE_EXPECTED_HOSTNAME` to the exact authorized hostname, or set `SITE_URL` so the server can read its hostname. If both are set, `TURNSTILE_EXPECTED_HOSTNAME` wins. The form refuses to submit when neither is available. `VERCEL_PROJECT_PRODUCTION_URL` can fill the sitemap origin, but it is not used for this Turnstile check.
+6. Redeploy after changing the public key because it is included at build time.
 
 Do not use the official test keys from CI on the public production site.
 
@@ -58,7 +59,9 @@ Do not use the official test keys from CI on the public production site.
 
 Follow [BREVO_SETUP.en.md](BREVO_SETUP.en.md). In short, authenticate the sending domain, verify the sender, create an API key (not an SMTP password), and configure `BREVO_API_KEY`, `BREVO_SENDER_EMAIL`, and `VOLUNTEER_NOTIFICATION_EMAIL`. `BREVO_SENDER_NAME` is optional.
 
-When a new volunteer request is successfully saved, the server attempts a confirmation email to the volunteer and an internal notification. If Brevo is missing or unavailable, the saved request remains valid. An email failure must not be interpreted as a failed database save.
+When a new volunteer request is successfully saved, and `BREVO_API_KEY`, `BREVO_SENDER_EMAIL`, and `VOLUNTEER_NOTIFICATION_EMAIL` are all set, the server attempts a confirmation email to the volunteer and an internal notification. The internal notice omits the personal message. If Brevo is missing or unavailable, the saved request remains valid.
+
+When an administrator changes a saved request to `aceptada` or `descartada`, the server attempts one email to the applicant. That message uses `BREVO_API_KEY` and `BREVO_SENDER_EMAIL` and does not require `VOLUNTEER_NOTIFICATION_EMAIL`. No status email is sent for `contactada`, when the status does not change, or for trash and restore. An email failure does not roll back the status. An email failure must not be interpreted as a failed database save.
 
 ## 7. Configure Vercel environment variables
 
@@ -70,9 +73,10 @@ In **Settings → Environment Variables**, add the exact variable names below to
 | `ADMIN_PASSWORD` | Initial owner only | Initial password; does not reset an existing account. |
 | `ADMIN_SESSION_SECRET` | Yes | Independent random secret, at least 32 bytes. |
 | `ADMIN_TOTP_ENCRYPTION_KEY` | Yes | 32 random bytes encoded as Base64. |
-| `SITE_URL` | Recommended | Canonical HTTPS origin without path, query, or fragment. |
+| `SITE_URL` | Required for the form unless `TURNSTILE_EXPECTED_HOSTNAME` is set | Canonical HTTPS origin without path, query, or fragment. Also used for canonical URLs, the sitemap, and the internal-notice link. |
 | `VITE_TURNSTILE_SITE_KEY` | Form required | Public Site Key for the exact hostname. |
 | `TURNSTILE_SECRET_KEY` | Form required | Private Secret Key for the same widget. |
+| `TURNSTILE_EXPECTED_HOSTNAME` | Required for the form unless `SITE_URL` provides the hostname | Exact hostname, no scheme or path. Takes priority over `SITE_URL`. |
 | `BREVO_API_KEY` | Email required | Brevo API key. |
 | `BREVO_SENDER_EMAIL` | Email required | Verified sender address. |
 | `BREVO_SENDER_NAME` | Optional | Display name for the sender. |
@@ -87,7 +91,7 @@ Set `SITE_URL` to the public HTTPS origin, such as `https://your-project.vercel.
 2. Trigger a new deployment from `main`.
 3. Wait for **Ready** and inspect build logs if it fails.
 4. During build, the app validates configuration and applies pending migrations. Do not delete tables to fix an error.
-5. Visit `https://YOUR-DOMAIN/api/health`. An `ok` result indicates the database schema is reachable; it does not prove that the public form or email delivery works.
+5. Visit `https://YOUR-DOMAIN/api/health`. `{"status":"ok"}` means the `admin_policy` probe succeeded. `{"status":"unavailable"}` with HTTP 503 means it did not. Neither result proves that the public form or email delivery works. The probe is cached for 15 seconds.
 
 ## 9. First admin login and language preference
 
@@ -109,10 +113,11 @@ Use a mailbox you control and clearly fake test data.
 3. Confirm that the UI reports success and the request appears exactly once in `/solicitudes`.
 4. Check the volunteer confirmation and internal notification mailbox separately, including spam folders.
 5. Verify the internal email does not include the personal message and that its panel link is correct.
-6. Review Vercel/Brevo logs without publishing personal data or secrets.
-7. Remove the test request in accordance with the organization's policy.
+6. On an isolated database, not Production, change the test request to `aceptada` or `descartada` and confirm the applicant email. `contactada` must not send one. A Brevo failure must leave the saved status in place.
+7. Review Vercel/Brevo logs without publishing personal data or secrets.
+8. Remove the test request in accordance with the organization's policy.
 
-The project owner has reported a real Production test in which the request was saved successfully and at least one email arrived. That confirms the specific tested path only; it does not establish that both messages, idempotency, provider failures, or load behavior have all been tested. Unit tests mock Brevo and do not deliver real messages.
+The project owner has reported a real Production test in which the request was saved successfully and at least one email arrived. That confirms the specific tested path only; it does not establish that both new-request messages, the status email, idempotency, provider failures, or load behavior have all been tested. Unit tests mock Brevo and do not deliver real messages.
 
 Never run destructive tests or write-oriented E2E tests against the Production database.
 
@@ -139,7 +144,7 @@ Without `DATABASE_URL`, development uses in-memory PGLite and data is lost when 
 ## 12. Maintenance and recovery
 
 - `npm run check`: types, lint, and tests.
-- `npm run build`: validation and Vercel build.
+- `npm run build`: typecheck, lint, tests, the Vercel build, and pending migrations when `DATABASE_URL` is set. With no `DATABASE_URL`, or on Preview without `PREVIEW_DATABASE_ISOLATED=true`, the migrator exits without applying SQL. PGLite applies the same files when the app starts.
 - `npm run db:verify`: private, read-only database verification.
 - `npm run data:retention`: reports old trashed requests; it does not delete.
 - `npm run data:retention -- --apply`: applies an approved purge of old trashed requests.

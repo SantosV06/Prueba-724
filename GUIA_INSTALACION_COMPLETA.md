@@ -80,10 +80,10 @@ En el proyecto de Vercel, abre **Settings → Environment Variables**. Añade ca
 | `ADMIN_PASSWORD` | Sí para el primer acceso | Contraseña inicial robusta (14–256 caracteres). | Secreto |
 | `ADMIN_SESSION_SECRET` | Sí | Secreto aleatorio de 32 bytes o más. | Secreto |
 | `ADMIN_TOTP_ENCRYPTION_KEY` | Sí | 32 bytes aleatorios en Base64. | Secreto |
-| `SITE_URL` | Recomendada | URL HTTPS canónica, sin ruta ni parámetros. | Pública |
+| `SITE_URL` | Sí, si no defines el hostname de Turnstile | URL HTTPS canónica, sin ruta ni parámetros. También alimenta canónicas, sitemap y el enlace del aviso interno. No basta `VERCEL_PROJECT_PRODUCTION_URL` para Turnstile. | Pública |
 | `VITE_TURNSTILE_SITE_KEY` | Sí para el formulario | Site Key pública del widget para el hostname correcto. | Pública |
 | `TURNSTILE_SECRET_KEY` | Sí para el formulario | Secret Key del mismo widget. | Secreto |
-| `TURNSTILE_EXPECTED_HOSTNAME` | Recomendada | Hostname exacto autorizado por Turnstile; si se omite, se obtiene de `SITE_URL`. | Servidor |
+| `TURNSTILE_EXPECTED_HOSTNAME` | Sí, si `SITE_URL` no aporta el hostname | Hostname exacto autorizado por Turnstile, sin protocolo ni ruta. Si también existe `SITE_URL`, este valor tiene prioridad. | Servidor |
 | `BREVO_API_KEY` | Sí para correo | API key de Brevo. | Secreto |
 | `BREVO_SENDER_EMAIL` | Sí para correo | Dirección autenticada en Brevo. | Configuración |
 | `BREVO_SENDER_NAME` | Opcional | Nombre visible del remitente. | Pública |
@@ -137,7 +137,7 @@ Haz una prueba controlada con un correo que controles y datos ficticios marcados
 7. Si un mensaje no llega, revisa Spam/Promociones, configuración del remitente y logs de Vercel/Brevo sin publicar datos privados.
 8. Elimina la solicitud de prueba de forma controlada cuando hayas terminado, conforme a la política de la organización.
 
-Una prueba real reportada por el responsable confirmó que se recibió al menos un correo en Production. No debe afirmarse que ambos mensajes, la idempotencia o los fallos del proveedor quedaron validados a menos que se comprueben por separado. No uses el formulario público para probar reintentos con la misma clave: cada envío normal puede generar una clave nueva.
+Una prueba real reportada por el responsable confirmó que se recibió al menos un correo en Production. No debe afirmarse que ambos mensajes de alta, el aviso de `aceptada`/`descartada`, la idempotencia o los fallos del proveedor quedaron validados a menos que se comprueben por separado. No uses el formulario público para probar reintentos con la misma clave: cada envío normal puede generar una clave nueva. El cambio de estado debe probarse en una base aislada, no repitiendo envíos públicos.
 
 ## 11. Preview y desarrollo local
 

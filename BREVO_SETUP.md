@@ -32,9 +32,10 @@ En Vercel, abre el proyecto correcto y entra en **Settings → Environment Varia
 | `ADMIN_PASSWORD` | Sí para el primer acceso | Contraseña inicial del propietario, entre 14 y 256 caracteres. Solo inicializa la cuenta si todavía no hay cuentas. | Sí |
 | `ADMIN_SESSION_SECRET` | Sí | Secreto aleatorio de al menos 32 caracteres. | Sí |
 | `ADMIN_TOTP_ENCRYPTION_KEY` | Sí | 32 bytes aleatorios codificados en Base64; conserva una copia segura. | Sí |
-| `SITE_URL` | Recomendada | Origen HTTPS canónico del sitio, sin ruta ni parámetros, por ejemplo `https://tu-dominio.vercel.app`. | No |
+| `SITE_URL` | Recomendada para enlaces; obligatoria para el formulario si no hay hostname de Turnstile | Origen HTTPS canónico del sitio, sin ruta ni parámetros, por ejemplo `https://tu-dominio.vercel.app`. | No |
 | `VITE_TURNSTILE_SITE_KEY` | Sí para el formulario | Clave **site/public** de Cloudflare Turnstile para el hostname publicado. Está disponible durante la compilación del cliente. | No; es pública |
 | `TURNSTILE_SECRET_KEY` | Sí para el formulario | Clave **secret** correspondiente de Cloudflare Turnstile. Solo servidor. | Sí |
+| `TURNSTILE_EXPECTED_HOSTNAME` | Sí para el formulario si `SITE_URL` no aporta el hostname | Hostname exacto, sin protocolo ni ruta. Tiene prioridad sobre `SITE_URL`. `VERCEL_PROJECT_PRODUCTION_URL` no vale para esta comprobación. | No |
 | `BREVO_API_KEY` | Sí para enviar correos | API key de Brevo. | Sí |
 | `BREVO_SENDER_EMAIL` | Sí para enviar correos | Dirección remitente autenticada/verificada en Brevo. | No, pero es configuración operativa |
 | `BREVO_SENDER_NAME` | Opcional | Nombre visible, por ejemplo `Fundación Venezuela Nueva Esperanza`. | No |

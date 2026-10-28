@@ -14,9 +14,10 @@ Importa `SantosV06/Prueba-724`, rama `main`, Root Directory en la raíz. Usa Nod
 | `ADMIN_PASSWORD`            | Contraseña inicial de 14–256 caracteres. Solo crea el propietario cuando todavía no existe ninguna cuenta. No funciona como acceso alternativo después.                                                         |
 | `ADMIN_SESSION_SECRET`      | Secreto aleatorio de al menos 32 caracteres. Rotarlo invalida todas las sesiones.                                                                                                                               |
 | `ADMIN_TOTP_ENCRYPTION_KEY` | Clave aleatoria de 32 bytes en Base64. Necesaria para configurar y verificar autenticadores. No es el secreto de sesión.                                                                                        |
-| `SITE_URL`                  | Origen HTTPS de producción, sin ruta ni parámetros. Ejemplo: `https://prueba-724.vercel.app`. Se usa para canónicas, alternativas y sitemap. Sin esta variable se intenta usar `VERCEL_PROJECT_PRODUCTION_URL`. |
+| `SITE_URL`                  | Origen HTTPS de producción, sin ruta ni parámetros. Ejemplo: `https://prueba-724.vercel.app`. Se usa para canónicas, alternativas, sitemap y, si no hay `TURNSTILE_EXPECTED_HOSTNAME`, para el hostname de Turnstile. Sin esta variable el sitemap puede usar `VERCEL_PROJECT_PRODUCTION_URL`; esa reserva no valida el formulario. |
 | `VITE_TURNSTILE_SITE_KEY`  | Clave pública/site key de Cloudflare Turnstile para el hostname de Production. Necesaria para renderizar el widget; se incorpora durante el build. |
 | `TURNSTILE_SECRET_KEY`     | Clave secreta del mismo widget Turnstile. Necesaria para validar el token en el servidor; nunca usar prefijo `VITE_`. |
+| `TURNSTILE_EXPECTED_HOSTNAME` | Hostname exacto del widget, sin protocolo ni ruta. Obligatoria para el formulario si `SITE_URL` no aporta un hostname. Si ambas existen, esta tiene prioridad. |
 | `BREVO_API_KEY`            | API key privada de Brevo. Necesaria para enviar correo transaccional. |
 | `BREVO_SENDER_EMAIL`       | Remitente autenticado/verificado en Brevo. |
 | `BREVO_SENDER_NAME`        | Opcional: nombre visible del remitente. |
@@ -68,11 +69,11 @@ En Preview utiliza una rama Neon independiente y secretos distintos. Solo despu�
 
 Esta variable no compara automáticamente conexiones: el operador debe confirmar que la base realmente está aislada. No la habilites con la conexión de producción. Los robots de Preview reciben `Disallow: /`.
 
-En desarrollo, sin conexión externa, se usa PGLite en memoria. En una compilación local que necesite probar el backend con esa base se permite `E2E_LOCAL_DATABASE=true` únicamente fuera de Vercel. No configures esa excepción en producción.
+En desarrollo, sin `DATABASE_URL`, se usa PGLite en memoria. Los datos se pierden al reiniciar el proceso. En una compilación local que necesite probar el backend con esa base se permite `E2E_LOCAL_DATABASE=true` únicamente fuera de Vercel. No configures esa excepción en producción.
 
 ## 6. Comprobación posterior
 
-- Visita las páginas públicas y `/api/health`; la salud responde `{"status":"ok"}` o HTTP 503 con un mensaje genérico.
+- Visita las páginas públicas y `/api/health`. Una base operativa responde `{"status":"ok"}` con HTTP 200. Si la consulta a `admin_policy` falla, responde `{"status":"unavailable"}` con HTTP 503. El resultado se reutiliza 15 segundos y no demuestra el formulario ni el correo.
 - Comprueba idiomas con `?lang=en` y `?lang=pt`, canónicas, `hreflang`, sitemap y el login privado.
 - Si se ha restaurado una base, ejecuta `npm run db:verify` con conexión y clave TOTP privadas del entorno correcto. Este comando no escribe datos ni imprime credenciales.
 - Verifica formulario y administración con datos de prueba identificados y elimina esos datos de forma controlada al terminar.
@@ -82,14 +83,15 @@ El correo transaccional está implementado mediante Brevo, pero solo intenta env
 
 ## 7. Validar el formulario y los correos en Production
 
-El formulario requiere las dos claves de Cloudflare Turnstile: `VITE_TURNSTILE_SITE_KEY` (pública, disponible durante el build) y `TURNSTILE_SECRET_KEY` (secreta, solo servidor). Para correo transaccional también se necesitan `BREVO_API_KEY`, `BREVO_SENDER_EMAIL` y `VOLUNTEER_NOTIFICATION_EMAIL`; `BREVO_SENDER_NAME` es opcional. Sigue [BREVO_SETUP.md](BREVO_SETUP.md) para obtener y validar estas claves.
+El formulario requiere las dos claves de Cloudflare Turnstile y un hostname esperado (`TURNSTILE_EXPECTED_HOSTNAME` o el de `SITE_URL`). Para el par de correos de una solicitud nueva también se necesitan `BREVO_API_KEY`, `BREVO_SENDER_EMAIL` y `VOLUNTEER_NOTIFICATION_EMAIL`; `BREVO_SENDER_NAME` es opcional. El aviso al cambiar a `aceptada` o `descartada` usa la API key y el remitente, sin el buzón interno. Sigue [BREVO_SETUP.md](BREVO_SETUP.md).
 
 Después de configurar variables en **Settings → Environment Variables**, selecciona el ámbito **Production** y ejecuta un nuevo despliegue. Prueba con datos ficticios y un correo que controles:
 
 1. Confirma que Turnstile carga y permite enviar el formulario.
 2. Envía una solicitud una sola vez y verifica que se guarda en `/solicitudes`.
 3. Comprueba por separado la confirmación al correo del formulario y el aviso al buzón interno.
-4. Revisa logs de Vercel sin exponer datos personales o secretos.
-5. Elimina la solicitud de prueba de forma controlada cuando termine la comprobación.
+4. En una base que no sea la de Production, cambia el estado de prueba a `aceptada` o `descartada` y comprueba el aviso al voluntario. `contactada` no debe enviarlo. Un fallo de Brevo no revierte el estado.
+5. Revisa logs de Vercel sin exponer datos personales o secretos.
+6. Elimina la solicitud de prueba de forma controlada cuando termine la comprobación.
 
-El responsable del proyecto informó de una prueba real en Production en la que recibió al menos un correo. Eso no acredita por sí solo que ambos destinatarios, los reintentos o los errores del proveedor hayan sido probados. Para una guía completa de instalación desde cero, consulta [GUIA_INSTALACION_COMPLETA.md](GUIA_INSTALACION_COMPLETA.md).
+El responsable del proyecto informó de una prueba real en Production en la que recibió al menos un correo. Eso no acredita ambos destinatarios del alta, el aviso de estado, los reintentos ni los errores del proveedor. Para una guía completa de instalación desde cero, consulta [GUIA_INSTALACION_COMPLETA.md](GUIA_INSTALACION_COMPLETA.md).

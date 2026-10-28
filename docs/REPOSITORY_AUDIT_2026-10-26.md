@@ -1,5 +1,7 @@
 # Revisión documental de Prueba-724 — 26 de octubre de 2026
 
+> **Actualización 28 de octubre de 2026.** DOC-01 y DOC-02 ya no están en `main`: la guía de instalación numera Turnstile de forma consecutiva y `BREVO_SETUP.md` no tiene el paréntesis sobrante. El cierre original de este informe describía una rama de mantenimiento que no se integraba; eso vale solo para la sesión del 26 de octubre. La comparación posterior con el código está al final, en «Actualización frente al código».
+
 ## Alcance y límites
 
 Revisión estática de documentación y configuración accesible en la rama `main`: `README.md`, `README.en.md`, `ARCHITECTURE.md`, `OPERATIONS.md`, `SECURITY.md`, `package.json`, `GUIA_INSTALACION_COMPLETA.md`, `BREVO_SETUP.md`, `.gitignore` y `.github/workflows/ci.yml`. También se hicieron búsquedas puntuales de referencias de archivos y de tareas pendientes.
@@ -56,6 +58,25 @@ La documentación de `main` menciona una versión histórica de Cloudflare y her
 - Aclarar en `README.md` y `ARCHITECTURE.md` que el alcance del despliegue no demuestra la presencia física de carpetas históricas.
 - Mejorar los enlaces del índice en inglés.
 
-## Estado y límites
+## Estado y límites de la sesión del 26 de octubre
 
-Los cambios están en una rama de mantenimiento separada y no modifican `main`, no fusionan cambios ni despliegan. No se ejecutaron CI, build, pruebas ni un escaneo exhaustivo del árbol en esta sesión. La auditoría sigue siendo documental y parcial; las correcciones deben revisarse y pasar CI antes de integrarse.
+Los párrafos siguientes describen aquella sesión, no el árbol actual. Entonces las correcciones propuestas estaban en una rama de mantenimiento y no modificaban `main`. No se ejecutaron CI, build, pruebas ni un escaneo exhaustivo del árbol. La auditoría de esa fecha sigue siendo documental y parcial.
+
+## Actualización frente al código — 28 de octubre de 2026
+
+Se contrastó la documentación con el árbol de `main` (código, migraciones, `package.json` y workflows), no solo con los archivos de la lista original.
+
+Correcciones aplicadas porque el texto contradecía el código:
+
+- `OPERATIONS.md` decía que cambiar el estado no envía correo. `volunteer-service.server.ts` llama a `notifyVolunteerStatus` cuando el estado guardado pasa a `aceptada` o `descartada`. `contactada`, el mismo estado, la papelera y la restauración no envían correo. El fallo de Brevo no revierte la fila ni la auditoría.
+- El alta exige `BREVO_API_KEY`, `BREVO_SENDER_EMAIL` y `VOLUNTEER_NOTIFICATION_EMAIL`. El aviso de estado no exige el buzón interno.
+- El formulario exige hostname de `TURNSTILE_EXPECTED_HOSTNAME` o de `SITE_URL`. `VERCEL_PROJECT_PRODUCTION_URL` solo puede completar el origen del sitemap en `scripts/site-origin.mjs`; no valida Turnstile.
+- En el job `validate`, `TURNSTILE_TEST_MODE` con `CI` y `E2E_LOCAL_DATABASE` no llama a `siteverify`. El comentario de `scripts/e2e.mjs` decía lo contrario.
+- `npm run admin:recover -- admin` también revoca sesiones y escribe `account:recovery`. `--reset-2fa` además retira el factor y los códigos.
+- `/api/health` responde `{"status":"ok"}` o `{"status":"unavailable"}` tras consultar `admin_policy`, con caché de 15 segundos.
+- Los workflows presentes, además de `ci.yml` y `availability.yml`, son `security-audit.yml`, `dependency-review.yml` y `codeql.yml`, más `dependabot.yml`. No son el check `validate`.
+- El monitor horario usa `https://prueba-724.vercel.app` si no existe la variable de Actions `MONITOR_SITE_URL`.
+- La auditoría de idioma se guarda como `settings:language`. Un código de recuperación aceptado se guarda como `login:recovery-code`.
+- Sin `DATABASE_URL` el migrador de `npm run build` no aplica SQL; PGLite aplica las migraciones al arrancar. En Preview, sin `PREVIEW_DATABASE_ISOLATED=true`, el migrador sale sin aplicarlas.
+
+No se reescribieron procedimientos que el código no puede demostrar: entrega real de Brevo, aislamiento de Preview, Secret Scanning, restauración de Neon ni el resultado de CI. `src/lib/env.server.ts` define `isWorkspacePreview` y no tiene consumidores; no forma parte del panel ni de Brevo.

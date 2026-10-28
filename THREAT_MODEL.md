@@ -17,7 +17,7 @@ Activos que proteger:
 1. Navegador público → funciones del servidor: toda entrada es no confiable.
 2. Funciones del servidor → PostgreSQL: evitar consultas no parametrizadas y exposición de filas de otras solicitudes.
 3. Navegador → Turnstile → servidor: el token no es confiable hasta validarlo en el servidor.
-4. Servidor → Brevo: el proveedor puede fallar; el error de correo no debe invalidar una solicitud ya guardada.
+4. Servidor → Brevo: el proveedor puede fallar. Ni una solicitud ya guardada ni un cambio de estado ya confirmado (`aceptada` o `descartada`) deben deshacerse porque falle el correo.
 5. GitHub Actions → artefacto/despliegue: PR, dependencias y workflows son entradas de la cadena de suministro.
 6. Operación → Vercel/Neon: credenciales de producción deben permanecer fuera del repositorio y de los logs.
 
