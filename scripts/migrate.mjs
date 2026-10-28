@@ -24,11 +24,24 @@ if (process.env.VERCEL_ENV === "preview" && process.env.PREVIEW_DATABASE_ISOLATE
   process.exit(0);
 }
 
-const databaseUrl = process.env.DATABASE_URL?.trim();
-if (!databaseUrl) {
+const rawDatabaseUrl = process.env.DATABASE_URL?.trim();
+if (!rawDatabaseUrl) {
   console.log("[migrate] DATABASE_URL not set — skipping (the PGLite fallback migrates itself).");
   process.exit(0);
 }
+
+// pg-connection-string warns for legacy modes even though current pg versions
+// treat them as verify-full. Make the intended certificate + hostname checks
+// explicit in every direct Pool connection, including deploy-time migrations.
+function normalizeSslMode(connectionString) {
+  const url = new URL(connectionString);
+  const mode = url.searchParams.get("sslmode")?.toLowerCase();
+  if (mode && ["prefer", "require", "verify-ca"].includes(mode)) {
+    url.searchParams.set("sslmode", "verify-full");
+  }
+  return url.toString();
+}
+const databaseUrl = normalizeSslMode(rawDatabaseUrl);
 
 const migrationsDir = join(dirname(fileURLToPath(import.meta.url)), "..", "migrations");
 

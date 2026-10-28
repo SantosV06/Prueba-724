@@ -4,12 +4,16 @@ import { readdir } from "node:fs/promises";
 import { decryptTotp, totpConfigured } from "../src/lib/admin-totp-crypto.server.ts";
 async function main() {
   const url = new URL(process.env.DATABASE_URL);
+  const sslMode = url.searchParams.get("sslmode")?.toLowerCase();
   if (
     !["postgres:", "postgresql:"].includes(url.protocol) ||
     !url.hostname.endsWith(".neon.tech") ||
-    !["require", "verify-ca", "verify-full"].includes(url.searchParams.get("sslmode"))
+    !["require", "verify-ca", "verify-full"].includes(sslMode)
   )
     throw new Error("Neon SSL required");
+  if (sslMode && ["require", "verify-ca"].includes(sslMode)) {
+    url.searchParams.set("sslmode", "verify-full");
+  }
   const pool = new pg.Pool({
     connectionString: url.href,
     max: 1,
