@@ -33,7 +33,13 @@ export default tseslint.config(
     rules: {
       "react-hooks/rules-of-hooks": "error",
       "react-hooks/exhaustive-deps": "warn",
-      "react-refresh/only-export-components": ["warn", { allowConstantExport: true }],
+      // TanStack file routes must export the Route object; it is framework
+      // metadata, not a React component, so allow it without suppressing
+      // Fast Refresh checks for other non-component exports.
+      "react-refresh/only-export-components": [
+        "warn",
+        { allowConstantExport: true, allowExportNames: ["Route"] },
+      ],
       "@typescript-eslint/no-unused-vars": [
         "warn",
         { argsIgnorePattern: "^_", varsIgnorePattern: "^_" },
