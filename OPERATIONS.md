@@ -20,9 +20,11 @@ Los metadatos SEO y las demás secciones siguen mantenidos en el repositorio. El
 
 `/api/health` ejecuta `SELECT require_two_factor FROM admin_policy WHERE id=1` y devuelve solo `{"status":"ok"}` (HTTP 200) o `{"status":"unavailable"}` (HTTP 503). Reutiliza esa comprobación 15 segundos. No informa recuentos, credenciales, versiones o contenido personal. No equivale a enviar un formulario ni comprueba Turnstile o Brevo.
 
-`.github/workflows/availability.yml` consulta inicio y salud aproximadamente cada hora (`17 * * * *`) y también permite **Run workflow**. Si el idioma predeterminado guardado no es español, la portada responde con un único redirect mismo origen a `?lang=es`, `?lang=en` o `?lang=pt`; el monitor sigue solo ese salto y exige el texto «Fundación VNE». Cualquier otro redirect (otro host, otra ruta o un segundo salto) es un fallo. `/api/health` no debe redirigir y su JSON debe ser `{"status":"ok"}`. Usa la variable de Actions `MONITOR_SITE_URL` como origen HTTPS final, sin salto entre apex y `www`; si no está definida, el workflow usa `https://prueba-724.vercel.app`. Los fallos aparecen como ejecuciones fallidas. El propietario debe habilitar y comprobar las notificaciones de GitHub Actions en su cuenta; no hay Slack, SMTP ni proveedor de alertas configurado.
+`.github/workflows/availability.yml` ya está activo en este repositorio: consulta inicio y salud aproximadamente cada hora (`17 * * * *`) y también permite **Run workflow**. No hace falta contratar otro producto para que esa comprobación exista. El 28 de octubre de 2026 la ejecución [40693833170](https://github.com/SantosV06/Prueba-724/actions/runs/40693833170) terminó bien contra `https://prueba-724.vercel.app`, porque la variable de Actions `MONITOR_SITE_URL` no está definida. El log siguió un único redirect de idioma a `en` y después vio «Fundación VNE» y `{"status":"ok"}` en `/api/health`. Ese redirect indica que el idioma predeterminado guardado en Neon, en esa fecha, era inglés; no es el valor por defecto del código cuando la base falla (español).
 
-El horario de GitHub puede retrasarse. Para avisos inmediatos o una garantía contractual necesitas un monitor externo independiente. Analytics y Speed Insights ayudan con uso/rendimiento, pero no sustituyen monitorización de errores del frontend. Los fallos de salud y de lectura del contenido público emiten eventos genéricos sin datos personales en los logs de Vercel.
+Si el idioma guardado no es español, la portada responde con un único redirect mismo origen a `?lang=es`, `?lang=en` o `?lang=pt`. Cualquier otro redirect (otro host, otra ruta o un segundo salto) es un fallo. `/api/health` no debe redirigir. Si el dominio público cambia, define `MONITOR_SITE_URL` como origen HTTPS final, sin salto entre apex y `www`.
+
+Los fallos solo se ven como ejecuciones rojas en la pestaña Actions. El responsable no tiene activadas las notificaciones de GitHub Actions, y no hay Slack, correo SMTP ni otro avisador. Una ejecución verde no llega a ningún buzón. Para enterarte de un fallo hay que activar las notificaciones de Actions en la cuenta de GitHub o mirar el historial. El horario de GitHub puede retrasarse. Para avisos inmediatos o una garantía contractual necesitas un monitor externo independiente. Analytics y Speed Insights ayudan con uso/rendimiento, pero no sustituyen monitorización de errores del frontend. Los fallos de salud y de lectura del contenido público emiten eventos genéricos sin datos personales en los logs de Vercel.
 
 ## Correo transaccional con Brevo
 
@@ -81,9 +83,9 @@ La eliminación y el evento `retention:purge` se ejecutan atómicamente. Si fall
 ## Tareas del propietario tras desplegar
 
 - Activar 2FA en su cuenta, custodiar clave y códigos y decidir si se exige al equipo.
-- Revisar las notificaciones de Actions y ejecutar manualmente el monitor una vez.
+- El chequeo horario de Actions ya corre solo. No hay aviso al correo ni a Slack: activar las notificaciones de GitHub Actions si se quiere saber de un fallo sin abrir la pestaña Actions.
 - Realizar el ensayo de restauración y decidir conservación.
-- Verificar la configuración de Brevo y completar una prueba de aceptación autorizada antes de habilitar envíos reales en Production.
+- Las variables de Brevo del alta y Turnstile están configuradas en Production, según confirmó el responsable el 28 de octubre de 2026, y el widget funciona en el sitio publicado. Sigue pendiente comprobar por separado ambos correos del alta, el aviso de `aceptada`/`descartada` y un fallo del proveedor.
 
 ## Idioma inicial del sitio
 

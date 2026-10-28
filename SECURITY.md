@@ -28,7 +28,7 @@ Turnstile complementa los límites de solicitudes y el campo honeypot, pero no g
 
 *Nota del desarrollador: Turnstile resultó bastante más difícil de integrar de lo que sugería el clásico «solo hay que añadir un captcha» 😅. Precisamente por eso la integración cuenta con pruebas y configuración documentada.*
 
-El monitoreo horario detecta inicio/salud, no todos los errores de interfaz ni la entrega de correos. Los logs no deben incluir contraseñas, claves, códigos, mensajes, CSV o URLs de conexión. No hay certificación de seguridad, prueba de penetración exhaustiva ni garantía de ausencia de fallos.
+El chequeo horario de `.github/workflows/availability.yml` ya se ejecuta en este repositorio y solo mira la portada y `/api/health`. No avisa por correo ni por Slack: si las notificaciones de GitHub Actions están apagadas, un fallo queda solo en la pestaña Actions. No detecta todos los errores de interfaz ni la entrega de correos. El responsable confirmó el 28 de octubre de 2026 que Turnstile funciona en Production; el job `validate` sigue sin llamar a `siteverify` y no sustituye esa comprobación. Los logs no deben incluir contraseñas, claves, códigos, mensajes, CSV o URLs de conexión. No hay certificación de seguridad, prueba de penetración exhaustiva ni garantía de ausencia de fallos.
 
 La recuperación y conservación de Neon, permisos de GitHub/Vercel, versiones antiguas publicadas y custodia de claves son responsabilidad operativa. Deshabilita vistas antiguas que no deban conservar acceso a la misma base. Una migración correcta no hace seguros automáticamente todos los despliegues anteriores.
 

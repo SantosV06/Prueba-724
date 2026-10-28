@@ -62,7 +62,7 @@ Realizar las mutaciones en una rama Neon desechable, nunca ejecutar E2E de escri
 | Gestión                  | Búsqueda, estados, papelera, restauración y CSV funcionan; operaciones quedan auditadas.                                                                  |
 | Contenido                | Portada e idioma predeterminado persisten al reiniciar/republicar porque viven en Neon.                                                                   |
 | Restauración             | `db:verify` correcto, recuentos comparados y login/2FA comprobados en rama restaurada.                                                                    |
-| Operación                | Responsable recibe notificación de un fallo controlado del monitor y conoce recuperación y retención.                                                     |
+| Operación                | El workflow horario ya existe y, el 28-10-2026, acertó contra `https://prueba-724.vercel.app` sin `MONITOR_SITE_URL`. No hay aviso al responsable: hay que activar notificaciones de Actions o un monitor externo y probar que un fallo controlado llega. |
 
 Para QA local: seguir `.github/workflows/ci.yml`; usa credenciales ficticias. Ejecutar `npm run check`, `npm run build`, `npm run test:postgres` con PostgreSQL local desechable y `npm run test:e2e` contra desarrollo y compilación. Los recursos externos excluidos de las pruebas de navegador deben verificarse por separado antes de aceptar la entrega.
 
@@ -72,7 +72,7 @@ El ensayo detallado está en [OPERATIONS.md](OPERATIONS.md). Registrar fecha/pun
 
 Para rendimiento, acordar volumen esperado y umbrales antes de medir. En un entorno aislado equivalente a Production, probar lectura pública, envío de solicitudes ficticias, búsquedas/CSV y concurrencia de logins. Medir latencia p50/p95/p99, errores, conexiones PostgreSQL, memoria y coste; incluir el coste de scrypt. Aumentar carga gradualmente y detener al superar los umbrales acordados. Un smoke local o `/api/health` no demuestra capacidad de producción ni prueba la escritura y autenticación bajo carga.
 
-El monitor de Actions es horario y puede retrasarse. No hay un servicio externo de errores del navegador contratado/configurado. Acordar proveedor, privacidad y presupuesto antes de incorporar telemetría adicional. La auditoría de accesos rechazados no envía notificaciones por sí misma.
+El monitor de Actions ya corre cada hora contra `https://prueba-724.vercel.app` mientras no exista `MONITOR_SITE_URL`. Puede retrasarse y no envía correo ni Slack: el responsable no tiene esas notificaciones activadas. No hay un servicio externo de errores del navegador contratado. Acordar proveedor, privacidad y presupuesto antes de incorporar telemetría adicional. La auditoría de accesos rechazados no envía notificaciones por sí misma.
 
 ## 7. Acta de entrega (completar sin secretos)
 
