@@ -10,7 +10,7 @@ Importa `SantosV06/Prueba-724`, rama `main`, Root Directory en la raíz. Usa Nod
 
 | Variable                    | Configuración                                                                                                                                                                                                   |
 | --------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `DATABASE_URL`              | Conexión privada de Neon PostgreSQL, endpoint agrupado `-pooler` y `sslmode=require` o verificación SSL más estricta.                                                                                           |
+| `DATABASE_URL`              | Conexión privada de Neon PostgreSQL, endpoint agrupado `-pooler` y `sslmode=verify-full` recomendado. El controlador normaliza los modos heredados `prefer`, `require` y `verify-ca` a `verify-full` para mantener la verificación estricta y evitar la advertencia de Node.js. |
 | `ADMIN_PASSWORD`            | Contraseña inicial de 14–256 caracteres. Solo crea el propietario cuando todavía no existe ninguna cuenta. No funciona como acceso alternativo después.                                                         |
 | `ADMIN_SESSION_SECRET`      | Secreto aleatorio de al menos 32 caracteres. Rotarlo invalida todas las sesiones.                                                                                                                               |
 | `ADMIN_TOTP_ENCRYPTION_KEY` | Clave aleatoria de 32 bytes en Base64. Necesaria para configurar y verificar autenticadores. No es el secreto de sesión.                                                                                        |
@@ -35,7 +35,7 @@ Ejecuta el comando por separado para cada secreto. Guarda una copia segura de la
 
 ## 3. Neon y migraciones
 
-Crea o utiliza la base asociada al proyecto. Copia su conexión **pooled** con SSL a `DATABASE_URL` de Production. El despliegue rechaza también una `ADMIN_TOTP_ENCRYPTION_KEY` ausente, de tamaño incorrecto o Base64 no canónico, sin imprimirla. Valida la configuración y aplica pendientes con `pg_advisory_xact_lock` dentro de una transacción. `_migrations` registra las versiones aplicadas.
+Crea o utiliza la base asociada al proyecto. Copia su conexión **pooled** con SSL a `DATABASE_URL` de Production. Se recomienda `sslmode=verify-full`; `src/lib/db.ts` normaliza los modos heredados `prefer`, `require` y `verify-ca` a `verify-full` antes de inicializar el controlador `pg`. El despliegue rechaza también una `ADMIN_TOTP_ENCRYPTION_KEY` ausente, de tamaño incorrecto o Base64 no canónico, sin imprimirla. Valida la configuración y aplica pendientes con `pg_advisory_xact_lock` dentro de una transacción. `_migrations` registra las versiones aplicadas.
 
 | Migración | Finalidad                                                                       |
 | --------- | ------------------------------------------------------------------------------- |
