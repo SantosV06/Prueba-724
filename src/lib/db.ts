@@ -6,7 +6,34 @@ export type DbSource = "neon" | "pglite";
 // An empty/whitespace DATABASE_URL (an easy misconfig in deploy UIs) must mean
 // "unset" — otherwise production would silently run on the PGLite fallback.
 const rawDatabaseUrl = typeof process !== "undefined" ? process.env.DATABASE_URL : undefined;
-const databaseUrl = rawDatabaseUrl && rawDatabaseUrl.trim() ? rawDatabaseUrl.trim() : undefined;
+
+/**
+ * Recent node-postgres connection-string parsing treats the legacy SSL modes
+ * "prefer", "require", and "verify-ca" as aliases for "verify-full" and emits
+ * a Node warning. Normalize those explicit legacy modes before passing the URL
+ * to pg so the effective TLS verification stays strict without a warning.
+ *
+ * Keep malformed URLs unchanged so the database driver can report the
+ * underlying configuration error rather than masking it here.
+ */
+function normalizePostgresSslMode(connectionString: string): string {
+  try {
+    const url = new URL(connectionString);
+    const sslMode = url.searchParams.get("sslmode")?.toLowerCase();
+    if (sslMode && ["prefer", "require", "verify-ca"].includes(sslMode)) {
+      url.searchParams.set("sslmode", "verify-full");
+      return url.toString();
+    }
+  } catch {
+    // Preserve the input; node-postgres will report invalid connection strings.
+  }
+  return connectionString;
+}
+
+const databaseUrl =
+  rawDatabaseUrl && rawDatabaseUrl.trim()
+    ? normalizePostgresSslMode(rawDatabaseUrl.trim())
+    : undefined;
 
 /**
  * Active backend: real **Neon** when `DATABASE_URL` is set (deployed / configured
